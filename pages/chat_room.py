@@ -861,12 +861,15 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
     )
 
     # 하단 입력 영역
+    def focus_input_box(e):
+        input_box.focus()
+        page.update()
     input_row = ft.Row([
         input_box,
         ft.IconButton(
             ft.Icons.MIC,
-            on_click=lambda e: transcribe_from_mic(input_box, page, e.control),
-            tooltip="음성 입력"
+            on_click=focus_input_box,
+            tooltip="음성 입력(키보드 마이크 버튼 사용)"
         ) if not IS_SERVER else ft.Container(),
         ft.IconButton(
             ft.Icons.SEND,
