@@ -6,6 +6,7 @@ from flet import Column, Switch
 import time
 from firebase_admin import db
 import uuid
+import threading
 
 IS_SERVER = os.environ.get("CLOUDTYPE") == "1"  # Cloudtype 환경변수 등으로 구분
 
@@ -874,13 +875,37 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         shadow=ft.BoxShadow(blur_radius=4, color="#B0BEC544")
     )
 
-    # 하단 입력 영역
+    # 언어별 마이크 안내 메시지
+    MIC_GUIDE_TEXTS = {
+        "ko": "키보드의 마이크 버튼을 눌러 음성 입력을 사용하세요!",
+        "en": "Tap the microphone button on your keyboard to use voice input!",
+        "ja": "キーボードのマイクボタンを押して音声入力を使ってください！",
+        "zh": "请点击键盘上的麦克风按钮进行语音输入！",
+        "zh-TW": "請點擊鍵盤上的麥克風按鈕進行語音輸入！",
+        "id": "Tekan tombol mikrofon di keyboard untuk menggunakan input suara!",
+        "vi": "Nhấn nút micro trên bàn phím để nhập bằng giọng nói!",
+        "fr": "Appuyez sur le bouton micro du clavier pour utiliser la saisie vocale !",
+        "de": "Tippen Sie auf die Mikrofontaste Ihrer Tastatur, um die Spracheingabe zu verwenden!",
+        "th": "แตะปุ่มไมโครโฟนบนแป้นพิมพ์เพื่อใช้การป้อนด้วยเสียง!"
+    }
+    # AlertDialog 미리 생성
+    mic_dialog = ft.AlertDialog(title=ft.Text(""), modal=True)
+
     def focus_input_box(e):
         input_box.focus()
-        # 언어별 안내 메시지
         guide_text = MIC_GUIDE_TEXTS.get(user_lang, MIC_GUIDE_TEXTS["en"])
-        page.dialog = ft.AlertDialog(title=ft.Text(guide_text), open=True)
+        mic_dialog.title = ft.Text(guide_text)
+        mic_dialog.open = True
         page.update()
+        # 3초 후 자동 닫힘
+        def close_dialog():
+            import time
+            time.sleep(3)
+            mic_dialog.open = False
+            page.update()
+        threading.Thread(target=close_dialog, daemon=True).start()
+
+    # 입력 영역
     input_row = ft.Row([
         input_box,
         ft.IconButton(
@@ -945,6 +970,7 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             chat_area,
             switch_row,
             input_area,
+            mic_dialog,  # AlertDialog를 컨트롤에 포함
         ],
         bgcolor=ft.LinearGradient(["#F8FAFC", "#F1F5F9"], begin=ft.alignment.top_left, end=ft.alignment.bottom_right)
     )
