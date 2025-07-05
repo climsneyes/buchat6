@@ -341,6 +341,20 @@ RAG_GUIDE_TEXTS = {
     }
 }
 
+# 언어별 마이크 안내 메시지
+MIC_GUIDE_TEXTS = {
+    "ko": "키보드의 마이크 버튼을 눌러 음성 입력을 사용하세요!",
+    "en": "Tap the microphone button on your keyboard to use voice input!",
+    "ja": "キーボードのマイクボタンを押して音声入力を使ってください！",
+    "zh": "请点击键盘上的麦克风按钮进行语音输入！",
+    "zh-TW": "請點擊鍵盤上的麥克風按鈕進行語音輸入！",
+    "id": "Tekan tombol mikrofon di keyboard untuk menggunakan input suara!",
+    "vi": "Nhấn nút micro trên bàn phím để nhập bằng giọng nói!",
+    "fr": "Appuyez sur le bouton micro du clavier pour utiliser la saisie vocale !",
+    "de": "Tippen Sie auf die Mikrofontaste Ihrer Tastatur, um die Spracheingabe zu verwenden!",
+    "th": "แตะปุ่มไมโครโฟนบนแป้นพิมพ์เพื่อใช้การป้อนด้วยเสียง!"
+}
+
 def translate_message(text, target_lang):
     try:
         target_lang_name = LANG_NAME_MAP.get(target_lang, "영어")
@@ -687,7 +701,7 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         return ft.Row([
             ft.Container(
                 content=ft.Column(controls, spacing=2),
-                padding=12,
+            padding=12,
                 bgcolor="#2563EB" if is_me else ft.Colors.GREY_200,
                 border_radius=16,
                 margin=ft.margin.only(top=6, left=8, right=8),
@@ -863,6 +877,9 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
     # 하단 입력 영역
     def focus_input_box(e):
         input_box.focus()
+        # 언어별 안내 메시지
+        guide_text = MIC_GUIDE_TEXTS.get(user_lang, MIC_GUIDE_TEXTS["en"])
+        page.dialog = ft.AlertDialog(title=ft.Text(guide_text), open=True)
         page.update()
     input_row = ft.Row([
         input_box,
