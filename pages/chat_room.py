@@ -813,24 +813,24 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         guide_texts = RAG_GUIDE_TEXTS.get(user_lang, RAG_GUIDE_TEXTS["ko"])
         guide_items = []
         for item in guide_texts["items"]:
-            guide_items.append(ft.Text(item, size=12 if is_mobile else 14, color=ft.Colors.GREY_700, selectable=True))
+            guide_items.append(ft.Text(item, size=14 if is_mobile else 16, color=ft.Colors.GREY_700, selectable=True))
         example_items = []
         for example in guide_texts["examples"]:
-            example_items.append(ft.Text(example, size=11 if is_mobile else 12, color=ft.Colors.GREY_600, selectable=True))
+            example_items.append(ft.Text(example, size=13 if is_mobile else 14, color=ft.Colors.GREY_600, selectable=True))
         bubble_width = int(page.width * 0.9) if is_mobile else 400
         return ft.Container(
             content=ft.Column([
-                ft.Text(guide_texts["title"], size=16 if is_mobile else 18, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_600, selectable=True),
+                ft.Text(guide_texts["title"], size=18 if is_mobile else 20, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_600, selectable=True),
                 ft.Container(height=8),
-                ft.Text(guide_texts["info"], size=13 if is_mobile else 14, color=ft.Colors.GREY_700, selectable=True),
+                ft.Text(guide_texts["info"], size=15 if is_mobile else 16, color=ft.Colors.GREY_700, selectable=True),
                 ft.Container(height=8),
                 *guide_items,
                 ft.Container(height=12),
-                ft.Text(guide_texts["example_title"], size=13 if is_mobile else 14, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700, selectable=True),
+                ft.Text(guide_texts["example_title"], size=15 if is_mobile else 16, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700, selectable=True),
                 ft.Container(height=6),
                 *example_items,
                 ft.Container(height=12),
-                ft.Text(guide_texts["input_hint"], size=13 if is_mobile else 14, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_600, text_align=ft.TextAlign.CENTER, selectable=True),
+                ft.Text(guide_texts["input_hint"], size=15 if is_mobile else 16, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_600, text_align=ft.TextAlign.CENTER, selectable=True),
             ], spacing=4),
             padding=16 if is_mobile else 20,
             bgcolor=ft.LinearGradient(["#E3F2FD", "#BBDEFB"], begin=ft.alignment.top_left, end=ft.alignment.bottom_right),
