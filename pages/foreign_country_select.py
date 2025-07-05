@@ -70,8 +70,7 @@ def ForeignCountrySelectPage(page, on_select, on_back=None):
                             margin=ft.margin.only(right=12 if is_mobile else 16)
                         ),
                         ft.Column([
-                            ft.Text("국적을 선택하세요", size=title_size, weight=ft.FontWeight.BOLD),
-                            ft.Text("당신의 출신 국가를 알려주세요", size=desc_size, color=ft.Colors.GREY_600),
+                            ft.Text("Please select your language", size=title_size, weight=ft.FontWeight.BOLD),
                         ], spacing=4)
                     ], alignment=ft.MainAxisAlignment.START),
                 ),
@@ -80,7 +79,6 @@ def ForeignCountrySelectPage(page, on_select, on_back=None):
             # 국가 선택 카드 (완전 흰색 배경, 연보라 그림자)
             ft.Container(
                 content=ft.Column([
-                    ft.Text("인기 국가", size=16 if is_mobile else 18, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
                     ft.Container(height=16 if is_mobile else 20),
                     *country_rows
                 ], spacing=8),
