@@ -19,6 +19,7 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
     texts = {
         "ko": {
             "title": "📌 채팅방 만들기",
+            "subtitle": "새로운 채팅방 설정",
             "room_title_label": "방 제목 입력",
             "room_title_hint": "예: 외국인에게 길을 알려주는 방",
             "your_lang": "🇰🇷 한국어 (자동 선택)",
@@ -26,10 +27,12 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             "target_lang_hint": "예: 영어, 일본어, 중국어 등",
             "purpose_label": "채팅 목적 선택 (선택사항)",
             "purpose_options": ["길안내", "음식 추천", "관광지 설명", "자유 대화", "긴급 도움 요청"],
-            "create_btn": "✅ 채팅방 만들기"
+            "create_btn": "✅ 채팅방 만들기",
+            "tip": "구체적인 방 제목을 작성하면 더 많은 사람들이 참여할 수 있어요!"
         },
         "en": {
             "title": "📌 Create Chat Room",
+            "subtitle": "Set up a new chat room",
             "room_title_label": "Enter Room Title",
             "room_title_hint": "e.g. Need help finding subway station",
             "your_lang": "🇺🇸 English (auto-detected)",
@@ -37,10 +40,12 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             "target_lang_hint": "e.g. Korean, Japanese, Chinese",
             "purpose_label": "Purpose of Chat (optional)",
             "purpose_options": ["Directions", "Food Recommendations", "Tourist Info", "Casual Talk", "Emergency Help"],
-            "create_btn": "✅ Create Chat Room"
+            "create_btn": "✅ Create Chat Room",
+            "tip": "If you write a specific room title, more people can join!"
         },
         "ja": {
             "title": "📌 チャットルーム作成",
+            "subtitle": "新しいチャットルームの設定",
             "room_title_label": "ルームタイトルを入力",
             "room_title_hint": "例: 外国人に道案内する部屋",
             "your_lang": "🇯🇵 日本語 (自動検出)",
@@ -48,10 +53,12 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             "target_lang_hint": "例: 英語、韓国語、中国語など",
             "purpose_label": "チャットの目的（任意）",
             "purpose_options": ["道案内", "食事のおすすめ", "観光案内", "フリートーク", "緊急支援"],
-            "create_btn": "✅ チャットルーム作成"
+            "create_btn": "✅ チャットルーム作成",
+            "tip": "具体的なルームタイトルを書くと、より多くの人が参加しやすくなります！"
         },
         "zh": {
             "title": "📌 创建聊天室",
+            "subtitle": "新建聊天室设置",
             "room_title_label": "输入房间标题",
             "room_title_hint": "例如：帮助外国人找路的房间",
             "your_lang": "🇨🇳 中文（自动检测）",
@@ -59,10 +66,12 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             "target_lang_hint": "例如：英语、日语、韩语等",
             "purpose_label": "聊天目的（可选）",
             "purpose_options": ["导航", "美食推荐", "旅游信息", "自由聊天", "紧急求助"],
-            "create_btn": "✅ 创建聊天室"
+            "create_btn": "✅ 创建聊天室",
+            "tip": "写一个具体的房间标题会有更多人加入哦！"
         },
         "zh-TW": {
             "title": "📌 建立聊天室",
+            "subtitle": "建立新聊天室設定",
             "room_title_label": "輸入房間標題",
             "room_title_hint": "例如：幫助外國人找路的房間",
             "your_lang": "🇹🇼 台灣中文（自動偵測）",
@@ -70,10 +79,12 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             "target_lang_hint": "例如：英文、日文、韓文等",
             "purpose_label": "聊天目的（可選）",
             "purpose_options": ["導航", "美食推薦", "旅遊資訊", "自由聊天", "緊急求助"],
-            "create_btn": "✅ 建立聊天室"
+            "create_btn": "✅ 建立聊天室",
+            "tip": "寫下具體的房間標題，會有更多人參加喔！"
         },
         "id": {
             "title": "📌 Buat Ruang Obrolan",
+            "subtitle": "Pengaturan ruang obrolan baru",
             "room_title_label": "Masukkan Judul Ruangan",
             "room_title_hint": "misal: Ruang untuk membantu orang asing menemukan jalan",
             "your_lang": "🇮🇩 Bahasa Indonesia (terdeteksi otomatis)",
@@ -81,10 +92,12 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             "target_lang_hint": "misal: Inggris, Jepang, Korea, dll",
             "purpose_label": "Tujuan Obrolan (opsional)",
             "purpose_options": ["Petunjuk Arah", "Rekomendasi Makanan", "Info Wisata", "Obrolan Bebas", "Bantuan Darurat"],
-            "create_btn": "✅ Buat Ruang Obrolan"
+            "create_btn": "✅ Buat Ruang Obrolan",
+            "tip": "Jika Anda menulis judul ruang yang spesifik, lebih banyak orang dapat bergabung!"
         },
         "fr": {
             "title": "📌 Créer une salle de chat",
+            "subtitle": "Configurer une nouvelle salle de chat",
             "room_title_label": "Entrez le titre de la salle",
             "room_title_hint": "ex : Salle pour aider les étrangers",
             "your_lang": "🇫🇷 Français (auto-détecté)",
@@ -92,10 +105,12 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             "target_lang_hint": "ex : Anglais, Japonais, Chinois",
             "purpose_label": "But du chat (optionnel)",
             "purpose_options": ["Itinéraire", "Recommandation de nourriture", "Info touristique", "Discussion libre", "Aide d'urgence"],
-            "create_btn": "✅ Créer la salle"
+            "create_btn": "✅ Créer la salle",
+            "tip": "Si vous écrivez un titre de salle précis, plus de personnes pourront rejoindre !"
         },
         "de": {
             "title": "📌 Chatraum erstellen",
+            "subtitle": "Neuen Chatraum einrichten",
             "room_title_label": "Raumtitel eingeben",
             "room_title_hint": "z.B. Raum zur Wegbeschreibung für Ausländer",
             "your_lang": "🇩🇪 Deutsch (automatisch erkannt)",
@@ -103,10 +118,12 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             "target_lang_hint": "z.B. Englisch, Japanisch, Chinesisch",
             "purpose_label": "Chat-Zweck (optional)",
             "purpose_options": ["Wegbeschreibung", "Essensempfehlung", "Touristeninfo", "Freies Gespräch", "Notfallhilfe"],
-            "create_btn": "✅ Chatraum erstellen"
+            "create_btn": "✅ Chatraum erstellen",
+            "tip": "Wenn Sie einen konkreten Raumnamen angeben, können mehr Leute teilnehmen!"
         },
         "th": {
             "title": "📌 สร้างห้องแชท",
+            "subtitle": "ตั้งค่าห้องแชทใหม่",
             "room_title_label": "กรอกชื่อห้อง",
             "room_title_hint": "เช่น ห้องช่วยเหลือชาวต่างชาติ",
             "your_lang": "🇹🇭 ไทย (ตรวจจับอัตโนมัติ)",
@@ -114,10 +131,12 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             "target_lang_hint": "เช่น อังกฤษ ญี่ปุ่น จีน",
             "purpose_label": "วัตถุประสงค์ของแชท (ไม่บังคับ)",
             "purpose_options": ["นำทาง", "แนะนำอาหาร", "ข้อมูลท่องเที่ยว", "พูดคุยทั่วไป", "ขอความช่วยเหลือฉุกเฉิน"],
-            "create_btn": "✅ สร้างห้องแชท"
+            "create_btn": "✅ สร้างห้องแชท",
+            "tip": "หากตั้งชื่อห้องให้เฉพาะเจาะจง จะมีคนเข้าร่วมมากขึ้น!"
         },
         "vi": {
             "title": "📌 Tạo phòng trò chuyện",
+            "subtitle": "Cài đặt phòng trò chuyện mới",
             "room_title_label": "Nhập tên phòng",
             "room_title_hint": "VD: Phòng hướng dẫn cho người nước ngoài",
             "your_lang": "🇻🇳 Tiếng Việt (tự động phát hiện)",
@@ -125,7 +144,8 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             "target_lang_hint": "VD: Tiếng Anh, Tiếng Nhật, Tiếng Trung",
             "purpose_label": "Mục đích trò chuyện (tùy chọn)",
             "purpose_options": ["Chỉ đường", "Gợi ý món ăn", "Thông tin du lịch", "Trò chuyện tự do", "Yêu cầu khẩn cấp"],
-            "create_btn": "✅ Tạo phòng"
+            "create_btn": "✅ Tạo phòng",
+            "tip": "Nếu bạn đặt tên phòng cụ thể, sẽ có nhiều người tham gia hơn!"
         }
     }
     t = texts.get(lang, texts["en"])
@@ -197,7 +217,7 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             # 중앙 카드 (설정 폼)
             ft.Container(
                 content=ft.Column([
-                    ft.Text("새로운 채팅방 설정", size=subtitle_size, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87, text_align="center"),
+                    ft.Text(t["subtitle"], size=subtitle_size, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87, text_align="center"),
                     ft.Container(
                         content=ft.Text(t["room_title_label"], size=label_size, weight=ft.FontWeight.W_500),
                         margin=ft.margin.only(top=16 if is_mobile else 20)
@@ -224,7 +244,7 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
                     ft.Container(
                         content=ft.Row([
                             ft.Icon(name=ft.Icons.LIGHTBULB_OUTLINE, color="#F59E42", size=16 if is_mobile else 18),
-                            ft.Text("구체적인 방 제목을 작성하면 더 많은 사람들이 참여할 수 있어요!", size=11 if is_mobile else 12, color="#64748B"),
+                            ft.Text(t["tip"], size=11 if is_mobile else 12, color="#64748B"),
                         ], spacing=4 if is_mobile else 6, vertical_alignment=ft.CrossAxisAlignment.CENTER),
                         bgcolor="#F1F5FF",
                         border_radius=6 if is_mobile else 8,

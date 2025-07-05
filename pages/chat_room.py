@@ -348,7 +348,7 @@ def translate_message(text, target_lang):
             model=MODEL_NAME,
             messages=[
                 {"role": "system", "content": "You are a helpful translator."},
-                {"role": "user", "content": f"다음 문장을 {target_lang_name}로 번역해줘:\n{text}"}
+                {"role": "user", "content": f"다음 문장을 {target_lang_name}로 번역만 해줘. 설명 없이 번역 결과만 출력:\n{text}"}
             ],
             max_tokens=1000,
             temperature=0.2,
@@ -405,6 +405,159 @@ def transcribe_from_mic(input_box: ft.TextField, page: ft.Page, mic_button: ft.I
             os.remove(filename)
         page.update()
 
+# 자주 깨지는 특수문자 자동 치환 함수
+def safe_text(text):
+    if not text:
+        return text
+    t = text
+    # 마침표/쉼표 유사문자까지 모두 치환
+    t = t.replace('·', '•')
+    t = t.replace('。', '.')
+    t = t.replace('．', '.')
+    t = t.replace('｡', '.')
+    t = t.replace('﹒', '.')
+    t = t.replace('､', ',')
+    t = t.replace('，', ',')
+    t = t.replace('﹐', ',')
+    t = t.replace('﹑', ',')
+    t = t.replace('、', ',')
+    t = t.replace('.', '.')
+    t = t.replace(',', ',')
+    # ... 이하 기존 특수문자 치환 ...
+    t = t.replace('※', '*')
+    t = t.replace('◆', '-')
+    t = t.replace('■', '-')
+    t = t.replace('●', '•')
+    t = t.replace('◎', '○')
+    t = t.replace('★', '*')
+    t = t.replace('☆', '*')
+    t = t.replace('▶', '>')
+    t = t.replace('▷', '>')
+    t = t.replace('◀', '<')
+    t = t.replace('◁', '<')
+    t = t.replace('→', '→')
+    t = t.replace('←', '←')
+    t = t.replace('↑', '↑')
+    t = t.replace('↓', '↓')
+    t = t.replace('∼', '~')
+    t = t.replace('∑', 'Σ')
+    t = t.replace('∏', 'Π')
+    t = t.replace('∫', '∫')
+    t = t.replace('√', '√')
+    t = t.replace('∂', '∂')
+    t = t.replace('∞', '∞')
+    t = t.replace('≒', '≈')
+    t = t.replace('≠', '≠')
+    t = t.replace('≡', '=')
+    t = t.replace('≪', '<<')
+    t = t.replace('≫', '>>')
+    t = t.replace('∵', 'because')
+    t = t.replace('∴', 'therefore')
+    t = t.replace('∇', '∇')
+    t = t.replace('∈', '∈')
+    t = t.replace('∋', '∋')
+    t = t.replace('⊂', '⊂')
+    t = t.replace('⊃', '⊃')
+    t = t.replace('⊆', '⊆')
+    t = t.replace('⊇', '⊇')
+    t = t.replace('⊕', '+')
+    t = t.replace('⊙', '○')
+    t = t.replace('⊥', '⊥')
+    t = t.replace('⌒', '~')
+    t = t.replace('∠', '∠')
+    t = t.replace('∟', '∟')
+    t = t.replace('∩', '∩')
+    t = t.replace('∪', '∪')
+    t = t.replace('∧', '∧')
+    t = t.replace('∨', '∨')
+    t = t.replace('∃', '∃')
+    t = t.replace('∀', '∀')
+    t = t.replace('∅', '∅')
+    t = t.replace('∝', '∝')
+    t = t.replace('∵', 'because')
+    t = t.replace('∴', 'therefore')
+    t = t.replace('‰', '‰')
+    t = t.replace('℉', '°F')
+    t = t.replace('℃', '°C')
+    t = t.replace('㎏', 'kg')
+    t = t.replace('㎏', 'kg')
+    t = t.replace('㎜', 'mm')
+    t = t.replace('㎝', 'cm')
+    t = t.replace('㎞', 'km')
+    t = t.replace('㎖', 'ml')
+    t = t.replace('㎗', 'dl')
+    t = t.replace('㎍', 'μg')
+    t = t.replace('㎚', 'nm')
+    t = t.replace('㎛', 'μm')
+    t = t.replace('㎧', 'm/s')
+    t = t.replace('㎨', 'm/s²')
+    t = t.replace('㎰', 'pH')
+    t = t.replace('㎲', 'μs')
+    t = t.replace('㎳', 'ms')
+    t = t.replace('㎴', 'pF')
+    t = t.replace('㎵', 'nF')
+    t = t.replace('㎶', 'μV')
+    t = t.replace('㎷', 'mV')
+    t = t.replace('㎸', 'kV')
+    t = t.replace('㎹', 'MV')
+    t = t.replace('㎽', 'mW')
+    t = t.replace('㎾', 'kW')
+    t = t.replace('㎿', 'MW')
+    t = t.replace('㏄', 'cc')
+    t = t.replace('㏅', 'cd')
+    t = t.replace('㏈', 'dB')
+    t = t.replace('㏊', 'ha')
+    t = t.replace('㏎', 'kn')
+    t = t.replace('㏏', 'kt')
+    t = t.replace('㏐', 'lm')
+    t = t.replace('㏑', 'ln')
+    t = t.replace('㏒', 'log')
+    t = t.replace('㏓', 'lb')
+    t = t.replace('㏔', 'p.m.')
+    t = t.replace('㏕', 'rpm')
+    t = t.replace('㏖', 'MBq')
+    t = t.replace('㏗', 'pH')
+    t = t.replace('㏘', 'sr')
+    t = t.replace('㏙', 'Sv')
+    t = t.replace('㏚', 'Wb')
+    t = t.replace('㏛', 'rad')
+    t = t.replace('㏜', 'Gy')
+    t = t.replace('㏝', 'Pa')
+    t = t.replace('㏞', 'ppm')
+    t = t.replace('㏟', 'ppb')
+    t = t.replace('㏠', 'ps')
+    t = t.replace('㏡', 'a')
+    t = t.replace('㏢', 'bar')
+    t = t.replace('㏣', 'G')
+    t = t.replace('㏤', 'Gal')
+    t = t.replace('㏥', 'Bq')
+    t = t.replace('㏦', 'C')
+    t = t.replace('㏧', 'F')
+    t = t.replace('㏨', 'H')
+    t = t.replace('㏩', 'Hz')
+    t = t.replace('㏪', 'J')
+    t = t.replace('㏫', 'K')
+    t = t.replace('㏬', 'L')
+    t = t.replace('㏭', 'mol')
+    t = t.replace('㏮', 'N')
+    t = t.replace('㏯', 'Oe')
+    t = t.replace('㏰', 'P')
+    t = t.replace('㏱', 'Pa')
+    t = t.replace('㏲', 'rad')
+    t = t.replace('㏳', 'S')
+    t = t.replace('㏴', 'St')
+    t = t.replace('㏵', 'T')
+    t = t.replace('㏶', 'V')
+    t = t.replace('㏷', 'W')
+    t = t.replace('㏸', 'Ω')
+    t = t.replace('㏹', 'Å')
+    t = t.replace('㏺', '㎖')
+    t = t.replace('㏻', '㎗')
+    t = t.replace('㏼', '㎍')
+    t = t.replace('㏽', '㎚')
+    t = t.replace('㏾', '㎛')
+    return t
+
 def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None, on_share=None, custom_translate_message=None, firebase_available=True):
     # 화면 크기에 따른 반응형 설정
     is_mobile = page.width < 600
@@ -420,7 +573,11 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
     header_padding = 12 if is_mobile else 16
     
     # --- 상태 및 컨트롤 초기화 ---
-    chat_messages = Column(auto_scroll=True, spacing=10 if is_mobile else 15, expand=True)
+    chat_messages = ft.Column(
+        auto_scroll=True,
+        spacing=10 if is_mobile else 15,
+        expand=True,
+    )
     current_target_lang = [target_lang]
     is_korean = user_lang == "ko"
     # RAG 채팅방인지 확인
@@ -483,119 +640,97 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
     ) if not is_rag_room else None
 
     def create_message_bubble(msg_data, is_me):
-        """메시지 말풍선을 생성하는 함수"""
-        message_column = ft.Column(
-            [
-                ft.Text(msg_data.get('nickname', '익명'), size=nickname_size, color=ft.Colors.GREY_700, selectable=True),  # 닉네임 표시
-                ft.Text(msg_data['text'], color=ft.Colors.WHITE if is_me else ft.Colors.BLACK, size=message_size, selectable=True),
+        # 닉네임이 '익명'이고 본문/번역문이 모두 비어있으면 말풍선 생성하지 않음
+        if msg_data.get('nickname', '') == '익명' and not msg_data.get('text', '').strip() and not msg_data.get('translated', '').strip():
+            return None
+        bubble_width = int(page.width * 0.5) if is_mobile else 400
+        base_size = 16 if is_mobile else 18  # 기존보다 2pt 크게
+        is_rag = msg_data.get('nickname', '') == 'RAG'
+        font_family = "Noto Sans KR, Malgun Gothic, Arial, Apple SD Gothic Neo, sans-serif" if is_rag else None
+        # RAG 답변 특수문자 치환
+        if is_rag:
+            msg_data['text'] = safe_text(msg_data['text'])
+            msg_data['translated'] = safe_text(msg_data.get('translated', ''))
+        # 질문예시(가이드 메시지)라면 글자 크기 한 단계 키움
+        nickname = msg_data.get('nickname', '')
+        is_guide = is_rag and msg_data.get('is_guide', False)
+        nickname_color = ft.Colors.WHITE if is_me else ft.Colors.BLACK87
+        controls = [
+            ft.Text(
+                nickname,
+                size=(base_size - 2) + (2 if is_guide else 0),
+                color=nickname_color,
+                italic=True,
+                font_family=font_family,
+                selectable=True,
+            ),
+            ft.Text(
+                msg_data.get('text', ''),
+                size=base_size + (2 if is_guide else 0),
+                color=ft.Colors.WHITE if is_me else ft.Colors.BLACK87,
+                font_family=font_family,
+                selectable=True,
+            ),
+        ]
+        if msg_data.get('translated', ''):
+            controls.append(
                 ft.Text(
-                    f"({msg_data['translated']})" if msg_data.get('translated') else "",
-                    color=ft.Colors.WHITE70 if is_me else ft.Colors.GREY_700,
-                    size=translated_size,
+                    msg_data.get('translated', ''),
+                    size=(base_size - 2) + (2 if is_guide else 0),
+                    color=ft.Colors.WHITE if is_me else ft.Colors.BLACK87,
                     italic=True,
+                    font_family=font_family,
                     selectable=True,
                 )
-            ],
-            spacing=3 if is_mobile else 4,
-        )
-
-        bubble = ft.Container(
-            content=message_column,
-            padding=bubble_padding,
-            border_radius=15 if is_mobile else 18,
-            bgcolor=ft.Colors.BLUE_500 if is_me else ft.Colors.GREY_300,  # 본인: 파란색, 상대: 회색
-            margin=ft.margin.only(top=3 if is_mobile else 5, bottom=3 if is_mobile else 5, left=3 if is_mobile else 5, right=3 if is_mobile else 5),
-            alignment=ft.alignment.center_right if is_me else ft.alignment.center_left,  # 본인: 오른쪽, 상대: 왼쪽
-            width=page.width * 0.75 if is_mobile else None,  # 모바일에서 최대 너비 제한
-        )
-
-        # 내가 보낸 메시지는 오른쪽, 상대 메시지는 왼쪽에 정렬
-        return ft.Row(
-            controls=[bubble],
-            alignment=ft.MainAxisAlignment.END if is_me else ft.MainAxisAlignment.START,  # 본인: 오른쪽, 상대: 왼쪽
-        )
+            )
+        # Row로 감싸서 좌/우 정렬
+        return ft.Row([
+            ft.Container(
+                content=ft.Column(controls, spacing=2),
+                padding=12,
+                bgcolor="#2563EB" if is_me else ft.Colors.GREY_200,
+                border_radius=16,
+                margin=ft.margin.only(top=6, left=8, right=8),
+                width=bubble_width,
+                alignment=ft.alignment.top_right if is_me else ft.alignment.top_left,
+            )
+        ], alignment=ft.MainAxisAlignment.END if is_me else ft.MainAxisAlignment.START)
 
     # --- Firebase 리스너 콜백 ---
     def on_message(event):
-        
-        # RAG 채팅방인 경우 안내 메시지 표시
-        if is_rag_room and len(chat_messages.controls) == 0:
-            guide_texts = RAG_GUIDE_TEXTS.get(user_lang, RAG_GUIDE_TEXTS["ko"])
-            
-            # 안내 메시지 생성
-            def get_rag_guide_message():
-                guide_items = []
-                for item in guide_texts["items"]:
-                    guide_items.append(ft.Text(item, size=12 if is_mobile else 14, color=ft.Colors.GREY_700, selectable=True))
-                
-                example_items = []
-                for example in guide_texts["examples"]:
-                    example_items.append(ft.Text(example, size=11 if is_mobile else 12, color=ft.Colors.GREY_600, selectable=True))
-                
-                return ft.Container(
-                    content=ft.Column([
-                        ft.Text(guide_texts["title"], size=16 if is_mobile else 18, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_600, selectable=True),
-                        ft.Container(height=8),
-                        ft.Text(guide_texts["info"], size=13 if is_mobile else 14, color=ft.Colors.GREY_700, selectable=True),
-                        ft.Container(height=8),
-                        *guide_items,
-                        ft.Container(height=12),
-                        ft.Text(guide_texts["example_title"], size=13 if is_mobile else 14, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700, selectable=True),
-                        ft.Container(height=6),
-                        *example_items,
-                        ft.Container(height=12),
-                        ft.Text(guide_texts["input_hint"], size=13 if is_mobile else 14, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_600, text_align=ft.TextAlign.CENTER, selectable=True),
-                    ], spacing=4),
-                    padding=16 if is_mobile else 20,
-                    bgcolor=ft.LinearGradient(["#E3F2FD", "#BBDEFB"], begin=ft.alignment.top_left, end=ft.alignment.bottom_right),
-                    border_radius=12,
-                    margin=ft.margin.only(bottom=16),
-                    border=ft.border.all(1, "#2196F3")
-                )
-            
-            chat_messages.controls.append(get_rag_guide_message())
-            
-            def set_scroll():
-                page.update()
-                time.sleep(0.1)
-                chat_messages.scroll_to(offset=0)
-                page.update()
-            
-            set_scroll()
-            return
-        
-        # 일반 메시지 처리
         if event.data:
             try:
                 data = event.data
                 if isinstance(data, str):
                     import json
                     data = json.loads(data)
-                
-                # 메시지 데이터 추출
                 msg_data = {
                     'text': data.get('text', ''),
                     'nickname': data.get('nickname', '익명'),
-                    'timestamp': data.get('timestamp', ''),
+                    'timestamp': str(data.get('timestamp', '')),
                     'translated': data.get('translated', '')
                 }
-                
+                # 중복 메시지 방지: 최근 5개 메시지의 (nickname, text, timestamp)와 비교
+                def get_msg_id(msg):
+                    return f"{msg['nickname']}|{msg['text']}|{msg['timestamp']}"
+                new_id = get_msg_id(msg_data)
+                for c in chat_messages.controls[-5:]:
+                    if hasattr(c, 'content') and hasattr(c.content, 'controls'):
+                        try:
+                            last_nickname = c.content.controls[0].value
+                            last_text = c.content.controls[1].value
+                            last_timestamp = getattr(c, 'timestamp', None) or ''
+                            last_id = f"{last_nickname}|{last_text}|{last_timestamp}"
+                            if last_id == new_id:
+                                return  # 중복
+                        except Exception:
+                            continue
                 # 메시지 말풍선 생성
                 is_me = msg_data['nickname'] == (page.session.get('nickname') or '')
                 message_bubble = create_message_bubble(msg_data, is_me)
-                
-                # 채팅창에 메시지 추가
+                setattr(message_bubble, 'timestamp', msg_data['timestamp'])
                 chat_messages.controls.append(message_bubble)
-                
-                # 스크롤을 맨 아래로
-                def set_scroll():
-                    page.update()
-                    time.sleep(0.1)
-                    chat_messages.scroll_to(offset=999999)
-                    page.update()
-                
-                set_scroll()
-                
+                page.update()
             except Exception as e:
                 print(f"메시지 처리 오류: {e}")
 
@@ -603,10 +738,8 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
     def send_message(e=None):
         if not input_box.value or not input_box.value.strip():
             return
-        
         message_text = input_box.value.strip()
         nickname = page.session.get('nickname') or '익명'
-        
         # 번역 처리
         translated_text = ""
         if translate_switch and translate_switch.value and current_target_lang[0]:
@@ -614,8 +747,7 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                 translated_text = translate_message(message_text, current_target_lang[0])
             except Exception as e:
                 translated_text = f"[번역 오류: {e}]"
-        
-        # Firebase에 메시지 저장
+        # Firebase에 메시지 저장만 하고, 직접 채팅창에 추가하지 않음
         if firebase_available:
             try:
                 message_data = {
@@ -624,46 +756,28 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                     'timestamp': time.time(),
                     'translated': translated_text
                 }
-                
-                # Firebase에 메시지 저장
                 db.reference(f'rooms/{room_id}/messages').push(message_data)
-                
             except Exception as e:
                 print(f"Firebase 저장 오류: {e}")
-                # Firebase 실패시 로컬에만 표시
-                msg_data = {
-                    'text': message_text,
-                    'nickname': nickname,
+        # RAG 채팅방이면 RAG 답변만 직접 추가
+        if custom_translate_message is not None:
+            try:
+                rag_answer = custom_translate_message(message_text, user_lang)
+                rag_msg_data = {
+                    'text': rag_answer,
+                    'nickname': 'RAG',
                     'timestamp': time.time(),
-                    'translated': translated_text
+                    'translated': ''
                 }
-                message_bubble = create_message_bubble(msg_data, True)
+                message_bubble = create_message_bubble(rag_msg_data, False)
+                setattr(message_bubble, 'timestamp', rag_msg_data['timestamp'])
                 chat_messages.controls.append(message_bubble)
                 page.update()
-        else:
-            # Firebase 없을 때 로컬에만 표시
-            msg_data = {
-                'text': message_text,
-                'nickname': nickname,
-                'timestamp': time.time(),
-                'translated': translated_text
-            }
-            message_bubble = create_message_bubble(msg_data, True)
-            chat_messages.controls.append(message_bubble)
-            page.update()
-        
+            except Exception as e:
+                print(f'RAG 답변 오류: {e}')
         # 입력창 초기화
         input_box.value = ""
         page.update()
-        
-        # 스크롤을 맨 아래로
-        def set_scroll():
-            page.update()
-            time.sleep(0.1)
-            chat_messages.scroll_to(offset=999999)
-            page.update()
-        
-        set_scroll()
 
     # --- 뒤로가기 함수 ---
     def go_back(e):
@@ -679,6 +793,38 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             print(f"Firebase 리스너 설정 오류: {e}")
 
     # --- UI 구성 ---
+    # RAG 채팅방이면 예시/가이드 메시지를 항상 맨 위에 추가 (중복 방지)
+    def get_rag_guide_message():
+        guide_texts = RAG_GUIDE_TEXTS.get(user_lang, RAG_GUIDE_TEXTS["ko"])
+        guide_items = []
+        for item in guide_texts["items"]:
+            guide_items.append(ft.Text(item, size=12 if is_mobile else 14, color=ft.Colors.GREY_700, selectable=True))
+        example_items = []
+        for example in guide_texts["examples"]:
+            example_items.append(ft.Text(example, size=11 if is_mobile else 12, color=ft.Colors.GREY_600, selectable=True))
+        bubble_width = int(page.width * 0.9) if is_mobile else 400
+        return ft.Container(
+            content=ft.Column([
+                ft.Text(guide_texts["title"], size=16 if is_mobile else 18, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_600, selectable=True),
+                ft.Container(height=8),
+                ft.Text(guide_texts["info"], size=13 if is_mobile else 14, color=ft.Colors.GREY_700, selectable=True),
+                ft.Container(height=8),
+                *guide_items,
+                ft.Container(height=12),
+                ft.Text(guide_texts["example_title"], size=13 if is_mobile else 14, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700, selectable=True),
+                ft.Container(height=6),
+                *example_items,
+                ft.Container(height=12),
+                ft.Text(guide_texts["input_hint"], size=13 if is_mobile else 14, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_600, text_align=ft.TextAlign.CENTER, selectable=True),
+            ], spacing=4),
+            padding=16 if is_mobile else 20,
+            bgcolor=ft.LinearGradient(["#E3F2FD", "#BBDEFB"], begin=ft.alignment.top_left, end=ft.alignment.bottom_right),
+            border_radius=12,
+            margin=ft.margin.only(bottom=16),
+            border=ft.border.all(1, "#2196F3"),
+            width=bubble_width,
+        )
+
     # 다국어 '빠른 채팅방' 타이틀 사전
     QUICK_ROOM_TITLES = {
         "ko": "빠른 채팅방",
@@ -739,24 +885,46 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         margin=ft.margin.only(bottom=8)
     ) if translate_switch else ft.Container()
 
+    # chat_column은 다문화 RAG 채팅방에서만 가이드+메시지, 일반 채팅방에서는 메시지 Column만 포함
+    if is_rag_room:
+        chat_column = ft.Column(
+            controls=[get_rag_guide_message(), chat_messages],
+            expand=True,
+            scroll=ft.ScrollMode.ALWAYS,
+        )
+    else:
+        chat_column = ft.Column(
+            controls=[chat_messages],
+            expand=True,
+            scroll=ft.ScrollMode.ALWAYS,
+        )
+    chat_area = ft.Container(
+        content=chat_column,
+        expand=True,
+        padding=8 if is_mobile else 12,
+        bgcolor="#F6F8FC",
+        border_radius=16,
+        margin=ft.margin.only(bottom=8, left=8, right=8, top=8),
+        border=ft.border.all(1, "#E0E7EF"),
+        alignment=ft.alignment.center,
+        width=min(page.width, 900),
+    )
+    # 입력 영역
+    input_area = ft.Container(
+        content=input_row,
+        padding=header_padding,
+        bgcolor=ft.Colors.WHITE,
+        border_radius=16,
+        margin=ft.margin.only(left=8, right=8, bottom=8),
+        shadow=ft.BoxShadow(blur_radius=4, color="#B0BEC544")
+    )
     return ft.View(
         f"/chat/{room_id}",
         controls=[
             header,
-            ft.Container(
-                content=chat_messages,
-                expand=True,
-                padding=8 if is_mobile else 12,
-            ),
+            chat_area,
             switch_row,
-            ft.Container(
-                content=input_row,
-                padding=header_padding,
-                bgcolor=ft.Colors.WHITE,
-                border_radius=8,
-                margin=ft.margin.only(top=8),
-                shadow=ft.BoxShadow(blur_radius=4, color="#B0BEC544")
-            ),
+            input_area,
         ],
         bgcolor=ft.LinearGradient(["#F8FAFC", "#F1F5F9"], begin=ft.alignment.top_left, end=ft.alignment.bottom_right)
     )

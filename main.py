@@ -289,6 +289,70 @@ NICKNAME_TEXTS = {
     },
 }
 
+# QR 코드 공유 다국어 텍스트 사전 추가
+QR_SHARE_TEXTS = {
+    "ko": {
+        "title": "방 '{room}' 공유",
+        "desc": "다른 사용자가 QR코드를 스캔하면 이 방으로 바로 참여할 수 있습니다.",
+        "room_id": "방 ID: {id}",
+        "close": "닫기"
+    },
+    "en": {
+        "title": "Share room '{room}'",
+        "desc": "Other users can join this room by scanning the QR code.",
+        "room_id": "Room ID: {id}",
+        "close": "Close"
+    },
+    "ja": {
+        "title": "ルーム『{room}』を共有",
+        "desc": "他のユーザーがQRコードをスキャンするとこのルームに参加できます。",
+        "room_id": "ルームID: {id}",
+        "close": "閉じる"
+    },
+    "zh": {
+        "title": "分享房间'{room}'",
+        "desc": "其他用户扫描二维码即可加入此房间。",
+        "room_id": "房间ID: {id}",
+        "close": "关闭"
+    },
+    "zh-TW": {
+        "title": "分享房間「{room}」",
+        "desc": "其他用戶掃描 QR 碼即可加入此房間。",
+        "room_id": "房間ID: {id}",
+        "close": "關閉"
+    },
+    "id": {
+        "title": "Bagikan ruang '{room}'",
+        "desc": "Pengguna lain dapat bergabung dengan memindai kode QR ini.",
+        "room_id": "ID Ruang: {id}",
+        "close": "Tutup"
+    },
+    "fr": {
+        "title": "Partager la salle '{room}'",
+        "desc": "D'autres utilisateurs peuvent rejoindre cette salle en scannant le QR code.",
+        "room_id": "ID de la salle : {id}",
+        "close": "Fermer"
+    },
+    "de": {
+        "title": "Raum '{room}' teilen",
+        "desc": "Andere Nutzer können diesem Raum per QR-Code beitreten.",
+        "room_id": "Raum-ID: {id}",
+        "close": "Schließen"
+    },
+    "th": {
+        "title": "แชร์ห้อง '{room}'",
+        "desc": "ผู้ใช้อื่นสามารถเข้าร่วมห้องนี้ได้โดยสแกน QR โค้ด",
+        "room_id": "รหัสห้อง: {id}",
+        "close": "ปิด"
+    },
+    "vi": {
+        "title": "Chia sẻ phòng '{room}'",
+        "desc": "Người khác có thể tham gia phòng này bằng cách quét mã QR.",
+        "room_id": "ID phòng: {id}",
+        "close": "Đóng"
+    }
+}
+
 def main(page: ft.Page):
     # 구글 폰트 링크 및 CSS 추가 (웹 환경에서 특수문자 깨짐 방지)
     page.html = """
@@ -304,35 +368,39 @@ def main(page: ft.Page):
     lang = "ko"
     country = None
     
+    # 웹폰트 적용 (Noto Sans KR, Noto Emoji)
+    page.fonts = {
+        "NotoSansKR": "https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap",
+        "NotoEmoji": "https://fonts.googleapis.com/css2?family=Noto+Emoji&display=swap"
+    }
+    page.theme = ft.Theme(font_family="NotoSansKR")
+    
     # --- QR 코드 관련 함수 (Container를 직접 오버레이) ---
     def show_qr_dialog(room_id, room_title):
         print(f"--- DEBUG: QR 코드 다이얼로그 생성 (Container 방식) ---")
-        
+        # 다국어 텍스트 적용
+        texts = QR_SHARE_TEXTS.get(lang, QR_SHARE_TEXTS["ko"])
         def close_dialog(e):
             if page.overlay:
                 page.overlay.pop()
                 page.update()
-
         # QR코드에 전체 URL이 들어가도록 수정
         qr_data = f"{BASE_URL}/join_room/{room_id}"
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
         qr.add_data(qr_data)
         qr.make(fit=True)
         img = qr.make_image(fill='black', back_color='white')
-        
         buffer = io.BytesIO()
         img.save(buffer, format="PNG")
         img_str = base64.b64encode(buffer.getvalue()).decode("utf-8")
         qr_code_image = ft.Image(src_base64=img_str, width=250, height=250)
-
-        # AlertDialog 대신, 성공했던 Container를 직접 꾸며서 사용합니다.
         popup_content = ft.Container(
             content=ft.Column([
-                ft.Text(f"방 '{room_title}' 공유", size=20, weight=ft.FontWeight.BOLD),
-                ft.Text("다른 사용자가 QR코드를 스캔하면 이 방으로 바로 참여할 수 있습니다."),
+                ft.Text(texts["title"].format(room=room_title), size=20, weight=ft.FontWeight.BOLD),
+                ft.Text(texts["desc"], text_align="center"),
                 qr_code_image,
-                ft.Text(f"방 ID: {room_id}"),
-                ft.ElevatedButton("닫기", on_click=close_dialog, width=300)
+                ft.Text(texts["room_id"].format(id=room_id)),
+                ft.ElevatedButton(texts["close"], on_click=close_dialog, width=300)
             ], tight=True, spacing=15, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
             width=350,
             padding=30,
@@ -340,8 +408,6 @@ def main(page: ft.Page):
             border_radius=20,
             shadow=ft.BoxShadow(blur_radius=20, color=ft.Colors.BLACK26)
         )
-
-        # 화면 중앙에 팝업을 띄웁니다.
         page.overlay.append(
             ft.Container(
                 content=popup_content,
@@ -757,7 +823,7 @@ def main(page: ft.Page):
                                 ft.Text(texts["desc"], size=14, color=ft.Colors.GREY_600, text_align="center"),
                                 ft.Container(height=8),
                                 ft.Text(texts["label"], size=14, weight=ft.FontWeight.W_500),
-                                nickname_field,
+                        nickname_field,
                                 ft.Row([
                                     char_count
                                 ], alignment=ft.MainAxisAlignment.END),
