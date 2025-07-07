@@ -70,7 +70,7 @@ def ForeignCountrySelectPage(page, on_select, on_back=None):
                             margin=ft.margin.only(right=12 if is_mobile else 16)
                         ),
                         ft.Column([
-                            ft.Text("Please select your language", size=title_size, weight=ft.FontWeight.BOLD),
+                            ft.Text("select your language", size=title_size, weight=ft.FontWeight.BOLD),
                         ], spacing=4)
                     ], alignment=ft.MainAxisAlignment.START),
                 ),

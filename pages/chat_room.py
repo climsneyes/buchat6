@@ -182,22 +182,22 @@ RAG_GUIDE_TEXTS = {
         "example_title": "問題範例:",
         "examples": [
             "• 我要去哪裡辦理外國人登記？",
-            "• 我需要在韓國停留更久，該怎麼辦？",
+            "• 我需要在韓國停留更久，該怎麽辦？",
             "• 外國人如何使用手機？",
-            "• 什麼是全租房？",
-            "• 什麼是房地產仲介？",
+            "• 什麽是全租房？",
+            "• 什麽是房地產仲介？",
             "• 我該如何寫房屋合約？",
-            "• 取得韓國駕照的流程是什麼？",
+            "• 取得韓國駕照的流程是什麽？",
             "• 我在哪裡買垃圾袋？",
             "• 我該如何丟垃圾？",
-            "• 我生病了該怎麼辦？",
-            "• 去醫院需要的健康保險卡是什麼？",
-            "• 韓醫院和一般醫院有什麼不同？",
-            "• 如果沒有處方怎麼辦？",
+            "• 我生病了該怎麽辦？",
+            "• 去醫院需要的健康保險卡是什麽？",
+            "• 韓醫院和一般醫院有什麽不同？",
+            "• 如果沒有處方怎麽辦？",
             "• 我該如何開銀行帳戶？",
             "• 我該如何寄東西到國外？",
             "• 24小時客服電話是多少？",
-            "• 緊急電話號碼是什麼？",
+            "• 緊急電話號碼是什麽？",
             "• 我該如何學韓文？"
         ],
         "input_hint": "請在下方輸入您的問題！💬"
@@ -339,6 +339,270 @@ RAG_GUIDE_TEXTS = {
             "• ฉันจะใช้ระบบขนส่งสาธารณะของเกาหลีได้อย่างไร?"
         ],
         "input_hint": "พิมพ์คำถามของคุณด้านล่าง! 💬"
+    },
+    "uz": {
+        "title": "Чет эл ишчилари ҳуқуқларини ҳимоя қилиш бўйича йўриқнома",
+        "info": "Қуйидаги ҳуқуқ ҳимояси мавзулари ҳақида савол бера оласиз:",
+        "items": [
+            "💰 Иш ҳақининг қолдирилиши ва тўланиши",
+            "🚫 Нодўст ундатиш ва ундатиш огоҳлантириши",
+            "🏥 Иш ҳалокати ва иш билан боглиқ жароҳатлар",
+            "🚨 Иш жойидаги жинсий таъқиб ва жинсий зўравонлик",
+            "📞 Чет элликлар учун алоҳида суғурта ва маслаҳат",
+            "📱 Шошилинч алока ва маслаҳат агентликлари",
+            "⚖️ Меҳнат қонунлари ва ҳуқуқ ҳимояси жараёни"
+        ],
+        "example_title": "Савол мисоллари:",
+        "examples": [
+            "• Менинг иш ҳақим қолдирилган",
+            "• Мен нодўст ундатилдим",
+            "• Мен ишда жароҳатландим",
+            "• Мен иш жойида жинсий таъқибга дуч келдим",
+            "• Мен жинсий зўравонлик ёки таъқибга дуч келдим",
+            "• Чет элликлар учун қандай суғурта мавжуд?",
+            "• Кореяда қайси телефон рақамларини билишим керак?"
+        ],
+        "input_hint": "Қуйидаги ҳуқуқ ҳимояси саволингизни киритинг! 💬"
+    },
+    "ne": {
+        "title": "विदेशी श्रमिक अधिकार संरक्षण गाइड",
+        "info": "तपाईं निम्न अधिकार संरक्षण विषयहरूको बारेमा सोध्न सक्नुहुन्छ:",
+        "items": [
+            "💰 तलब रोक्ने र भुक्तानी",
+            "🚫 अन्यायपूर्ण बर्खास्त र बर्खास्त सूचना",
+            "🏥 औद्योगिक दुर्घटना र काम सम्बन्धित चोट",
+            "🚨 कार्यस्थलमा यौन उत्पीडन र यौन हमला",
+            "📞 विदेशीहरूको लागि विशेष बीमा र परामर्श",
+            "📱 आकस्मिक सम्पर्क र परामर्श एजेन्सीहरू",
+            "⚖️ श्रम कानून र अधिकार संरक्षण प्रक्रिया"
+        ],
+        "example_title": "प्रश्नहरूको उदाहरण:",
+        "examples": [
+            "• मेरो तलब रोकिएको छ",
+            "• म अन्यायपूर्ण रूपमा बर्खास्त भएको थिएँ",
+            "• म काममा चोट पुगेको थिएँ",
+            "• म कार्यस्थलमा यौन उत्पीडनको अनुभव गरेको थिएँ",
+            "• म यौन हमला वा उत्पीडनको शिकार भएको थिएँ",
+            "• विदेशीहरूको लागि कुन बीमा उपलब्ध छ?",
+            "• कोरियामा कुन फोन नम्बरहरू थाहा पाउनु पर्छ?"
+        ],
+        "input_hint": "तल आफ्नो अधिकार संरक्षण प्रश्न लेख्नुहोस्! 💬"
+    },
+    "tet": {
+        "title": "Gia ba Knaar Direitu Trabalhadór Estranjeiru",
+        "info": "Ita bele husu kona-ba topiku protesaun direitu sira ne'e:",
+        "items": [
+            "💰 Saláriu atrasu no pagamentu saláriu",
+            "🚫 Despedida injusta no avizu despedida",
+            "🏥 Asidente trabálhu no lesaun relasiona ho servisu",
+            "🚨 Asédiu seksuál no atake seksuál iha fatin servisu",
+            "📞 Seguru no konsellu espesiál ba estranjeiru",
+            "📱 Kontaktu emergénsia no ajénsia konsellu",
+            "⚖️ Lei trabálhu no prosedimentu protesaun direitu"
+        ],
+        "example_title": "Ezemplu pergunta sira:",
+        "examples": [
+            "• Ha'u-nia saláriu hetan atrasu",
+            "• Ha'u hetan despedida injusta",
+            "• Ha'u hetan lesaun iha servisu",
+            "• Ha'u esperiénsia asédiu seksuál iha fatin servisu",
+            "• Ha'u hetan atake ka asédiu seksuál",
+            "• Seguru saida mak disponível ba estranjeiru?",
+            "• Numeru telefone saida mak ha'u tenke hatene iha Korea?"
+        ],
+        "input_hint": "Hakerek ita-nia pergunta protesaun direitu iha okos! 💬"
+    },
+    "lo": {
+        "title": "ຄູ່ມືການປົກປ້ອງສິດຂອງຄົນງານຕ່າງປະເທດ",
+        "info": "ທ່ານສາມາດຖາມກ່ຽວກັບຫົວຂໍ້ການປົກປ້ອງສິດດັ່ງນີ້:",
+        "items": [
+            "💰 ຄ່າແຮງງານຄ້າງຊຳແລະການຈ່າຍຄ່າແຮງງານ",
+            "🚫 ການໄລ່ອອກທີ່ບໍ່ຍຸດຕິທຳແລະການແຈ້ງໄລ່ອອກ",
+            "🏥 ອຸປະຕິເຫດທາງອຸດສາຫະກຳແລະການບາດເຈັບທີ່ກ່ຽວຂ້ອງກັບການເຮັດວຽກ",
+            "🚨 ການລະເມີດທາງເພດແລະການຮຸກຮານທາງເພດໃນສະຖານທີ່ເຮັດວຽກ",
+            "📞 ການປະກັນໄພແລະການໃຫ້ຄຳປຶກສາສຳລັບຄົນຕ່າງປະເທດ",
+            "📱 ການຕິດຕໍ່ສຸກເສີນແລະອົງກອນໃຫ້ຄຳປຶກສາ",
+            "⚖️ ກົດໝາຍແຮງງານແລະຂັ້ນຕອນການປົກປ້ອງສິດ"
+        ],
+        "example_title": "ຕົວຢ່າງຄຳຖາມ:",
+        "examples": [
+            "• ຄ່າແຮງງານຂອງຂ້ອຍຖືກຄ້າງຊຳ",
+            "• ຂ້ອຍຖືກໄລ່ອອກຢ່າງບໍ່ຍຸດຕິທຳ",
+            "• ຂ້ອຍບາດເຈັບໃນຂະນະເຮັດວຽກ",
+            "• ຂ້ອຍປະສົບກັບການລະເມີດທາງເພດໃນສະຖານທີ່ເຮັດວຽກ",
+            "• ຂ້ອຍປະສົບກັບການຮຸກຮານຫຼືການລະເມີດທາງເພດ",
+            "• ການປະກັນໄພໃດທີ່ມີສຳລັບຄົນຕ່າງປະເທດ?",
+            "• ເບີໂທລະສັບໃດທີ່ຂ້ອຍຄວນຮູ້ໃນເກົາຫຼີ?"
+        ],
+        "input_hint": "ຂຽນຄຳຖາມການປົກປ້ອງສິດຂອງທ່ານຂ້າງລຸ່ມ! 💬"
+    },
+    "mn": {
+        "title": "Гадаад хөдөлмөрчдийн эрхийн хамгаалалтын заавар",
+        "info": "Та дараах эрхийн хамгаалалтын сэдвүүдийн талаар асуулт тавьж болно:",
+        "items": [
+            "💰 Цалингийн хойшлуулалт ба төлбөр",
+            "🚫 Шударга бус халах ба халах мэдэгдэл",
+            "🏥 Аж үйлдвэрийн осол ба ажлын холбоотой гэмтэл",
+            "🚨 Ажлын байран дээрх хүйсийн хавчлага ба хүйсийн халдлага",
+            "📞 Гадаад хүмүүст зориулсан даатгал ба зөвлөгөө",
+            "📱 Яаралтын холбоо ба зөвлөгөөний агентлагууд",
+            "⚖️ Хөдөлмөрийн хууль ба эрхийн хамгаалалтын журам"
+        ],
+        "example_title": "Асуултын жишээ:",
+        "examples": [
+            "• Миний цалин хойшлогдсон",
+            "• Би шударга бус байдлаар халсан",
+            "• Би ажил дээр гэмтсэн",
+            "• Би ажлын байран дээр хүйсийн хавчлагад өртсөн",
+            "• Би хүйсийн халдлага эсвэл хавчлагад өртсөн",
+            "• Гадаад хүмүүст ямар даатгал боломжтой вэ?",
+            "• Солонгос улсад ямар утасны дугаарыг мэдэх ёстой вэ?"
+        ],
+        "input_hint": "Доорх эрхийн хамгаалалтын асуултаа бичнэ үү! 💬"
+    },
+    "my": {
+        "title": "နိုင်ငံခြားလုပ်သားများ အခွင့်အရေး ကာကွယ်ရေး လမ်းညွှန်",
+        "info": "အောက်ပါ အခွင့်အရေး ကာကွယ်ရေး ခေါင်းစဉ်များအကြောင်း မေးခွန်းများ မေးနိုင်ပါသည်:",
+        "items": [
+            "💰 လုပ်ခ ကြွေးကြော်ခြင်းနှင့် လုပ်ခ ပေးချေခြင်း",
+            "🚫 မတရား ထုတ်ပယ်ခြင်းနှင့် ထုတ်ပယ်ခြင်း အကြောင်းကြားချက်",
+            "🏥 စက်မှုလုပ်ငန်း မတော်တဆမှုနှင့် အလုပ်နှင့်ဆိုင်သော ဒဏ်ရာ",
+            "🚨 အလုပ်ခွင်တွင် လိင်ပိုင်းဆိုင်ရာ နှောင့်ယှက်မှုနှင့် လိင်ပိုင်းဆိုင်ရာ စော်ကားမှု",
+            "📞 နိုင်ငံခြားသားများအတွက် အထူး အာမခံနှင့် အကြံပေးခြင်း",
+            "📱 အရေးပေါ် ဆက်သွယ်ရေးနှင့် အကြံပေးခြင်း အေဂျင်စီများ",
+            "⚖️ အလုပ်သမား ဥပဒေများနှင့် အခွင့်အရေး ကာကွယ်ရေး လုပ်ငန်းစဉ်"
+        ],
+        "example_title": "မေးခွန်း ဥပမာများ:",
+        "examples": [
+            "• ကျွန်ုပ်၏ လုပ်ခ ကြွေးကြော်ခံရသည်",
+            "• ကျွန်ုပ် မတရားစွာ ထုတ်ပယ်ခံရသည်",
+            "• ကျွန်ုပ် အလုပ်တွင် ဒဏ်ရာရခဲ့သည်",
+            "• ကျွန်ုပ် အလုပ်ခွင်တွင် လိင်ပိုင်းဆိုင်ရာ နှောင့်ယှက်မှု ကြုံတွေ့ခဲ့သည်",
+            "• ကျွန်ုပ် လိင်ပိုင်းဆိုင်ရာ စော်ကားမှု သို့မဟုတ် နှောင့်ယှက်မှု ခံရသည်",
+            "• နိုင်ငံခြားသားများအတွက် မည်သည့် အာမခံ ရရှိနိုင်သနည်း?",
+            "• ကိုရီးယားတွင် မည်သည့် ဖုန်းနံပါတ်များ သိထားသင့်သနည်း?"
+        ],
+        "input_hint": "အောက်တွင် သင့် အခွင့်အရေး ကာကွယ်ရေး မေးခွန်းကို ရေးပါ! 💬"
+    },
+    "bn": {
+        "title": "বিদেশি শ্রমিক অধিকার সুরক্ষা গাইড",
+        "info": "আপনি নিম্নলিখিত অধিকার সুরক্ষা বিষয়গুলি সম্পর্কে জিজ্ঞাসা করতে পারেন:",
+        "items": [
+            "💰 মজুরি বকেয়া এবং মজুরি প্রদান",
+            "🚫 অন্যায় বরখাস্ত এবং বরখাস্তের নোটিশ",
+            "🏥 শিল্প দুর্ঘটনা এবং কাজ সম্পর্কিত আঘাত",
+            "🚨 কর্মক্ষেত্রে যৌন হয়রানি এবং যৌন নিপীড়ন",
+            "📞 বিদেশিদের জন্য বিশেষ বীমা এবং পরামর্শ",
+            "📱 জরুরি যোগাযোগ এবং পরামর্শ সংস্থা",
+            "⚖️ শ্রম আইন এবং অধিকার সুরক্ষা প্রক্রিয়া"
+        ],
+        "example_title": "প্রশ্নের উদাহরণ:",
+        "examples": [
+            "• আমার মজুরি বকেয়া রয়েছে",
+            "• আমি অন্যায়ভাবে বরখাস্ত হয়েছি",
+            "• আমি কাজে আহত হয়েছি",
+            "• আমি কর্মক্ষেত্রে যৌন হয়রানির শিকার হয়েছি",
+            "• আমি যৌন নিপীড়ন বা হয়রানির শিকার হয়েছি",
+            "• বিদেশিদের জন্য কী ধরনের বীমা পাওয়া যায়?",
+            "• কোরিয়ায় কোন ফোন নম্বরগুলি জানা উচিত?"
+        ],
+        "input_hint": "নীচে আপনার অধিকার সুরক্ষা প্রশ্ন লিখুন! 💬"
+    },
+    "si": {
+        "title": "විදේශීය කම්කරුවන්ගේ අයිතිවාසිකම් ආරක්ෂා කිරීමේ මාර්ගෝපදේශය",
+        "info": "ඔබට පහත අයිතිවාසිකම් ආරක්ෂා කිරීමේ මාතෘකා ගැන ප්‍රශ්න අසන්න පුළුවන්:",
+        "items": [
+            "💰 වැටුප් ණය සහ වැටුප් ගෙවීම",
+            "🚫 අයුතු ඉවත් කිරීම සහ ඉවත් කිරීමේ දැනුම්දීම",
+            "🏥 කර්මාන්ත හානි සහ වැඩ සම්බන්ධ තුවාල",
+            "🚨 වැඩ ස්ථානයේ ලිංගික හානි සහ ලිංගික පහර",
+            "📞 විදේශීයයින් සඳහා විශේෂ රක්ෂණ සහ උපදේශන",
+            "📱 හදිසි සම්බන්ධතා සහ උපදේශන ආයතන",
+            "⚖️ ශ්‍රම නීති සහ අයිතිවාසිකම් ආරක්ෂා කිරීමේ ක්‍රියාවලිය"
+        ],
+        "example_title": "ප්‍රශ්න උදාහරණ:",
+        "examples": [
+            "• මගේ වැටුප් ණය වෙලා තියෙනවා",
+            "• මම අයුතු ලෙස ඉවත් කරනවා",
+            "• මම වැඩේදී තුවාල වෙනවා",
+            "• මම වැඩ ස්ථානයේ ලිංගික හානි අත්විඳිනවා",
+            "• මම ලිංගික පහර හෝ හානි අත්විඳිනවා",
+            "• විදේශීයයින් සඳහා කුමන රක්ෂණ තියෙනවාද?",
+            "• කොරියාවේ කුමන දුරකථන අංක දැනගන්න ඕනෑද?"
+        ],
+        "input_hint": "පහත ඔබේ අයිතිවාසිකම් ආරක්ෂා කිරීමේ ප්‍රශ්නය ලියන්න! 💬"
+    },
+    "km": {
+        "title": "មគ្គុទ្ទេសក៍ការការពារសិទ្ធិរបស់កម្មករជាតិផ្សេង",
+        "info": "អ្នកអាចសួរអំពីប្រធានបទការពារសិទ្ធិដូចខាងក្រោម:",
+        "items": [
+            "💰 ប្រាក់ខែជំពាក់និងការទូទាត់ប្រាក់ខែ",
+            "🚫 ការដកចេញដោយមិនយុត្តិធម៌និងការជូនដំណឹងដកចេញ",
+            "🏥 គ្រោះថ្នាក់ការងារនិងការរបួសដែលពាក់ព័ន្ធនឹងការងារ",
+            "🚨 ការរំលោភផ្លូវភេទនិងការវាយប្រហារផ្លូវភេទនៅកន្លែងធ្វើការ",
+            "📞 ការធានារ៉ាប់រងនិងការណែនាំសម្រាប់ជនជាតិផ្សេង",
+            "📱 ការទាក់ទងអាសន្ននិងអង្គការណែនាំ",
+            "⚖️ ច្បាប់ការងារនិងនីតិវិធីការពារសិទ្ធិ"
+        ],
+        "example_title": "ឧទាហរណ៍សំណួរ:",
+        "examples": [
+            "• ប្រាក់ខែរបស់ខ្ញុំត្រូវបានជំពាក់",
+            "• ខ្ញុំត្រូវបានដកចេញដោយមិនយុត្តិធម៌",
+            "• ខ្ញុំបានរបួសក្នុងពេលធ្វើការ",
+            "• ខ្ញុំបានជួបការរំលោភផ្លូវភេទនៅកន្លែងធ្វើការ",
+            "• ខ្ញុំបានជួបការវាយប្រហារឬរំលោភផ្លូវភេទ",
+            "• ការធានារ៉ាប់រងអ្វីដែលមានសម្រាប់ជនជាតិផ្សេង?",
+            "• លេខទូរស័ព្ទអ្វីដែលខ្ញុំគួរដឹងនៅកូរ៉េ?"
+        ],
+        "input_hint": "សូមសរសេរសំណួរការពារសិទ្ធិរបស់អ្នកខាងក្រោម! 💬"
+    },
+    "ky": {
+        "title": "Чет эл жумушчуларынын укуктарын коргоо боюнча колдонмо",
+        "info": "Төмөнкү укук коргоо темалары жөнүндө суроо беришиңиз мүмкүн:",
+        "items": [
+            "💰 Жумуш акысынын калтырылышы жана төлөнүшү",
+            "🚫 Адилетсиз жумуштан келтирилиши жана келтирилиш жарыясы",
+            "🏥 Өнөр жай кырсыгы жана жумуш менен байланыштуу жаракат",
+            "🚨 Жумуш орундундагы жыныстык зомбулук жана жыныстык кол салуу",
+            "📞 Чет элдиктер үчүн атайын камсыздандыруу жана кеңеш",
+            "📱 Оор кырдаал байланышы жана кеңеш берүү мекемелери",
+            "⚖️ Эмгек мыйзамдары жана укук коргоо процедурасы"
+        ],
+        "example_title": "Суроо мисалдары:",
+        "examples": [
+            "• Менин жумуш акысым калтырылган",
+            "• Мен адилетсиз түрдө жумуштан келтирилдим",
+            "• Мен жумушта жаракат алдым",
+            "• Мен жумуш орундунда жыныстык зомбулукка дуушар болдум",
+            "• Мен жыныстык кол салуу же зомбулукка дуушар болдум",
+            "• Чет элдиктер үчүн кандай камсыздандыруу бар?",
+            "• Кореяда кайсы телефон номерилерин билишим керек?"
+        ],
+        "input_hint": "Төмөнкү укук коргоо сурооңузду жазыңыз! 💬"
+    },
+    "ur": {
+        "title": "غیر ملکی مزدوروں کے حقوق کی حفاظت کی گائیڈ",
+        "info": "آپ مندرجہ ذیل حقوق کی حفاظت کے موضوعات کے بارے میں پوچھ سکتے ہیں:",
+        "items": [
+            "💰 تنخواہ کی بکائی اور ادائیگی",
+            "🚫 ناانصافی برطرفی اور برطرفی کی نوٹس",
+            "🏥 صنعتی حادثات اور کام سے متعلق چوٹ",
+            "🚨 کام کی جگہ پر جنسی ہراسانی اور جنسی حملہ",
+            "📞 غیر ملکیوں کے لیے خصوصی انشورنس اور مشاورت",
+            "📱 ہنگامی رابطے اور مشاورت کی ایجنسیاں",
+            "⚖️ مزدوری کے قوانین اور حقوق کی حفاظت کے طریقہ کار"
+        ],
+        "example_title": "سوالات کی مثالیں:",
+        "examples": [
+            "• میری تنخواہ روک لی گئی ہے",
+            "• مجھے ناانصافی سے برطرف کر دیا گیا",
+            "• مجھے کام کے دوران چوٹ لگی",
+            "• مجھے کام کی جگہ پر جنسی ہراسانی کا سامنا ہوا",
+            "• مجھے جنسی حملہ یا ہراسانی کا سامنا ہوا",
+            "• غیر ملکیوں کے لیے کیا انشورنس دستیاب ہے؟",
+            "• کوریا میں کون سے فون نمبر جاننے چاہئیں؟"
+        ],
+        "input_hint": "ذیل میں اپنا حقوق کی حفاظت کا سوال لکھیں! 💬"
     }
 }
 
@@ -354,6 +618,250 @@ MIC_GUIDE_TEXTS = {
     "fr": "Appuyez sur le bouton micro du clavier pour utiliser la saisie vocale !",
     "de": "Tippen Sie auf die Mikrofontaste Ihrer Tastatur, um die Spracheingabe zu verwenden!",
     "th": "แตะปุ่มไมโครโฟนบนแป้นพิมพ์เพื่อใช้การป้อนด้วยเสียง!"
+}
+
+# 외국인 근로자 권리구제 RAG 가이드 텍스트
+FOREIGN_WORKER_GUIDE_TEXTS = {
+    "ko": {
+        "title": "외국인 근로자 권리구제 안내",
+        "info": "다음과 같은 권리구제 관련 정보를 질문할 수 있습니다:",
+        "items": [
+            "💰 임금 체불 및 임금 지급",
+            "🚫 부당해고 및 해고 예고",
+            "🏥 산업재해 및 업무상 재해",
+            "🚨 직장 내 성희롱 및 성폭력",
+            "📞 외국인 전용 보험 및 상담",
+            "📱 긴급 연락처 및 상담 기관",
+            "⚖️ 노동법 및 권리구제 절차"
+        ],
+        "example_title": "질문 예시:",
+        "examples": [
+            "• 받아야 할 임금이 체불 되었어요",
+            "• 부당하게 해고 되었어요",
+            "• 일을 하다가 다쳤어요",
+            "• 직장 내 성희롱을 당했어요",
+            "• 성폭력이나 성추행을 당했어요",
+            "• 외국인 전용보험은 어떤게 있나요?",
+            "• 한국 체류시 꼭 알아둘 전화번호는요?"
+        ],
+        "input_hint": "권리구제 관련 질문을 입력해보세요! 💬"
+    },
+    "en": {
+        "title": "Foreign Worker Rights Protection Guide",
+        "info": "You can ask about the following rights protection topics:",
+        "items": [
+            "💰 Wage arrears and payment",
+            "🚫 Unfair dismissal and dismissal notice",
+            "🏥 Industrial accidents and work-related injuries",
+            "🚨 Workplace sexual harassment and assault",
+            "📞 Foreigner-only insurance and counseling",
+            "📱 Emergency contacts and counseling agencies",
+            "⚖️ Labor laws and rights protection procedures"
+        ],
+        "example_title": "Example questions:",
+        "examples": [
+            "• My wages have been withheld",
+            "• I was unfairly dismissed",
+            "• I got injured at work",
+            "• I experienced sexual harassment at work",
+            "• I was sexually assaulted or harassed",
+            "• What insurance is available for foreigners?",
+            "• What phone numbers should I know in Korea?"
+        ],
+        "input_hint": "Enter your rights protection question below! 💬"
+    },
+    "vi": {
+        "title": "Hướng dẫn bảo vệ quyền lợi người lao động nước ngoài",
+        "info": "Bạn có thể hỏi về các chủ đề bảo vệ quyền lợi sau:",
+        "items": [
+            "💰 Nợ lương và thanh toán lương",
+            "🚫 Sa thải bất công và thông báo sa thải",
+            "🏥 Tai nạn lao động và thương tích liên quan đến công việc",
+            "🚨 Quấy rối tình dục và tấn công tình dục tại nơi làm việc",
+            "📞 Bảo hiểm và tư vấn dành riêng cho người nước ngoài",
+            "📱 Liên lạc khẩn cấp và cơ quan tư vấn",
+            "⚖️ Luật lao động và thủ tục bảo vệ quyền lợi"
+        ],
+        "example_title": "Ví dụ câu hỏi:",
+        "examples": [
+            "• Lương của tôi bị nợ",
+            "• Tôi bị sa thải bất công",
+            "• Tôi bị thương tại nơi làm việc",
+            "• Tôi bị quấy rối tình dục tại nơi làm việc",
+            "• Tôi bị tấn công hoặc quấy rối tình dục",
+            "• Bảo hiểm nào có sẵn cho người nước ngoài?",
+            "• Số điện thoại nào tôi nên biết ở Hàn Quốc?"
+        ],
+        "input_hint": "Nhập câu hỏi bảo vệ quyền lợi của bạn bên dưới! 💬"
+    },
+    "ja": {
+        "title": "外国人労働者権利保護ガイド",
+        "info": "以下の権利保護に関するトピックについて質問できます:",
+        "items": [
+            "💰 賃金未払いと支払い",
+            "🚫 不当解雇と解雇予告",
+            "🏥 産業災害と業務上の災害",
+            "🚨 職場でのセクハラと性的暴行",
+            "📞 外国人専用保険とカウンセリング",
+            "📱 緊急連絡先と相談機関",
+            "⚖️ 労働法と権利保護手続き"
+        ],
+        "example_title": "質問例:",
+        "examples": [
+            "• 給料が未払いになっています",
+            "• 不当に解雇されました",
+            "• 仕事中に怪我をしました",
+            "• 職場でセクハラを受けました",
+            "• 性的暴行や性的嫌がらせを受けました",
+            "• 外国人専用保険は何がありますか？",
+            "• 韓国滞在中に知っておくべき電話番号は？"
+        ],
+        "input_hint": "権利保護に関する質問を入力してください！💬"
+    },
+    "zh": {
+        "title": "外籍劳工权益保护指南",
+        "info": "您可以询问以下权益保护主题:",
+        "items": [
+            "💰 工资拖欠和支付",
+            "🚫 不当解雇和解雇通知",
+            "🏥 工伤和工作相关伤害",
+            "🚨 职场性骚扰和性侵犯",
+            "📞 外国人专用保险和咨询",
+            "📱 紧急联系方式和咨询机构",
+            "⚖️ 劳动法和权益保护程序"
+        ],
+        "example_title": "问题示例:",
+        "examples": [
+            "• 我的工资被拖欠了",
+            "• 我被不当解雇了",
+            "• 我在工作中受伤了",
+            "• 我在职场遭遇性骚扰",
+            "• 我遭遇性侵犯或性骚扰",
+            "• 外国人有什么保险？",
+            "• 在韩国应该知道哪些电话号码？"
+        ],
+        "input_hint": "请在下方输入您的权益保护问题！💬"
+    },
+    "zh-TW": {
+        "title": "外籍勞工權益保護指南",
+        "info": "您可以詢問以下權益保護主題:",
+        "items": [
+            "💰 工資拖欠和支付",
+            "🚫 不當解僱和解僱通知",
+            "🏥 工傷和工作相關傷害",
+            "🚨 職場性騷擾和性侵犯",
+            "📞 外國人專用保險和諮詢",
+            "📱 緊急聯繫方式和諮詢機構",
+            "⚖️ 勞動法和權益保護程序"
+        ],
+        "example_title": "問題範例:",
+        "examples": [
+            "• 我的工資被拖欠了",
+            "• 我被不當解僱了",
+            "• 我在工作中受傷了",
+            "• 我在職場遭遇性騷擾",
+            "• 我遭遇性侵犯或性騷擾",
+            "• 外國人有什麽保險？",
+            "• 在韓國應該知道哪些電話號碼？"
+        ],
+        "input_hint": "請在下方輸入您的權益保護問題！💬"
+    },
+    "id": {
+        "title": "Panduan Perlindungan Hak Pekerja Asing",
+        "info": "Anda dapat menanyakan topik perlindungan hak berikut:",
+        "items": [
+            "💰 Tunggakan gaji dan pembayaran gaji",
+            "🚫 Pemecatan tidak adil dan pemberitahuan pemecatan",
+            "🏥 Kecelakaan kerja dan cedera terkait pekerjaan",
+            "🚨 Pelecehan seksual dan serangan seksual di tempat kerja",
+            "📞 Asuransi dan konseling khusus warga asing",
+            "📱 Kontak darurat dan lembaga konseling",
+            "⚖️ Undang-undang ketenagakerjaan dan prosedur perlindungan hak"
+        ],
+        "example_title": "Contoh pertanyaan:",
+        "examples": [
+            "• Gaji saya ditahan",
+            "• Saya dipecat secara tidak adil",
+            "• Saya terluka saat bekerja",
+            "• Saya mengalami pelecehan seksual di tempat kerja",
+            "• Saya mengalami serangan atau pelecehan seksual",
+            "• Asuransi apa yang tersedia untuk warga asing?",
+            "• Nomor telepon apa yang harus saya ketahui di Korea?"
+        ],
+        "input_hint": "Masukkan pertanyaan perlindungan hak Anda di bawah ini! 💬"
+    },
+    "th": {
+        "title": "คู่มือการคุ้มครองสิทธิแรงงานต่างชาติ",
+        "info": "คุณสามารถถามเกี่ยวกับหัวข้อการคุ้มครองสิทธิ์ต่อไปนี้:",
+        "items": [
+            "💰 ค้างชำระค่าจ้างและการจ่ายเงินเดือน",
+            "🚫 การเลิกจ้างที่ไม่เป็นธรรมและการแจ้งเลิกจ้าง",
+            "🏥 อุบัติเหตุจากการทำงานและการบาดเจ็บที่เกี่ยวข้องกับงาน",
+            "🚨 การล่วงละเมิดทางเพศและการล่วงละเมิดทางเพศในที่ทำงาน",
+            "📞 ประกันและบริการให้คำปรึกษาสำหรับชาวต่างชาติ",
+            "📱 เบอร์ติดต่อฉุกเฉินและหน่วยงานให้คำปรึกษา",
+            "⚖️ กฎหมายแรงงานและขั้นตอนการคุ้มครองสิทธิ์"
+        ],
+        "example_title": "ตัวอย่างคำถาม:",
+        "examples": [
+            "• เงินเดือนของฉันถูกค้างชำระ",
+            "• ฉันถูกเลิกจ้างอย่างไม่เป็นธรรม",
+            "• ฉันได้รับบาดเจ็บขณะทำงาน",
+            "• ฉันประสบกับการล่วงละเมิดทางเพศในที่ทำงาน",
+            "• ฉันประสบกับการล่วงละเมิดหรือคุกคามทางเพศ",
+            "• ประกันอะไรที่มีสำหรับชาวต่างชาติ?",
+            "• เบอร์โทรศัพท์อะไรที่ฉันควรรู้ในเกาหลี?"
+        ],
+        "input_hint": "ป้อนคำถามการคุ้มครองสิทธิ์ของคุณด้านล่าง! 💬"
+    },
+    "fr": {
+        "title": "Guide de protection des droits des travailleurs étrangers",
+        "info": "Vous pouvez poser des questions sur les sujets de protection des droits suivants:",
+        "items": [
+            "💰 Arriérés de salaire et paiement des salaires",
+            "🚫 Licenciement abusif et préavis de licenciement",
+            "🏥 Accidents du travail et blessures liées au travail",
+            "🚨 Harcèlement sexuel et agression sexuelle sur le lieu de travail",
+            "📞 Assurance et conseil réservés aux étrangers",
+            "📱 Contacts d'urgence et agences de conseil",
+            "⚖️ Lois du travail et procédures de protection des droits"
+        ],
+        "example_title": "Exemples de questions:",
+        "examples": [
+            "• Mon salaire a été retenu",
+            "• J'ai été licencié injustement",
+            "• Je me suis blessé au travail",
+            "• J'ai subi du harcèlement sexuel au travail",
+            "• J'ai subi une agression ou du harcèlement sexuel",
+            "• Quelle assurance est disponible pour les étrangers?",
+            "• Quels numéros de téléphone dois-je connaître en Corée?"
+        ],
+        "input_hint": "Entrez votre question de protection des droits ci-dessous! 💬"
+    },
+    "de": {
+        "title": "Leitfaden zum Schutz der Rechte ausländischer Arbeitnehmer",
+        "info": "Sie können Fragen zu folgenden Themen des Rechtsschutzes stellen:",
+        "items": [
+            "💰 Lohnrückstände und Lohnzahlung",
+            "🚫 Unfaire Kündigung und Kündigungsfrist",
+            "🏥 Arbeitsunfälle und arbeitsbedingte Verletzungen",
+            "🚨 Sexuelle Belästigung und sexuelle Übergriffe am Arbeitsplatz",
+            "📞 Ausländer-spezifische Versicherung und Beratung",
+            "📱 Notfallkontakte und Beratungsstellen",
+            "⚖️ Arbeitsgesetze und Rechtsschutzverfahren"
+        ],
+        "example_title": "Beispielfragen:",
+        "examples": [
+            "• Mein Lohn wurde einbehalten",
+            "• Ich wurde unfair gekündigt",
+            "• Ich habe mich bei der Arbeit verletzt",
+            "• Ich habe sexuelle Belästigung am Arbeitsplatz erlebt",
+            "• Ich habe sexuelle Übergriffe oder Belästigung erlebt",
+            "• Welche Versicherung ist für Ausländer verfügbar?",
+            "• Welche Telefonnummern sollte ich in Korea kennen?"
+        ],
+        "input_hint": "Geben Sie Ihre Rechtsschutzfrage unten ein! 💬"
+    }
 }
 
 def translate_message(text, target_lang):
@@ -573,7 +1081,7 @@ def safe_text(text):
     t = t.replace('㏾', '㎛')
     return t
 
-def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None, on_share=None, custom_translate_message=None, firebase_available=True):
+def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None, on_share=None, custom_translate_message=None, firebase_available=True, is_foreign_worker_rag=False):
     # 화면 크기에 따른 반응형 설정
     is_mobile = page.width < 600
     is_tablet = 600 <= page.width < 1024
@@ -624,7 +1132,12 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
     }.get(user_lang, "Type a message")
     input_box = ft.TextField(hint_text=input_hint, expand=True, height=input_height)
     if is_rag_room:
-        translate_switch = None  # RAG 답변 ON/OFF 스위치 제거
+        if is_foreign_worker_rag or room_id == "foreign_worker_rights_rag":
+            # 외국인 근로자 RAG 방에서는 언어 선택 드롭다운 표시
+            translate_switch = None
+        else:
+            # 일반 RAG 방에서는 번역 스위치 제거
+            translate_switch = None
     else:
         switch_label = "번역 ON/OFF" if is_korean else "Translate ON/OFF"
         translate_switch = ft.Switch(label=switch_label, value=True)
@@ -646,13 +1159,24 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         ("de", "🇩🇪 German"),
         ("th", "🇹🇭 Thai"),
         ("vi", "🇻🇳 Vietnamese"),
+        ("uz", "🇺🇿 Uzbek"),
+        ("ne", "🇳🇵 Nepali"),
+        ("tet", "🇹🇱 Tetum"),
+        ("lo", "🇱🇦 Lao"),
+        ("mn", "🇲🇳 Mongolian"),
+        ("my", "🇲🇲 Burmese"),
+        ("bn", "🇧🇩 Bengali"),
+        ("si", "🇱🇰 Sinhala"),
+        ("km", "🇰🇭 Khmer"),
+        ("ky", "🇰🇬 Kyrgyz"),
+        ("ur", "🇵🇰 Urdu"),
     ]
     target_lang_dropdown = ft.Dropdown(
         value=current_target_lang[0],
         options=[ft.dropdown.Option(key, text) for key, text in target_lang_options],
         width=180 if is_mobile else 220,
         on_change=on_target_lang_change
-    ) if not is_rag_room else None
+    ) if not is_rag_room or (is_foreign_worker_rag or room_id == "foreign_worker_rights_rag") else None
 
     def create_message_bubble(msg_data, is_me):
         # 닉네임이 '익명'이고 본문/번역문이 모두 비어있으면 말풍선 생성하지 않음
@@ -755,6 +1279,11 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             return
         message_text = input_box.value.strip()
         nickname = page.session.get('nickname') or '익명'
+        
+        # 입력창 초기화 (먼저 초기화하여 UI 반응성 향상)
+        input_box.value = ""
+        page.update()
+        
         # 번역 처리
         translated_text = ""
         if translate_switch and translate_switch.value and current_target_lang[0]:
@@ -762,8 +1291,9 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                 translated_text = translate_message(message_text, current_target_lang[0])
             except Exception as e:
                 translated_text = f"[번역 오류: {e}]"
-        # Firebase에 메시지 저장만 하고, 직접 채팅창에 추가하지 않음
-        if firebase_available:
+        
+        # Firebase에 메시지 저장 (외국인 근로자 RAG 방이 아닐 때만)
+        if firebase_available and not (is_foreign_worker_rag or room_id == "foreign_worker_rights_rag"):
             try:
                 message_data = {
                     'text': message_text,
@@ -774,25 +1304,139 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                 db.reference(f'rooms/{room_id}/messages').push(message_data)
             except Exception as e:
                 print(f"Firebase 저장 오류: {e}")
-        # RAG 채팅방이면 RAG 답변만 직접 추가
-        if custom_translate_message is not None:
+        
+        # 외국인 근로자 RAG 방이면 사용자 메시지와 RAG 답변을 직접 추가
+        if is_foreign_worker_rag or room_id == "foreign_worker_rights_rag":
+            # 사용자 메시지 추가
+            user_msg_data = {
+                'text': message_text,
+                'nickname': nickname,
+                'timestamp': time.time(),
+                'translated': translated_text
+            }
+            user_bubble = create_message_bubble(user_msg_data, True)
+            setattr(user_bubble, 'timestamp', user_msg_data['timestamp'])
+            chat_messages.controls.append(user_bubble)
+            page.update()
+            
+            # RAG 답변 추가 (더 안전한 처리)
             try:
-                rag_answer = custom_translate_message(message_text, user_lang)
-                rag_msg_data = {
-                    'text': rag_answer,
+                # 로딩 메시지 먼저 표시
+                loading_msg_data = {
+                    'text': "답변을 생성하고 있습니다...",
                     'nickname': 'RAG',
                     'timestamp': time.time(),
                     'translated': ''
                 }
-                message_bubble = create_message_bubble(rag_msg_data, False)
-                setattr(message_bubble, 'timestamp', rag_msg_data['timestamp'])
-                chat_messages.controls.append(message_bubble)
+                loading_bubble = create_message_bubble(loading_msg_data, False)
+                setattr(loading_bubble, 'timestamp', loading_msg_data['timestamp'])
+                chat_messages.controls.append(loading_bubble)
                 page.update()
+                
+                # 외국인 근로자 RAG 방에서는 선택된 언어로 답변 생성
+                if is_foreign_worker_rag or room_id == "foreign_worker_rights_rag":
+                    selected_lang = current_target_lang[0] if current_target_lang[0] else user_lang
+                    rag_answer = custom_translate_message(message_text, selected_lang)
+                else:
+                    # 일반 RAG 방에서는 기존 방식 사용
+                    rag_answer = custom_translate_message(message_text, user_lang)
+                
+                # 로딩 메시지 제거
+                chat_messages.controls.remove(loading_bubble)
+                
+                if rag_answer and rag_answer.strip():  # 답변이 있을 때만 추가
+                    rag_msg_data = {
+                        'text': rag_answer,
+                        'nickname': 'RAG',
+                        'timestamp': time.time(),
+                        'translated': ''
+                    }
+                    rag_bubble = create_message_bubble(rag_msg_data, False)
+                    setattr(rag_bubble, 'timestamp', rag_msg_data['timestamp'])
+                    chat_messages.controls.append(rag_bubble)
+                    page.update()
+                else:
+                    # 답변이 없어도 화면 업데이트
+                    page.update()
             except Exception as e:
                 print(f'RAG 답변 오류: {e}')
-        # 입력창 초기화
-        input_box.value = ""
-        page.update()
+                # 로딩 메시지가 있다면 제거
+                try:
+                    if 'loading_bubble' in locals():
+                        chat_messages.controls.remove(loading_bubble)
+                except:
+                    pass
+                
+                # 오류 발생 시에도 화면 업데이트
+                page.update()
+                # 오류 메시지도 표시
+                error_msg_data = {
+                    'text': f"죄송합니다. 답변을 생성하는 중 오류가 발생했습니다: {str(e)}",
+                    'nickname': '시스템',
+                    'timestamp': time.time(),
+                    'translated': ''
+                }
+                error_bubble = create_message_bubble(error_msg_data, False)
+                setattr(error_bubble, 'timestamp', error_msg_data['timestamp'])
+                chat_messages.controls.append(error_bubble)
+                page.update()
+        # 일반 RAG 채팅방이면 RAG 답변만 직접 추가
+        elif custom_translate_message is not None:
+            try:
+                # 로딩 메시지 먼저 표시
+                loading_msg_data = {
+                    'text': "답변을 생성하고 있습니다...",
+                    'nickname': 'RAG',
+                    'timestamp': time.time(),
+                    'translated': ''
+                }
+                loading_bubble = create_message_bubble(loading_msg_data, False)
+                setattr(loading_bubble, 'timestamp', loading_msg_data['timestamp'])
+                chat_messages.controls.append(loading_bubble)
+                page.update()
+                
+                # RAG 답변 생성
+                rag_answer = custom_translate_message(message_text, user_lang)
+                
+                # 로딩 메시지 제거
+                chat_messages.controls.remove(loading_bubble)
+                
+                if rag_answer and rag_answer.strip():  # 답변이 있을 때만 추가
+                    rag_msg_data = {
+                        'text': rag_answer,
+                        'nickname': 'RAG',
+                        'timestamp': time.time(),
+                        'translated': ''
+                    }
+                    message_bubble = create_message_bubble(rag_msg_data, False)
+                    setattr(message_bubble, 'timestamp', rag_msg_data['timestamp'])
+                    chat_messages.controls.append(message_bubble)
+                    page.update()
+                else:
+                    # 답변이 없어도 화면 업데이트
+                    page.update()
+            except Exception as e:
+                print(f'RAG 답변 오류: {e}')
+                # 로딩 메시지가 있다면 제거
+                try:
+                    if 'loading_bubble' in locals():
+                        chat_messages.controls.remove(loading_bubble)
+                except:
+                    pass
+                
+                # 오류 발생 시에도 화면 업데이트
+                page.update()
+                # 오류 메시지도 표시
+                error_msg_data = {
+                    'text': f"죄송합니다. 답변을 생성하는 중 오류가 발생했습니다: {str(e)}",
+                    'nickname': '시스템',
+                    'timestamp': time.time(),
+                    'translated': ''
+                }
+                error_bubble = create_message_bubble(error_msg_data, False)
+                setattr(error_bubble, 'timestamp', error_msg_data['timestamp'])
+                chat_messages.controls.append(error_bubble)
+                page.update()
 
     # --- 뒤로가기 함수 ---
     def go_back(e):
@@ -810,7 +1454,11 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
     # --- UI 구성 ---
     # RAG 채팅방이면 예시/가이드 메시지를 항상 맨 위에 추가 (중복 방지)
     def get_rag_guide_message():
-        guide_texts = RAG_GUIDE_TEXTS.get(user_lang, RAG_GUIDE_TEXTS["ko"])
+        # 외국인 근로자 권리구제 RAG 방인지 확인 (방 ID와 파라미터 모두 확인)
+        if is_foreign_worker_rag or room_id == "foreign_worker_rights_rag":
+            guide_texts = FOREIGN_WORKER_GUIDE_TEXTS.get(user_lang, FOREIGN_WORKER_GUIDE_TEXTS["ko"])
+        else:
+            guide_texts = RAG_GUIDE_TEXTS.get(user_lang, RAG_GUIDE_TEXTS["ko"])
         guide_items = []
         for item in guide_texts["items"]:
             guide_items.append(ft.Text(item, size=14 if is_mobile else 16, color=ft.Colors.GREY_700, selectable=True))
@@ -857,7 +1505,10 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
     is_rag_room = custom_translate_message is not None
     rag_title = None
     if is_rag_room:
-        rag_title = RAG_GUIDE_TEXTS.get(user_lang, RAG_GUIDE_TEXTS["en"])['title']
+        if is_foreign_worker_rag or room_id == "foreign_worker_rights_rag":
+            rag_title = FOREIGN_WORKER_GUIDE_TEXTS.get(user_lang, FOREIGN_WORKER_GUIDE_TEXTS["ko"])['title']
+        else:
+            rag_title = RAG_GUIDE_TEXTS.get(user_lang, RAG_GUIDE_TEXTS["en"])['title']
     # 헤더 (뒤로가기 + 방 제목 + 공유 버튼)
     display_room_title = rag_title if is_rag_room else (
         QUICK_ROOM_TITLES.get(user_lang, "Quick Chat Room") if room_title in ["빠른 채팅방", "Quick Chat Room"] else room_title
@@ -920,15 +1571,27 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         ),
     ], alignment=ft.MainAxisAlignment.CENTER, vertical_alignment=ft.CrossAxisAlignment.CENTER)
 
-    # 번역 스위치 + 드롭다운 (RAG 채팅방이 아닐 때만)
-    switch_row = ft.Container(
-        content=ft.Row([
-            translate_switch,
-            target_lang_dropdown if target_lang_dropdown else ft.Container(),
-        ], alignment=ft.MainAxisAlignment.CENTER, spacing=12),
-        padding=8 if is_mobile else 12,
-        margin=ft.margin.only(bottom=8)
-    ) if translate_switch else ft.Container()
+    # 번역 스위치 + 드롭다운 (RAG 채팅방이 아닐 때만, 외국인 근로자 RAG 방에서는 언어 선택만)
+    if is_foreign_worker_rag or room_id == "foreign_worker_rights_rag":
+        # 외국인 근로자 RAG 방에서는 언어 선택 드롭다운만 표시
+        switch_row = ft.Container(
+            content=ft.Row([
+                ft.Text("답변 언어:", size=14, weight=ft.FontWeight.BOLD),
+                target_lang_dropdown if target_lang_dropdown else ft.Container(),
+            ], alignment=ft.MainAxisAlignment.CENTER, spacing=12),
+            padding=8 if is_mobile else 12,
+            margin=ft.margin.only(bottom=8)
+        ) if target_lang_dropdown else ft.Container()
+    else:
+        # 일반 채팅방에서는 번역 스위치 + 드롭다운
+        switch_row = ft.Container(
+            content=ft.Row([
+                translate_switch,
+                target_lang_dropdown if target_lang_dropdown else ft.Container(),
+            ], alignment=ft.MainAxisAlignment.CENTER, spacing=12),
+            padding=8 if is_mobile else 12,
+            margin=ft.margin.only(bottom=8)
+        ) if translate_switch else ft.Container()
 
     # chat_column은 다문화 RAG 채팅방에서만 가이드+메시지, 일반 채팅방에서는 메시지 Column만 포함
     if is_rag_room:

@@ -37,7 +37,7 @@ import geocoder
 import time
 import firebase_admin
 from firebase_admin import credentials, db
-from rag_utils import get_or_create_vector_db, answer_with_rag
+from rag_utils import get_or_create_vector_db, answer_with_rag, answer_with_rag_foreign_worker
 from rag_utils import SimpleVectorDB, OpenAIEmbeddings
 
 
@@ -176,7 +176,7 @@ FIND_ROOM_TEXTS = {
         "qr": "QR코드로 찾기",
         "qr_desc": "QR 코드를 스캔하여 빠른 참여",
         "rag": "다문화가족 한국생활안내",
-        "rag_desc": "공식 안내 채팅방"
+        "rag_desc": "다문화 가족지원 포털 다누리- 한국생활 안내 자료에 근거한 챗봇"
     },
     "en": {
         "title": "Select a way to find a chat room",
@@ -185,7 +185,7 @@ FIND_ROOM_TEXTS = {
         "qr": "Find by QR code",
         "qr_desc": "Quick join by scanning QR code",
         "rag": "Korean Life Guide for Multicultural Families",
-        "rag_desc": "Official guide chat room"
+        "rag_desc": "Chatbot based on Danuri - Korean Life Guide for Multicultural Families Portal materials"
     },
     "vi": {
         "title": "Chọn cách tìm phòng chat",
@@ -194,7 +194,7 @@ FIND_ROOM_TEXTS = {
         "qr": "Tìm bằng mã QR",
         "qr_desc": "Tham gia nhanh bằng quét mã QR",
         "rag": "Hướng dẫn cuộc sống Hàn Quốc cho gia đình đa văn hóa",
-        "rag_desc": "Phòng chat hướng dẫn chính thức"
+        "rag_desc": "Chatbot dựa trên tài liệu Hướng dẫn cuộc sống Hàn Quốc của cổng thông tin Danuri cho gia đình đa văn hóa"
     },
     "ja": {
         "title": "チャットルームの探し方を選択してください",
@@ -203,7 +203,7 @@ FIND_ROOM_TEXTS = {
         "qr": "QRコードで探す",
         "qr_desc": "QRコードをスキャンして参加",
         "rag": "多文化家族のための韓国生活ガイド",
-        "rag_desc": "公式ガイドチャットルーム"
+        "rag_desc": "多文化家族支援ポータル「ダヌリ」- 韓国生活案内資料に基づくチャットボット"
     },
     "zh": {
         "title": "请选择查找聊天室的方法",
@@ -212,7 +212,7 @@ FIND_ROOM_TEXTS = {
         "qr": "通过二维码查找",
         "qr_desc": "扫描二维码快速加入",
         "rag": "多文化家庭韩国生活指南",
-        "rag_desc": "官方指南聊天室"
+        "rag_desc": "基于多文化家庭支援门户Danuri-韩国生活指南资料的聊天机器人"
     },
     "fr": {
         "title": "Sélectionnez une méthode pour trouver un salon de discussion",
@@ -221,7 +221,7 @@ FIND_ROOM_TEXTS = {
         "qr": "Rechercher par QR code",
         "qr_desc": "Rejoindre rapidement en scanant le code QR",
         "rag": "Guide de la vie en Corée pour les familles multiculturelles",
-        "rag_desc": "Salon de discussion guide officiel"
+        "rag_desc": "Chatbot basé sur le portail Danuri - Guide de la vie en Corée pour les familles multiculturelles"
     },
     "de": {
         "title": "Wählen Sie eine Methode, um einen Chatraum zu finden",
@@ -230,7 +230,7 @@ FIND_ROOM_TEXTS = {
         "qr": "Mit QR-Code suchen",
         "qr_desc": "Schnell beitreten, indem Sie den QR-Code scannen",
         "rag": "Koreanischer Lebensratgeber für multikulturelle Familien",
-        "rag_desc": "Offizieller Guide-Chatraum"
+        "rag_desc": "Chatbot basierend auf dem Danuri-Portal - Koreanischer Lebensratgeber für multikulturelle Familien"
     },
     "th": {
         "title": "เลือกวิธีค้นหาห้องแชท",
@@ -239,7 +239,7 @@ FIND_ROOM_TEXTS = {
         "qr": "ค้นหาด้วย QR โค้ด",
         "qr_desc": "เข้าร่วมอย่างรวดเร็วโดยสแกน QR โค้ด",
         "rag": "คู่มือการใช้ชีวิตในเกาหลีสำหรับครอบครัวพหุวัฒนธรรม",
-        "rag_desc": "ห้องแชทคู่มือการใช้ชีวิตระบบองค์กรสำหรับครอบครัวพหุวัฒนธรรม"
+        "rag_desc": "แชทบอทอ้างอิงจากข้อมูลคู่มือการใช้ชีวิตในเกาหลีของพอร์ทัล Danuri สำหรับครอบครัวพหุวัฒนธรรม"
     },
     "zh-TW": {
         "title": "請選擇查找聊天室的方法",
@@ -248,7 +248,7 @@ FIND_ROOM_TEXTS = {
         "qr": "通過二維碼查找",
         "qr_desc": "掃描二維碼快速參加",
         "rag": "多元文化家庭韓國生活指南",
-        "rag_desc": "官方指南聊天室"
+        "rag_desc": "基於多元文化家庭支援門戶Danuri-韓國生活指南資料的聊天機器人"
     },
     "id": {
         "title": "Pilih cara menemukan ruang obrolan",
@@ -257,7 +257,7 @@ FIND_ROOM_TEXTS = {
         "qr": "Cari dengan kode QR",
         "qr_desc": "Gabung cepat dengan memindai kode QR",
         "rag": "Panduan Hidup di Korea untuk Keluarga Multikultural",
-        "rag_desc": "Ruang obrolan panduan resmi"
+        "rag_desc": "Chatbot berdasarkan portal Danuri - Panduan Hidup di Korea untuk Keluarga Multikultural"
     },
 }
 
@@ -351,6 +351,31 @@ QR_SHARE_TEXTS = {
         "room_id": "ID phòng: {id}",
         "close": "Đóng"
     }
+}
+
+# --- 외국인 근로자 권리구제 방 카드/버튼 다국어 사전 ---
+FOREIGN_WORKER_ROOM_CARD_TEXTS = {
+    "ko": {"title": "외국인 근로자 권리구제", "desc": "외국인노동자권리구제안내수첩 기반 RAG 챗봇"},
+    "en": {"title": "Foreign Worker Rights Protection", "desc": "RAG chatbot based on the Foreign Worker Rights Guidebook"},
+    "vi": {"title": "Bảo vệ quyền lợi người lao động nước ngoài", "desc": "Chatbot RAG dựa trên Sổ tay bảo vệ quyền lợi lao động nước ngoài"},
+    "ja": {"title": "外国人労働者権利保護", "desc": "外国人労働者権利保護ガイドブックに基づくRAGチャットボット"},
+    "zh": {"title": "外籍劳工权益保护", "desc": "基于外籍劳工权益指南的RAG聊天机器人"},
+    "zh-TW": {"title": "外籍勞工權益保護", "desc": "基於外籍勞工權益指南的RAG聊天機器人"},
+    "id": {"title": "Perlindungan Hak Pekerja Asing", "desc": "Chatbot RAG berbasis Panduan Hak Pekerja Asing"},
+    "th": {"title": "การคุ้มครองสิทธิแรงงานต่างชาติ", "desc": "แชทบอท RAG ตามคู่มือสิทธิแรงงานต่างชาติ"},
+    "fr": {"title": "Protection des droits des travailleurs étrangers", "desc": "Chatbot RAG basé sur le guide des droits des travailleurs étrangers"},
+    "de": {"title": "Schutz der Rechte ausländischer Arbeitnehmer", "desc": "RAG-Chatbot basierend auf dem Leitfaden für ausländische Arbeitnehmer"},
+    "uz": {"title": "Чет эл ишчилари ҳуқуқларини ҳимоя қилиш", "desc": "Чет эл ишчилари ҳуқуқлари бўйича йўриқнома асосидаги RAG чатбот"},
+    "ne": {"title": "विदेशी श्रमिक अधिकार संरक्षण", "desc": "विदेशी श्रमिक अधिकार गाइडबुकमा आधारित RAG च्याटबोट"},
+    "tet": {"title": "Proteksaun Direitu Trabalhador Estranjeiru", "desc": "Chatbot RAG baseia ba livru guia direitu trabalhador estranjeiru"},
+    "lo": {"title": "ການປົກປ້ອງສິດຄົນງານຕ່າງປະເທດ", "desc": "RAG chatbot ອີງຕາມຄູ່ມືສິດຄົນງານຕ່າງປະເທດ"},
+    "mn": {"title": "Гадаад хөдөлмөрчдийн эрхийн хамгаалалт", "desc": "Гадаад хөдөлмөрчдийн эрхийн гарын авлагад суурилсан RAG чатбот"},
+    "my": {"title": "နိုင်ငံခြားလုပ်သား အခွင့်အရေး ကာကွယ်မှု", "desc": "နိုင်ငံခြားလုပ်သားအခွင့်အရေးလမ်းညွှန်အပေါ်အခြေခံသော RAG chatbot"},
+    "bn": {"title": "বিদেশি শ্রমিক অধিকার সুরক্ষা", "desc": "বিদেশি শ্রমিক অধিকার গাইডবুক ভিত্তিক RAG চ্যাটবট"},
+    "si": {"title": "විදේශීය කම්කරුවන්ගේ අයිතිවාසිකම් ආරක්ෂාව", "desc": "විදේශීය කම්කරුවන්ගේ අයිතිවාසිකම් මාර්ගෝපදේශය මත පදනම් වූ RAG චැට්බොට්"},
+    "km": {"title": "ការការពារសិទ្ធិកម្មករជាតិផ្សេង", "desc": "RAG chatbot ផ្អែកលើមគ្គុទ្ទេសក៍សិទ្ធិកម្មករជាតិផ្សេង"},
+    "ky": {"title": "Чет эл жумушчуларынын укуктарын коргоо", "desc": "Чет эл жумушчуларынын укук колдонмосуна негизделген RAG чатбот"},
+    "ur": {"title": "غیر ملکی مزدوروں کے حقوق کا تحفظ", "desc": "غیر ملکی مزدوروں کے حقوق کی گائیڈ بک پر مبنی RAG چیٹ بوٹ"}
 }
 
 def main(page: ft.Page):
@@ -574,6 +599,25 @@ def main(page: ft.Page):
                                 margin=ft.margin.only(bottom=16),
                                 on_click=lambda e: go_chat(lang, lang, user_rag_room_id, RAG_ROOM_TITLE, is_rag=True)
                             ),
+                            # --- 외국인 근로자 권리구제 버튼 추가 ---
+                            ft.Container(
+                                content=ft.Row([
+                                    ft.Container(
+                                        content=ft.Icon(name=ft.Icons.GAVEL, color="#F59E42", size=28),
+                                        bgcolor="#FFF7E6", border_radius=12, padding=10, margin=ft.margin.only(right=12)
+                                    ),
+                                    ft.Column([
+                                        ft.Text(FOREIGN_WORKER_ROOM_CARD_TEXTS.get(lang, FOREIGN_WORKER_ROOM_CARD_TEXTS["ko"])["title"], size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
+                                        ft.Text(FOREIGN_WORKER_ROOM_CARD_TEXTS.get(lang, FOREIGN_WORKER_ROOM_CARD_TEXTS["ko"])["desc"], size=12, color=ft.Colors.GREY_600)
+                                    ], spacing=2)
+                                ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
+                                bgcolor=ft.Colors.WHITE,
+                                border_radius=12,
+                                shadow=ft.BoxShadow(blur_radius=8, color="#B0BEC544"),
+                                padding=16,
+                                margin=ft.margin.only(bottom=16),
+                                on_click=lambda e: go_foreign_worker_rag_chat(lang)
+                            ),
                         ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
                         padding=ft.padding.only(top=32),
                         alignment=ft.alignment.center,
@@ -744,18 +788,73 @@ def main(page: ft.Page):
         except Exception as e:
             print(f"Firebase에서 방 정보 가져오기 실패: {e}")
 
-    def go_chat(user_lang, target_lang, room_id, room_title="채팅방", is_rag=False):
+    def go_chat(user_lang, target_lang, room_id, room_title="채팅방", is_rag=False, is_foreign_worker_rag=False):
         def after_nickname(nickname):
             page.session.set("nickname", nickname)
             page.views.clear()
             
-            # RAG 채팅방인지 확인
-            if is_rag:
-                def rag_translate_message(text, target_lang):
-                    # RAG 답변만 반환 (번역 X)
-                    if vector_db is None:
-                        return "죄송합니다. RAG 기능이 현재 사용할 수 없습니다. (벡터DB가 로드되지 않았습니다.)"
-                    return answer_with_rag(text, vector_db, OPENAI_API_KEY)
+            # 외국인 근로자 RAG 채팅방인지 확인
+            if is_foreign_worker_rag:
+                def foreign_worker_rag_answer(query, target_lang):
+                    # 다문화 가족 RAG 방과 동일한 방식으로 answer_with_rag 사용
+                    # 기존 vector_db를 사용하되, 외국인 근로자 관련 프롬프트 사용
+                    try:
+                        # 기존 vector_db 사용 (다문화 가족 DB)
+                        if vector_db is None:
+                            return "죄송합니다. RAG 기능이 현재 사용할 수 없습니다. (벡터DB가 로드되지 않았습니다.)"
+                        
+                        # 외국인 근로자 관련 프롬프트로 수정된 answer_with_rag 사용 (타겟 언어 전달)
+                        return answer_with_rag_foreign_worker(query, vector_db, OPENAI_API_KEY, target_lang=target_lang)
+                    except Exception as e:
+                        print(f"외국인 근로자 RAG 오류: {e}")
+                        return "죄송합니다. 외국인 근로자 권리구제 정보를 찾을 수 없습니다."
+                
+                page.views.append(ChatRoomPage(
+                    page,
+                    room_id=room_id,
+                    room_title=room_title,
+                    user_lang=user_lang,
+                    target_lang=target_lang,
+                    on_back=lambda e: go_room_list(lang),
+                    on_share=on_share_clicked,
+                    custom_translate_message=foreign_worker_rag_answer,
+                    firebase_available=FIREBASE_AVAILABLE,
+                    is_foreign_worker_rag=True
+                ))
+            # 기존 다문화 가족 RAG 채팅방인지 확인
+            elif is_rag:
+                def multicultural_rag_answer(query, target_lang):
+                    try:
+                        import chromadb
+                        from create_foreign_worker_db import OpenAIEmbeddingFunction
+                        # 다문화 가족 전용 ChromaDB 연결 (기존 vector_db 대신 별도 DB 사용)
+                        db_name = "multicultural_family_guide_openai"
+                        persist_directory = "./chroma_db"
+                        chroma_client = chromadb.PersistentClient(path=persist_directory)
+                        embedding_function = OpenAIEmbeddingFunction(OPENAI_API_KEY)
+                        collection = chroma_client.get_or_create_collection(
+                            name=db_name,
+                            embedding_function=embedding_function,
+                            metadata={"hnsw:space": "cosine"}
+                        )
+                        # 쿼리 임베딩 및 유사도 검색
+                        results = collection.query(query_texts=[query], n_results=3)
+                        docs = results.get("documents", [[]])[0]
+                        # 컨텍스트 생성
+                        context = "\n\n".join(docs)
+                        prompt = f"아래 참고 정보의 내용을 최대한 반영해 자연스럽게 답변하세요. 참고 정보에 없는 내용은 '참고 정보에 없습니다'라고 답하세요.\n\n[참고 정보]\n{context}\n\n질문: {query}\n답변:"
+                        # OpenAI 답변 생성
+                        client = openai.OpenAI(api_key=OPENAI_API_KEY)
+                        response = client.chat.completions.create(
+                            model="gpt-4.1-nano-2025-04-14",
+                            messages=[{"role": "user", "content": prompt}],
+                            max_tokens=1000,
+                            temperature=0.1
+                        )
+                        return response.choices[0].message.content.strip()
+                    except Exception as e:
+                        print(f"다문화 가족 RAG 오류: {e}")
+                        return "죄송합니다. 다문화 가족 한국생활 안내 정보를 찾을 수 없습니다."
                 
                 page.views.append(ChatRoomPage(
                     page,
@@ -765,7 +864,7 @@ def main(page: ft.Page):
                     target_lang=target_lang,
                     on_back=lambda e: go_home(lang),
                     on_share=on_share_clicked,
-                    custom_translate_message=rag_translate_message,
+                    custom_translate_message=multicultural_rag_answer,
                     firebase_available=FIREBASE_AVAILABLE
                 ))
             else:
@@ -850,6 +949,14 @@ def main(page: ft.Page):
             return
         else:
             after_nickname(page.session.get("nickname") or "")
+
+    # --- 외국인 근로자 권리구제 RAG 채팅방 진입 함수 ---
+    def go_foreign_worker_rag_chat(lang):
+        # 고유 방 ID 및 타이틀
+        room_id = "foreign_worker_rights_rag"
+        room_title = "외국인 근로자 권리구제"
+        # 채팅방 진입 (is_foreign_worker_rag=True로 설정)
+        go_chat(lang, lang, room_id, room_title, is_rag=False, is_foreign_worker_rag=True)
 
     # --- 라우팅 처리 ---
     def route_change(route):

@@ -579,6 +579,269 @@ def answer_with_rag(query, vector_db, openai_api_key, model=None):
         print(f"  - ❌ 예상치 못한 오류: {e}")
         return error_msg['unknown_error'].format(error=e)
 
+def answer_with_rag_foreign_worker(query, vector_db, openai_api_key, model=None, target_lang=None):
+    """외국인 근로자 권리구제 전용 RAG 답변 생성 함수"""
+    # OpenAI 답변 모델을 절대 변경하지 않음
+    model = "gpt-4.1-nano-2025-04-14"
+    print(f"  - 외국인 근로자 RAG 답변 생성 시작")
+
+    # 질문 언어 감지
+    lang = detect_language(query)
+    print(f"  - 감지된 언어: {lang}")
+    
+    # 외국인 근로자 전용 프롬프트 템플릿 (다국어 지원)
+    foreign_worker_prompt_templates = {
+        "ko": """다음은 외국인 근로자 권리구제 관련 정보입니다. 질문에 대해 정확하고 도움이 되는 답변을 한국어로 제공해주세요.
+
+[참고 정보]
+{context}
+
+질문: {query}
+
+답변: 외국인 근로자 권리구제 관점에서 한국어로 답변해주세요.""",
+        "en": """The following is information related to foreign worker rights protection. Please provide accurate and helpful answers in English.
+
+[Reference Information]
+{context}
+
+Question: {query}
+
+Answer: Please answer from the perspective of foreign worker rights protection in English.""",
+        "vi": """Sau đây là thông tin liên quan đến bảo vệ quyền lợi người lao động nước ngoài. Vui lòng cung cấp câu trả lời chính xác và hữu ích bằng tiếng Việt.
+
+[Thông tin tham khảo]
+{context}
+
+Câu hỏi: {query}
+
+Trả lời: Vui lòng trả lời từ góc độ bảo vệ quyền lợi người lao động nước ngoài bằng tiếng Việt.""",
+        "ja": """以下は外国人労働者の権利保護に関する情報です。質問に対して正確で役立つ回答を日本語で提供してください。
+
+[参考情報]
+{context}
+
+質問: {query}
+
+回答: 外国人労働者の権利保護の観点から日本語で回答してください。""",
+        "zh": """以下是外籍劳工权益保护相关信息。请用中文提供准确有用的回答。
+
+[参考信息]
+{context}
+
+问题: {query}
+
+回答: 请从外籍劳工权益保护的角度用中文回答。""",
+        "zh-TW": """以下是外籍勞工權益保護相關資訊。請用繁體中文提供準確有用的回答。
+
+[參考資訊]
+{context}
+
+問題: {query}
+
+回答: 請從外籍勞工權益保護的角度用繁體中文回答。""",
+        "id": """Berikut adalah informasi terkait perlindungan hak pekerja asing. Silakan berikan jawaban yang akurat dan bermanfaat dalam bahasa Indonesia.
+
+[Informasi Referensi]
+{context}
+
+Pertanyaan: {query}
+
+Jawaban: Silakan jawab dari perspektif perlindungan hak pekerja asing dalam bahasa Indonesia.""",
+        "th": """ต่อไปนี้เป็นข้อมูลที่เกี่ยวข้องกับการคุ้มครองสิทธิแรงงานต่างชาติ กรุณาให้คำตอบที่ถูกต้องและเป็นประโยชน์เป็นภาษาไทย
+
+[ข้อมูลอ้างอิง]
+{context}
+
+คำถาม: {query}
+
+คำตอบ: กรุณาตอบจากมุมมองการคุ้มครองสิทธิแรงงานต่างชาติเป็นภาษาไทย""",
+        "fr": """Voici des informations relatives à la protection des droits des travailleurs étrangers. Veuillez fournir des réponses précises et utiles en français.
+
+[Informations de référence]
+{context}
+
+Question: {query}
+
+Réponse: Veuillez répondre du point de vue de la protection des droits des travailleurs étrangers en français.""",
+        "de": """Im Folgenden finden Sie Informationen zum Schutz der Rechte ausländischer Arbeitnehmer. Bitte geben Sie genaue und hilfreiche Antworten auf Deutsch.
+
+[Referenzinformationen]
+{context}
+
+Frage: {query}
+
+Antwort: Bitte antworten Sie aus der Perspektive des Schutzes der Rechte ausländischer Arbeitnehmer auf Deutsch.""",
+        "uz": """Quyida chet ellik ishchilar huquqlarini himoya qilish bo'yicha ma'lumotlar keltirilgan. Iltimos, o'zbek tilida aniq va foydali javoblar bering.
+
+[Ma'lumotlar]
+{context}
+
+Savol: {query}
+
+Javob: Iltimos, chet ellik ishchilar huquqlarini himoya qilish nuqtai nazaridan o'zbek tilida javob bering.""",
+        "ne": """तल विदेशी श्रमिक अधिकार संरक्षण सम्बन्धी जानकारी छ। कृपया नेपाली भाषामा सटिक र उपयोगी उत्तरहरू दिनुहोस्।
+
+[सन्दर्भ जानकारी]
+{context}
+
+प्रश्न: {query}
+
+उत्तर: कृपया विदेशी श्रमिक अधिकार संरक्षणको दृष्टिकोणबाट नेपाली भाषामा उत्तर दिनुहोस्।""",
+        "tet": """Iha maklumat kona-ba proteksaun direitu trabalhador estranjeiru. Favor fó ema resposta ne'ebé loos no útil iha lian Tetun.
+
+[Informasaun Referénsia]
+{context}
+
+Pergunta: {query}
+
+Resposta: Favor responde husi perspetiva proteksaun direitu trabalhador estranjeiru iha lian Tetun.""",
+        "lo": """ຂ້າງລຸ່ມນີ້ແມ່ນຂໍ້ມູນທີ່ກ່ຽວຂ້ອງກັບການປົກປ້ອງສິດຂອງຄົນງານຕ່າງປະເທດ. ກະລຸນາໃຫ້ຄຳຕອບທີ່ຖືກຕ້ອງແລະເປັນປະໂຫຍດເປັນພາສາລາວ.
+
+[ຂໍ້ມູນອ້າງອີງ]
+{context}
+
+ຄຳຖາມ: {query}
+
+ຄຳຕອບ: ກະລຸນາຕອບຈາກມຸມມອງການປົກປ້ອງສິດຂອງຄົນງານຕ່າງປະເທດເປັນພາສາລາວ.""",
+        "mn": """Доорх мэдээл нь гадаад ажилчдын эрхийн хамгаалалттай холбоотой мэдээл юм. Монгол хэл дээр үнэн зөв, хэрэгтэй хариулт өгнө үү.
+
+[Лавлагааны мэдээл]
+{context}
+
+Асуулт: {query}
+
+Хариулт: Гадаад ажилчдын эрхийн хамгаалалтын үүднээс монгол хэл дээр хариулна уу.""",
+        "my": """အောက်ပါသည် နိုင်ငံခြားလုပ်သားများ၏ အခွင့်အရေးကာကွယ်မှုနှင့် ပတ်သက်သော အချက်အလက်များဖြစ်သည်။ မြန်မာဘာသာဖြင့် တိကျပြီး အသုံးဝင်သော အဖြေများကို ပေးပါ။
+
+[ကိုးကားချက်အချက်အလက်]
+{context}
+
+မေးခွန်း: {query}
+
+အဖြေ: နိုင်ငံခြားလုပ်သားများ၏ အခွင့်အရေးကာကွယ်မှုရှုထောင့်မှ မြန်မာဘာသာဖြင့် ဖြေကြားပါ။""",
+        "bn": """নিচে বিদেশী শ্রমিকদের অধিকার সুরক্ষা সম্পর্কিত তথ্য দেওয়া হয়েছে। অনুগ্রহ করে বাংলায় সঠিক এবং উপকারী উত্তর দিন।
+
+[রেফারেন্স তথ্য]
+{context}
+
+প্রশ্ন: {query}
+
+উত্তর: অনুগ্রহ করে বিদেশী শ্রমিকদের অধিকার সুরক্ষার দৃষ্টিকোণ থেকে বাংলায় উত্তর দিন।""",
+        "si": """පහත දැක්වෙන්නේ විදේශ කම්කරුවන්ගේ අයිතිවාසිකම් ආරක්ෂාව සම්බන්ධ තොරතුරු වේ. කරුණාකර සිංහල භාෂාවෙන් නිවැරදි සහ ප්‍රයෝජනවත් පිළිතුරු ලබා දෙන්න.
+
+[යොමු තොරතුරු]
+{context}
+
+ප්‍රශ්නය: {query}
+
+පිළිතුර: කරුණාකර විදේශ කම්කරුවන්ගේ අයිතිවාසිකම් ආරක්ෂාවේ දෘෂ්ටිකෝණයෙන් සිංහල භාෂාවෙන් පිළිතුරු දෙන්න.""",
+        "km": """ខាងក្រោមនេះគឺជាព័ត៌មានទាក់ទងនឹងការការពារសិទ្ធិរបស់កម្មករបរទេស។ សូមផ្តល់ចម្លើយត្រឹមត្រូវនិងមានប្រយោជន៍ជាភាសាខ្មែរ។
+
+[ព័ត៌មានយោបល់]
+{context}
+
+សំណួរ: {query}
+
+ចម្លើយ: សូមឆ្លើយតបពីទិដ្ឋភាពនៃការការពារសិទ្ធិរបស់កម្មករបរទេសជាភាសាខ្មែរ។""",
+        "ky": """Төмөндө чет элдик жумушчулардын укуктарын коргоо боюнча маалыматтар келтирилген. Сураныч, кыргыз тилинде так жана пайдалуу жоопторду бериңиз.
+
+[Маалыматтар]
+{context}
+
+Суроо: {query}
+
+Жооп: Сураныч, чет элдик жумушчулардын укуктарын коргоо көз карашынан кыргыз тилинде жооп бериңиз.""",
+        "ur": """ذیل میں غیر ملکی مزدوروں کے حقوق کی حفاظت سے متعلق معلومات ہیں۔ براہ کرم اردو میں درست اور مفید جوابات دیں۔
+
+[حوالہ معلومات]
+{context}
+
+سوال: {query}
+
+جواب: براہ کرم غیر ملکی مزدوروں کے حقوق کی حفاظت کے نقطہ نظر سے اردو میں جواب دیں۔""",
+    }
+    
+    # 타겟 언어 결정 (target_lang이 있으면 사용, 없으면 감지된 언어 사용)
+    if target_lang and target_lang in foreign_worker_prompt_templates:
+        prompt_lang = target_lang
+    else:
+        prompt_lang = lang if lang in foreign_worker_prompt_templates else "ko"
+    
+    print(f"  - 사용할 언어: {prompt_lang}")
+    foreign_worker_prompt_template = foreign_worker_prompt_templates[prompt_lang]
+
+    error_msg = ERROR_MESSAGES.get(lang, ERROR_MESSAGES['en'])
+
+    # 1단계: 유사 청크 검색
+    print(f"  - 1단계: 유사 청크 검색")
+    relevant_chunks = retrieve_relevant_chunks(query, vector_db)
+
+    if not relevant_chunks:
+        print(f"  - ❌ 유사한 청크를 찾지 못했습니다.")
+        return "죄송합니다. 외국인 근로자 권리구제 관련 정보를 찾을 수 없습니다."
+
+    # 2단계: 컨텍스트 생성
+    print(f"  - 2단계: 컨텍스트 생성")
+    context_parts = []
+    for doc in relevant_chunks:
+        if isinstance(doc, dict) and 'page_content' in doc:
+            # 딕셔너리 형식
+            context_parts.append(doc['page_content'])
+        elif hasattr(doc, 'page_content'):
+            # Document 객체 형식
+            context_parts.append(doc.page_content)
+        elif isinstance(doc, str):
+            # 문자열 형식
+            context_parts.append(doc)
+        else:
+            # 기타 형식은 문자열로 변환
+            context_parts.append(str(doc))
+    
+    context = "\n\n".join(context_parts)
+    print(f"  - 컨텍스트 길이: {len(context)} 문자")
+
+    # 3단계: 프롬프트 생성
+    print(f"  - 3단계: 프롬프트 생성")
+    prompt = foreign_worker_prompt_template.format(context=context, query=query)
+    print(f"  - 프롬프트 길이: {len(prompt)} 문자")
+
+    # 4단계: OpenAI API 호출
+    print(f"  - 4단계: OpenAI API 호출 (모델: {model})")
+    try:
+        client = openai.OpenAI(api_key=openai_api_key)
+        print(f"  - OpenAI 클라이언트 생성 완료")
+
+        response = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=1000,
+            temperature=0.1
+        )
+        print(f"  - OpenAI API 응답 수신 완료")
+
+        answer = response.choices[0].message.content.strip()
+        print(f"  - 응답 길이: {len(answer)} 문자")
+        if not answer:
+            print(f"  - ❌ OpenAI 응답이 비어있습니다.")
+            return "죄송합니다. 외국인 근로자 권리구제 관련 답변을 생성할 수 없습니다."
+        # 줄바꿈 후처리
+        answer = insert_linebreaks(answer, max_length=60)
+        print(f"  - ✅ 외국인 근로자 RAG 답변 생성 완료")
+        return answer
+
+    except openai.AuthenticationError as e:
+        print(f"  - ❌ OpenAI 인증 오류: {e}")
+        return "죄송합니다. OpenAI 인증 오류가 발생했습니다."
+    except openai.RateLimitError as e:
+        print(f"  - ❌ OpenAI 요청 제한 오류: {e}")
+        return "죄송합니다. OpenAI 요청 제한에 도달했습니다."
+    except openai.APIError as e:
+        print(f"  - ❌ OpenAI API 오류: {e}")
+        return f"죄송합니다. OpenAI API 오류가 발생했습니다: {e}"
+    except Exception as e:
+        print(f"  - ❌ 예상치 못한 오류: {e}")
+        return f"죄송합니다. 예상치 못한 오류가 발생했습니다: {e}"
+
 def get_or_create_vector_db_multi(pdf_paths, openai_api_key):
     """여러 PDF를 한 번에 임베딩해서 하나의 벡터DB로 저장합니다."""
     all_chunks = []
