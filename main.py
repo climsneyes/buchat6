@@ -81,90 +81,50 @@ client = openai.OpenAI(api_key=OPENAI_API_KEY)
 # RAG용 벡터DB 준비 (무조건 병합본만 사용)
 print("RAG 벡터DB 준비 중...")
 VECTOR_DB_MERGED_PATH = "vector_db_merged.pkl"
-vector_db = None
+VECTOR_DB_FOREIGN_WORKER_PATH = "vector_db_multi2.pkl"
+vector_db_multicultural = None
+vector_db_foreign_worker = None
 
+# 다문화가족 한국생활안내 벡터DB 로드
 try:
     if os.path.exists(VECTOR_DB_MERGED_PATH):
-        print("기존 벡터DB 파일을 로드합니다...")
+        print("다문화가족 벡터DB 파일을 로드합니다...")
+        print(f"벡터DB 파일 크기: {os.path.getsize(VECTOR_DB_MERGED_PATH)} bytes")
         with open(VECTOR_DB_MERGED_PATH, "rb") as f:
-            vector_db = pickle.load(f)
-        # 임베딩 객체 다시 생성
-        vector_db.embeddings = OpenAIEmbeddings(
+            vector_db_multicultural = pickle.load(f)
+        print(f"벡터DB 로드 완료. 문서 수: {len(vector_db_multicultural.documents) if hasattr(vector_db_multicultural, 'documents') else '알 수 없음'}")
+        vector_db_multicultural.embeddings = OpenAIEmbeddings(
             openai_api_key=OPENAI_API_KEY,
             model="text-embedding-3-small"
         )
-        print("기존 병합 벡터DB 로드 완료!")
+        print("다문화가족 벡터DB 로드 완료!")
     else:
-        print("벡터DB 파일이 없습니다.")
-        print("RAG 기능이 비활성화됩니다.")
+        print("다문화가족 벡터DB 파일이 없습니다.")
 except Exception as e:
-    print(f"벡터DB 로드 중 오류 발생: {e}")
-    if "langchain" in str(e).lower():
-        print("langchain 의존성 오류로 인해 기존 벡터DB를 변환합니다...")
-        try:
-            # 기존 벡터DB 파일을 백업
-            backup_path = VECTOR_DB_MERGED_PATH + ".backup"
-            if os.path.exists(VECTOR_DB_MERGED_PATH):
-                shutil.copy2(VECTOR_DB_MERGED_PATH, backup_path)
-                print(f"기존 벡터DB 백업 완료: {backup_path}")
-            
-            # 기존 벡터DB에서 데이터 추출
-            with open(VECTOR_DB_MERGED_PATH, 'rb') as f:
-                old_db = pickle.load(f)
-            
-            print("기존 벡터DB에서 데이터 추출 중...")
-            
-            # 기존 벡터DB에서 문서 추출
-            documents = []
-            if hasattr(old_db, 'documents'):
-                documents = old_db.documents
-                print(f"기존 문서 수: {len(documents)}")
-            elif hasattr(old_db, 'docstore') and hasattr(old_db.docstore, '_dict'):
-                # ChromaDB 형식에서 문서 추출
-                for doc_id, doc in old_db.docstore._dict.items():
-                    if hasattr(doc, 'page_content') and hasattr(doc, 'metadata'):
-                        documents.append({
-                            'page_content': doc.page_content,
-                            'metadata': doc.metadata
-                        })
-                print(f"추출된 문서 수: {len(documents)}")
-            
-            if documents:
-                # 새로운 임베딩 생성
-                from rag_utils import SimpleVectorDB
-                embeddings = OpenAIEmbeddings(
-                    openai_api_key=OPENAI_API_KEY,
-                    model="text-embedding-3-small"
-                )
-                
-                # 문서 임베딩 생성
-                print("새로운 임베딩 생성 중...")
-                doc_embeddings = embeddings.embed_documents([doc['page_content'] for doc in documents])
-                
-                # SimpleVectorDB 생성
-                vector_db = SimpleVectorDB(documents, embeddings, doc_embeddings)
-                
-                # 새로운 벡터DB 저장
-                with open(VECTOR_DB_MERGED_PATH, "wb") as f:
-                    pickle.dump(vector_db, f)
-                
-                # 변환 완료 표시
-                with open(VECTOR_DB_MERGED_PATH + ".converted", "w") as f:
-                    f.write("converted")
-                print("벡터DB 변환 완료!")
-            else:
-                print("추출할 문서가 없습니다.")
-                vector_db = None
-                
-        except Exception as e2:
-            print(f"벡터DB 변환 실패: {e2}")
-            vector_db = None
+    print(f"다문화가족 벡터DB 로드 중 오류 발생: {e}")
+    vector_db_multicultural = None
+
+# 외국인 권리구제 벡터DB 로드
+try:
+    if os.path.exists(VECTOR_DB_FOREIGN_WORKER_PATH):
+        print("외국인 권리구제 벡터DB 파일을 로드합니다...")
+        print(f"벡터DB 파일 크기: {os.path.getsize(VECTOR_DB_FOREIGN_WORKER_PATH)} bytes")
+        with open(VECTOR_DB_FOREIGN_WORKER_PATH, "rb") as f:
+            vector_db_foreign_worker = pickle.load(f)
+        print(f"벡터DB 로드 완료. 문서 수: {len(vector_db_foreign_worker.documents) if hasattr(vector_db_foreign_worker, 'documents') else '알 수 없음'}")
+        vector_db_foreign_worker.embeddings = OpenAIEmbeddings(
+            openai_api_key=OPENAI_API_KEY,
+            model="text-embedding-3-small"
+        )
+        print("외국인 권리구제 벡터DB 로드 완료!")
     else:
-        print("RAG 기능이 비활성화됩니다.")
-        vector_db = None
+        print("외국인 권리구제 벡터DB 파일이 없습니다.")
+except Exception as e:
+    print(f"외국인 권리구제 벡터DB 로드 중 오류 발생: {e}")
+    vector_db_foreign_worker = None
 
 # RAG 기능 사용 가능 여부 설정 (vector_db 정의 후)
-RAG_AVAILABLE = vector_db is not None
+RAG_AVAILABLE = vector_db_multicultural is not None and vector_db_foreign_worker is not None
 
 print("RAG 벡터DB 준비 완료!")
 
@@ -796,17 +756,20 @@ def main(page: ft.Page):
             # 외국인 근로자 RAG 채팅방인지 확인
             if is_foreign_worker_rag:
                 def foreign_worker_rag_answer(query, target_lang):
-                    # 다문화 가족 RAG 방과 동일한 방식으로 answer_with_rag 사용
-                    # 기존 vector_db를 사용하되, 외국인 근로자 관련 프롬프트 사용
                     try:
-                        # 기존 vector_db 사용 (다문화 가족 DB)
-                        if vector_db is None:
-                            return "죄송합니다. RAG 기능이 현재 사용할 수 없습니다. (벡터DB가 로드되지 않았습니다.)"
-                        
-                        # 외국인 근로자 관련 프롬프트로 수정된 answer_with_rag 사용 (타겟 언어 전달)
-                        return answer_with_rag_foreign_worker(query, vector_db, OPENAI_API_KEY, target_lang=target_lang)
+                        print(f"외국인 권리구제 RAG 질문: {query}")
+                        print(f"타겟 언어: {target_lang}")
+                        if vector_db_foreign_worker is None:
+                            print("외국인 권리구제 벡터DB가 None입니다.")
+                            return "죄송합니다. RAG 기능이 현재 사용할 수 없습니다. (외국인 권리구제 벡터DB가 로드되지 않았습니다.)"
+                        print(f"외국인 권리구제 벡터DB 문서 수: {len(vector_db_foreign_worker.documents) if hasattr(vector_db_foreign_worker, 'documents') else '알 수 없음'}")
+                        result = answer_with_rag_foreign_worker(query, vector_db_foreign_worker, OPENAI_API_KEY, target_lang=target_lang)
+                        print(f"RAG 답변 생성 완료: {len(result)} 문자")
+                        return result
                     except Exception as e:
                         print(f"외국인 근로자 RAG 오류: {e}")
+                        import traceback
+                        traceback.print_exc()
                         return "죄송합니다. 외국인 근로자 권리구제 정보를 찾을 수 없습니다."
                 
                 page.views.append(ChatRoomPage(
@@ -825,35 +788,19 @@ def main(page: ft.Page):
             elif is_rag:
                 def multicultural_rag_answer(query, target_lang):
                     try:
-                        import chromadb
-                        from create_foreign_worker_db import OpenAIEmbeddingFunction
-                        # 다문화 가족 전용 ChromaDB 연결 (기존 vector_db 대신 별도 DB 사용)
-                        db_name = "multicultural_family_guide_openai"
-                        persist_directory = "./chroma_db"
-                        chroma_client = chromadb.PersistentClient(path=persist_directory)
-                        embedding_function = OpenAIEmbeddingFunction(OPENAI_API_KEY)
-                        collection = chroma_client.get_or_create_collection(
-                            name=db_name,
-                            embedding_function=embedding_function,
-                            metadata={"hnsw:space": "cosine"}
-                        )
-                        # 쿼리 임베딩 및 유사도 검색
-                        results = collection.query(query_texts=[query], n_results=3)
-                        docs = results.get("documents", [[]])[0]
-                        # 컨텍스트 생성
-                        context = "\n\n".join(docs)
-                        prompt = f"아래 참고 정보의 내용을 최대한 반영해 자연스럽게 답변하세요. 참고 정보에 없는 내용은 '참고 정보에 없습니다'라고 답하세요.\n\n[참고 정보]\n{context}\n\n질문: {query}\n답변:"
-                        # OpenAI 답변 생성
-                        client = openai.OpenAI(api_key=OPENAI_API_KEY)
-                        response = client.chat.completions.create(
-                            model="gpt-4.1-nano-2025-04-14",
-                            messages=[{"role": "user", "content": prompt}],
-                            max_tokens=1000,
-                            temperature=0.1
-                        )
-                        return response.choices[0].message.content.strip()
+                        print(f"다문화 가족 RAG 질문: {query}")
+                        print(f"타겟 언어: {target_lang}")
+                        if vector_db_multicultural is None:
+                            print("다문화가족 벡터DB가 None입니다.")
+                            return "죄송합니다. RAG 기능이 현재 사용할 수 없습니다. (다문화가족 벡터DB가 로드되지 않았습니다.)"
+                        print(f"다문화가족 벡터DB 문서 수: {len(vector_db_multicultural.documents) if hasattr(vector_db_multicultural, 'documents') else '알 수 없음'}")
+                        result = answer_with_rag(query, vector_db_multicultural, OPENAI_API_KEY, target_lang=target_lang)
+                        print(f"RAG 답변 생성 완료: {len(result)} 문자")
+                        return result
                     except Exception as e:
                         print(f"다문화 가족 RAG 오류: {e}")
+                        import traceback
+                        traceback.print_exc()
                         return "죄송합니다. 다문화 가족 한국생활 안내 정보를 찾을 수 없습니다."
                 
                 page.views.append(ChatRoomPage(

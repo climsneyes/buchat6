@@ -498,15 +498,190 @@ def insert_linebreaks(text, max_length=60):
     return result
 
 # 4. RAG 답변 생성 함수
-def answer_with_rag(query, vector_db, openai_api_key, model=None):
+def answer_with_rag(query, vector_db, openai_api_key, model=None, target_lang=None):
     # OpenAI 답변 모델을 절대 변경하지 않음
     model = "gpt-4.1-nano-2025-04-14"
-    print(f"  - RAG 답변 생성 시작")
+    print(f"  - 다문화 가족 RAG 답변 생성 시작")
 
     # 질문 언어 감지
     lang = detect_language(query)
     print(f"  - 감지된 언어: {lang}")
-    prompt_template = LANGUAGE_PROMPTS.get(lang, LANGUAGE_PROMPTS['en'])
+    
+    # 다문화 가족 전용 프롬프트 템플릿 (다국어 지원)
+    multicultural_prompt_templates = {
+        "ko": """다음은 다문화 가족 한국생활 안내 관련 정보입니다. 질문에 대해 정확하고 도움이 되는 답변을 한국어로 제공해주세요.
+
+[참고 정보]
+{context}
+
+질문: {query}
+
+답변: 다문화 가족 한국생활 안내 관점에서 한국어로 답변해주세요.""",
+        "en": """The following is information related to Korean life guidance for multicultural families. Please provide accurate and helpful answers in English.
+
+[Reference Information]
+{context}
+
+Question: {query}
+
+Answer: Please answer from the perspective of Korean life guidance for multicultural families in English.""",
+        "vi": """Sau đây là thông tin liên quan đến hướng dẫn cuộc sống Hàn Quốc cho gia đình đa văn hóa. Vui lòng cung cấp câu trả lời chính xác và hữu ích bằng tiếng Việt.
+
+[Thông tin tham khảo]
+{context}
+
+Câu hỏi: {query}
+
+Trả lời: Vui lòng trả lời từ góc độ hướng dẫn cuộc sống Hàn Quốc cho gia đình đa văn hóa bằng tiếng Việt.""",
+        "ja": """以下は多文化家族のための韓国生活案内に関する情報です。質問に対して正確で役立つ回答を日本語で提供してください。
+
+[参考情報]
+{context}
+
+質問: {query}
+
+回答: 多文化家族のための韓国生活案内の観点から日本語で回答してください。""",
+        "zh": """以下是多文化家庭韩国生活指南相关信息。请用中文提供准确有用的回答。
+
+[参考信息]
+{context}
+
+问题: {query}
+
+回答: 请从多文化家庭韩国生活指南的角度用中文回答。""",
+        "zh-TW": """以下是多元文化家庭韓國生活指南相關資訊。請用繁體中文提供準確有用的回答。
+
+[參考資訊]
+{context}
+
+問題: {query}
+
+回答: 請從多元文化家庭韓國生活指南的角度用繁體中文回答。""",
+        "id": """Berikut adalah informasi terkait panduan kehidupan Korea untuk keluarga multikultural. Silakan berikan jawaban yang akurat dan bermanfaat dalam bahasa Indonesia.
+
+[Informasi Referensi]
+{context}
+
+Pertanyaan: {query}
+
+Jawaban: Silakan jawab dari perspektif panduan kehidupan Korea untuk keluarga multikultural dalam bahasa Indonesia.""",
+        "th": """ต่อไปนี้เป็นข้อมูลที่เกี่ยวข้องกับคู่มือการใช้ชีวิตในเกาหลีสำหรับครอบครัวพหุวัฒนธรรม กรุณาให้คำตอบที่ถูกต้องและเป็นประโยชน์เป็นภาษาไทย
+
+[ข้อมูลอ้างอิง]
+{context}
+
+คำถาม: {query}
+
+คำตอบ: กรุณาตอบจากมุมมองคู่มือการใช้ชีวิตในเกาหลีสำหรับครอบครัวพหุวัฒนธรรมเป็นภาษาไทย""",
+        "fr": """Voici des informations relatives au guide de la vie en Corée pour les familles multiculturelles. Veuillez fournir des réponses précises et utiles en français.
+
+[Informations de référence]
+{context}
+
+Question: {query}
+
+Réponse: Veuillez répondre du point de vue du guide de la vie en Corée pour les familles multiculturelles en français.""",
+        "de": """Es folgen Informationen zum koreanischen Lebensratgeber für multikulturelle Familien. Bitte geben Sie präzise und hilfreiche Antworten auf Deutsch.
+
+[Referenzinformationen]
+{context}
+
+Frage: {query}
+
+Antwort: Bitte antworten Sie aus der Perspektive des koreanischen Lebensratgebers für multikulturelle Familien auf Deutsch.""",
+        "uz": """Quyida ko'p millatli oilalar uchun Koreya hayoti bo'yicha yo'riqnoma bilan bog'liq ma'lumotlar keltirilgan. Iltimos, o'zbek tilida aniq va foydali javoblar bering.
+
+[Ma'lumotlar]
+{context}
+
+Savol: {query}
+
+Javob: Iltimos, ko'p millatli oilalar uchun Koreya hayoti bo'yicha yo'riqnoma nuqtai nazaridan o'zbek tilida javob bering.""",
+        "ne": """तलको बहुसांस्कृतिक परिवारहरूको लागि कोरियन जीवन मार्गदर्शन सम्बन्धी जानकारी हो। कृपया नेपालीमा सटीक र सहायक उत्तरहरू दिनुहोस्।
+
+[सन्दर्भ जानकारी]
+{context}
+
+प्रश्न: {query}
+
+उत्तर: कृपया बहुसांस्कृतिक परिवारहरूको लागि कोरियन जीवन मार्गदर्शनको दृष्टिकोणबाट नेपालीमा उत्तर दिनुहोस्।""",
+        "tet": """Iha maklumat relasiona ho guia vida Korea ba família multikultural. Favor ida fornesi resposta ne'ebé ezatu no útil iha lian Tetun.
+
+[Informasaun Referénsia]
+{context}
+
+Pertanyaan: {query}
+
+Resposta: Favor ida responde husi perspetiva guia vida Korea ba família multikultural iha lian Tetun.""",
+        "lo": """ຂ້າງລຸ່ມນີ້ແມ່ນຂໍ້ມູນທີ່ກ່ຽວຂ້ອງກັບຄູ່ມືການດຳລົງຊີວິດໃນເກົາຫຼີສຳລັບຄອບຄົວຫຼາຍວັດທະນະທຳ ກະລຸນາໃຫ້ຄຳຕອບທີ່ຖືກຕ້ອງ ແລະ ເປັນປະໂຫຍດເປັນພາສາລາວ
+
+[ຂໍ້ມູນອ້າງອີງ]
+{context}
+
+ຄຳຖາມ: {query}
+
+ຄຳຕອບ: ກະລຸນາຕອບຈາກມຸມມອງຄູ່ມືການດຳລົງຊີວິດໃນເກົາຫຼີສຳລັບຄອບຄົວຫຼາຍວັດທະນະທຳເປັນພາສາລາວ""",
+        "mn": """Доорх нь олон соёлт гэр бүлийн солонгос амьдралын заавартай холбоотой мэдээлэл юм. Монгол хэлээр үнэн зөв, хэрэгтэй хариулт өгнө үү.
+
+[Лавлах мэдээлэл]
+{context}
+
+Асуулт: {query}
+
+Хариулт: Олон соёлт гэр бүлийн солонгос амьдралын зааврын үүднээс монгол хэлээр хариулна уу.""",
+        "my": """အောက်ပါသည် ယဉ်ကျေးမှုစုံလင်သော မိသားစုများအတွက် ကိုရီးယားဘဝလမ်းညွှန်ချက်နှင့်ပတ်သက်သော အချက်အလက်များဖြစ်သည်။ မြန်မာဘာသာဖြင့် တိကျပြီး အသုံးဝင်သော အဖြေများကို ပေးပါ။
+
+[ကိုးကားအချက်အလက်]
+{context}
+
+မေးခွန်း: {query}
+
+အဖြေ: ယဉ်ကျေးမှုစုံလင်သော မိသားစုများအတွက် ကိုရီးယားဘဝလမ်းညွှန်ချက်၏ ရှုထောင့်မှ မြန်မာဘာသာဖြင့် ဖြေကြားပါ။""",
+        "bn": """নিচে বহুসংস্কৃতিক পরিবারের জন্য কোরিয়ান জীবন গাইড সম্পর্কিত তথ্য দেওয়া হয়েছে। অনুগ্রহ করে বাংলায় সঠিক এবং উপকারী উত্তর দিন।
+
+[রেফারেন্স তথ্য]
+{context}
+
+প্রশ্ন: {query}
+
+উত্তর: অনুগ্রহ করে বহুসংস্কৃতিক পরিবারের জন্য কোরিয়ান জীবন গাইডের দৃষ্টিকোণ থেকে বাংলায় উত্তর দিন।""",
+        "si": """පහත දැක්වෙන්නේ බහු සංස්කෘතික පවුල් සඳහා කොරියානු ජීවන මාර්ගෝපදේශය සම්බන්ධ තොරතුරු වේ. කරුණාකර සිංහල භාෂාවෙන් නිවැරදි සහ ප්‍රයෝජනවත් පිළිතුරු ලබා දෙන්න.
+
+[යොමු තොරතුරු]
+{context}
+
+ප්‍රශ්නය: {query}
+
+පිළිතුර: කරුණාකර බහු සංස්කෘතික පවුල් සඳහා කොරියානු ජීවන මාර්ගෝපදේශයේ දෘෂ්ටිකෝණයෙන් සිංහල භාෂාවෙන් පිළිතුරු දෙන්න.""",
+        "km": """ខាងក្រោមនេះគឺជាព័ត៌មានទាក់ទងនឹងមគ្គុទ្ទេសក៍ជីវិតកូរ៉េសម្រាប់គ្រួសារពហុវប្បធម៌ សូមផ្តល់ចម្លើយត្រឹមត្រូវនិងមានប្រយោជន៍ជាភាសាខ្មែរ
+
+[ព័ត៌មានយោបល់]
+{context}
+
+សំណួរ: {query}
+
+ចម្លើយ: សូមឆ្លើយតបពីទិដ្ឋភាពនៃមគ្គុទ្ទេសក៍ជីវិតកូរ៉េសម្រាប់គ្រួសារពហុវប្បធម៌ជាភាសាខ្មែរ""",
+        "ky": """Төмөндө көп маданийаттуу үй-бүлөлөр үчүн Корея жашоо жолун көрсөткүчү менен байланыштуу маалыматтар келтирилген. Суйлоо тилинде так жана пайдалуу жоопторду бериңиз.
+
+[Маалыматтар]
+{context}
+
+Суроо: {query}
+
+Жооп: Көп маданийаттуу үй-бүлөлөр үчүн Корея жашоо жолун көрсөткүчүнүн көз карашынан суйлоо тилинде жооп бериңиз.""",
+        "ur": """ذیل میں کثیرالثقافتی خاندانوں کے لیے کوریائی زندگی کی رہنمائی سے متعلق معلومات ہیں۔ براہ کرم اردو میں درست اور مفید جوابات دیں۔
+
+[حوالہ معلومات]
+{context}
+
+سوال: {query}
+
+جواب: براہ کرم کثیرالثقافتی خاندانوں کے لیے کوریائی زندگی کی رہنمائی کے نقطہ نظر سے اردو میں جواب دیں۔"""
+    }
+    
+    # 프롬프트 언어 선택 (타겟 언어가 지정되면 해당 언어 사용, 아니면 감지된 언어 사용)
+    prompt_lang = target_lang if target_lang else lang
+    multicultural_prompt_template = multicultural_prompt_templates.get(prompt_lang, multicultural_prompt_templates['en'])
     error_msg = ERROR_MESSAGES.get(lang, ERROR_MESSAGES['en'])
 
     # 1단계: 유사 청크 검색
@@ -539,7 +714,7 @@ def answer_with_rag(query, vector_db, openai_api_key, model=None):
 
     # 3단계: 프롬프트 생성
     print(f"  - 3단계: 프롬프트 생성")
-    prompt = prompt_template.format(context=context, query=query)
+    prompt = multicultural_prompt_template.format(context=context, query=query)
     print(f"  - 프롬프트 길이: {len(prompt)} 문자")
 
     # 4단계: OpenAI API 호출
