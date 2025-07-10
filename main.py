@@ -136,7 +136,7 @@ FIND_ROOM_TEXTS = {
         "qr": "QR코드로 찾기",
         "qr_desc": "QR 코드를 스캔하여 빠른 참여",
         "rag": "다문화가족 한국생활안내",
-        "rag_desc": "다문화 가족지원 포털 다누리- 한국생활 안내 자료에 근거한 챗봇"
+        "rag_desc": "다누리 포털 기반\n한국생활 안내 챗봇"
     },
     "en": {
         "title": "Select a way to find a chat room",
@@ -338,7 +338,25 @@ FOREIGN_WORKER_ROOM_CARD_TEXTS = {
     "ur": {"title": "غیر ملکی مزدوروں کے حقوق کا تحفظ", "desc": "غیر ملکی مزدوروں کے حقوق کی گائیڈ بک پر مبنی RAG چیٹ بوٹ"}
 }
 
+def get_text_color(page):
+    return ft.Colors.WHITE if page.theme_mode == ft.ThemeMode.DARK else ft.Colors.BLACK
+
+def get_sub_text_color(page):
+    return ft.Colors.GREY_300 if page.theme_mode == ft.ThemeMode.DARK else ft.Colors.GREY_600
+
+def get_bg_color(page):
+    return ft.Colors.BLACK if page.theme_mode == ft.ThemeMode.DARK else ft.Colors.WHITE
+
+def get_card_bg_color(page):
+    return "#23272F" if page.theme_mode == ft.ThemeMode.DARK else ft.Colors.WHITE
+
 def main(page: ft.Page):
+    # 시스템 다크모드 감지(또는 강제 다크/라이트)
+    page.theme_mode = ft.ThemeMode.SYSTEM
+    page.theme = ft.Theme(
+        color_scheme_seed="deepPurple",
+        use_material3=True,
+    )
     # 구글 폰트 링크 및 CSS 추가 (웹 환경에서 특수문자 깨짐 방지)
     page.html = """
     <link href='https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap' rel='stylesheet'>
@@ -501,7 +519,7 @@ def main(page: ft.Page):
                     # 헤더 (뒤로가기 + 타이틀)
                     ft.Row([
                         ft.IconButton(ft.Icons.ARROW_BACK, on_click=lambda e: go_home(lang)),
-                        ft.Text(texts["title"], size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
+                        ft.Text(texts["title"], size=24, weight=ft.FontWeight.BOLD, color=get_text_color(page)),
                     ], alignment=ft.MainAxisAlignment.START, spacing=8, vertical_alignment=ft.CrossAxisAlignment.CENTER),
 
                     # 카드형 버튼들
@@ -514,11 +532,11 @@ def main(page: ft.Page):
                                         bgcolor="#E0E7FF", border_radius=12, padding=10, margin=ft.margin.only(right=12)
                                     ),
                                     ft.Column([
-                                        ft.Text(texts["id"], size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
-                                        ft.Text(texts["id_desc"], size=12, color=ft.Colors.GREY_600)
+                                        ft.Text(texts["id"], size=16, weight=ft.FontWeight.BOLD, color=get_text_color(page)),
+                                        ft.Text(texts["id_desc"], size=12, color=get_sub_text_color(page))
                                     ], spacing=2)
                                 ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
-                                bgcolor=ft.Colors.WHITE,
+                                bgcolor=get_card_bg_color(page),
                                 border_radius=12,
                                 shadow=ft.BoxShadow(blur_radius=8, color="#B0BEC544"),
                                 padding=16,
@@ -531,11 +549,11 @@ def main(page: ft.Page):
                                         bgcolor="#F3E8FF", border_radius=12, padding=10, margin=ft.margin.only(right=12)
                                     ),
                                     ft.Column([
-                                        ft.Text(texts["qr"], size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
-                                        ft.Text(texts["qr_desc"], size=12, color=ft.Colors.GREY_600)
+                                        ft.Text(texts["qr"], size=16, weight=ft.FontWeight.BOLD, color=get_text_color(page)),
+                                        ft.Text(texts["qr_desc"], size=12, color=get_sub_text_color(page))
                                     ], spacing=2)
                                 ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
-                                bgcolor=ft.Colors.WHITE,
+                                bgcolor=get_card_bg_color(page),
                                 border_radius=12,
                                 shadow=ft.BoxShadow(blur_radius=8, color="#B0BEC544"),
                                 padding=16,
@@ -548,11 +566,11 @@ def main(page: ft.Page):
                                         bgcolor="#DCFCE7", border_radius=12, padding=10, margin=ft.margin.only(right=12)
                                     ),
                                     ft.Column([
-                                        ft.Text(texts["rag"], size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
-                                        ft.Text(texts["rag_desc"], size=12, color=ft.Colors.GREY_600)
+                                        ft.Text(texts["rag"], size=16, weight=ft.FontWeight.BOLD, color=get_text_color(page)),
+                                        ft.Text(texts["rag_desc"], size=12, color=get_sub_text_color(page))
                                     ], spacing=2)
                                 ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
-                                bgcolor=ft.Colors.WHITE,
+                                bgcolor=get_card_bg_color(page),
                                 border_radius=12,
                                 shadow=ft.BoxShadow(blur_radius=8, color="#B0BEC544"),
                                 padding=16,
@@ -567,11 +585,11 @@ def main(page: ft.Page):
                                         bgcolor="#FFF7E6", border_radius=12, padding=10, margin=ft.margin.only(right=12)
                                     ),
                                     ft.Column([
-                                        ft.Text(FOREIGN_WORKER_ROOM_CARD_TEXTS.get(lang, FOREIGN_WORKER_ROOM_CARD_TEXTS["ko"])["title"], size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
-                                        ft.Text(FOREIGN_WORKER_ROOM_CARD_TEXTS.get(lang, FOREIGN_WORKER_ROOM_CARD_TEXTS["ko"])["desc"], size=12, color=ft.Colors.GREY_600)
+                                        ft.Text(FOREIGN_WORKER_ROOM_CARD_TEXTS.get(lang, FOREIGN_WORKER_ROOM_CARD_TEXTS["ko"])["title"], size=16, weight=ft.FontWeight.BOLD, color=get_text_color(page)),
+                                        ft.Text(FOREIGN_WORKER_ROOM_CARD_TEXTS.get(lang, FOREIGN_WORKER_ROOM_CARD_TEXTS["ko"])["desc"], size=12, color=get_sub_text_color(page))
                                     ], spacing=2)
                                 ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
-                                bgcolor=ft.Colors.WHITE,
+                                bgcolor=get_card_bg_color(page),
                                 border_radius=12,
                                 shadow=ft.BoxShadow(blur_radius=8, color="#B0BEC544"),
                                 padding=16,
@@ -618,7 +636,7 @@ def main(page: ft.Page):
                     ft.ElevatedButton(t["enter"], on_click=on_submit, width=300),
                     ft.ElevatedButton(t["back"], on_click=lambda e: go_room_list(lang), width=300)
                 ],
-                bgcolor=ft.Colors.WHITE,
+                bgcolor=get_bg_color(page),
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 vertical_alignment=ft.MainAxisAlignment.CENTER
             )
@@ -689,7 +707,7 @@ def main(page: ft.Page):
                             ft.Text(
                                 t["desc"],
                                 size=14,
-                                color=ft.Colors.GREY_600,
+                                color=get_sub_text_color(page),
                                 text_align=ft.TextAlign.CENTER
                             ),
                             ft.Container(height=20),
@@ -708,13 +726,13 @@ def main(page: ft.Page):
                             ),
                         ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
                         padding=32,
-                        bgcolor=ft.Colors.WHITE,
+                        bgcolor=get_card_bg_color(page),
                         border_radius=20,
                         shadow=ft.BoxShadow(blur_radius=20, color=ft.Colors.BLACK12),
                     ),
                     ft.ElevatedButton(t["back"], on_click=lambda e: go_room_list(lang), width=350)
                 ],
-                bgcolor=ft.Colors.WHITE,
+                bgcolor=get_bg_color(page),
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 vertical_alignment=ft.MainAxisAlignment.CENTER
             )
@@ -833,7 +851,7 @@ def main(page: ft.Page):
             # 닉네임 입력 화면 다국어 지원
             texts = NICKNAME_TEXTS.get(lang, NICKNAME_TEXTS["ko"])
             nickname_value = ""
-            char_count = ft.Text(f"0/12", size=12, color=ft.Colors.GREY_600)
+            char_count = ft.Text(f"0/12", size=12, color=get_sub_text_color(page))
             nickname_field = ft.TextField(label=texts["label"], hint_text=texts["hint"], on_change=None, max_length=12, width=320)
             enter_button = ft.ElevatedButton(texts["enter"], disabled=True, width=320)
             def on_nickname_change(e):
@@ -860,13 +878,13 @@ def main(page: ft.Page):
                                         content=ft.Icon(name=ft.Icons.PERSON, color="#22C55E", size=28),
                                         bgcolor="#22C55E22", border_radius=12, padding=8, margin=ft.margin.only(right=8)
                                     ),
-                                    ft.Text(texts["title"], size=22, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
+                                    ft.Text(texts["title"], size=22, weight=ft.FontWeight.BOLD, color=get_text_color(page)),
                                 ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
                             ),
                         ], alignment=ft.MainAxisAlignment.START, spacing=8, vertical_alignment=ft.CrossAxisAlignment.CENTER),
                         ft.Container(
                             content=ft.Column([
-                                ft.Text(texts["desc"], size=14, color=ft.Colors.GREY_600, text_align="center"),
+                                ft.Text(texts["desc"], size=14, color=get_sub_text_color(page), text_align="center"),
                                 ft.Container(height=8),
                                 ft.Text(texts["label"], size=14, weight=ft.FontWeight.W_500),
                         nickname_field,
@@ -879,7 +897,7 @@ def main(page: ft.Page):
                                 ft.ElevatedButton(texts["back"], on_click=lambda e: go_home(lang), width=320, style=ft.ButtonStyle(bgcolor=ft.Colors.GREY_200, color=ft.Colors.BLACK)),
                             ], spacing=0, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
                             padding=40,
-                            bgcolor=ft.Colors.WHITE,
+                            bgcolor=get_card_bg_color(page),
                             border_radius=20,
                             shadow=ft.BoxShadow(blur_radius=24, color="#B0BEC544"),
                             alignment=ft.alignment.center,
