@@ -136,7 +136,7 @@ FIND_ROOM_TEXTS = {
         "qr": "QR코드로 찾기",
         "qr_desc": "QR 코드를 스캔하여 빠른 참여",
         "rag": "다문화가족 한국생활안내",
-        "rag_desc": "다누리 포털 기반\n한국생활 안내 챗봇"
+        "rag_desc": "다누리 포털 기반 한국생활 안내 챗봇"
     },
     "en": {
         "title": "Select a way to find a chat room",
@@ -533,8 +533,8 @@ def main(page: ft.Page):
                                     ),
                                     ft.Column([
                                         ft.Text(texts["id"], size=16, weight=ft.FontWeight.BOLD, color=get_text_color(page)),
-                                        ft.Text(texts["id_desc"], size=12, color=get_sub_text_color(page))
-                                    ], spacing=2)
+                                        ft.Text(texts["id_desc"], size=12, color=get_sub_text_color(page), text_align=ft.TextAlign.START, max_lines=3)
+                                    ], spacing=2, expand=True)
                                 ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
                                 bgcolor=get_card_bg_color(page),
                                 border_radius=12,
@@ -550,8 +550,8 @@ def main(page: ft.Page):
                                     ),
                                     ft.Column([
                                         ft.Text(texts["qr"], size=16, weight=ft.FontWeight.BOLD, color=get_text_color(page)),
-                                        ft.Text(texts["qr_desc"], size=12, color=get_sub_text_color(page))
-                                    ], spacing=2)
+                                        ft.Text(texts["qr_desc"], size=12, color=get_sub_text_color(page), text_align=ft.TextAlign.START, max_lines=3)
+                                    ], spacing=2, expand=True)
                                 ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
                                 bgcolor=get_card_bg_color(page),
                                 border_radius=12,
@@ -567,8 +567,8 @@ def main(page: ft.Page):
                                     ),
                                     ft.Column([
                                         ft.Text(texts["rag"], size=16, weight=ft.FontWeight.BOLD, color=get_text_color(page)),
-                                        ft.Text(texts["rag_desc"], size=12, color=get_sub_text_color(page))
-                                    ], spacing=2)
+                                        ft.Text(texts["rag_desc"], size=12, color=get_sub_text_color(page), text_align=ft.TextAlign.START, max_lines=3)
+                                    ], spacing=2, expand=True)
                                 ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
                                 bgcolor=get_card_bg_color(page),
                                 border_radius=12,
@@ -586,8 +586,8 @@ def main(page: ft.Page):
                                     ),
                                     ft.Column([
                                         ft.Text(FOREIGN_WORKER_ROOM_CARD_TEXTS.get(lang, FOREIGN_WORKER_ROOM_CARD_TEXTS["ko"])["title"], size=16, weight=ft.FontWeight.BOLD, color=get_text_color(page)),
-                                        ft.Text(FOREIGN_WORKER_ROOM_CARD_TEXTS.get(lang, FOREIGN_WORKER_ROOM_CARD_TEXTS["ko"])["desc"], size=12, color=get_sub_text_color(page))
-                                    ], spacing=2)
+                                        ft.Text(FOREIGN_WORKER_ROOM_CARD_TEXTS.get(lang, FOREIGN_WORKER_ROOM_CARD_TEXTS["ko"])["desc"], size=12, color=get_sub_text_color(page), text_align=ft.TextAlign.START, max_lines=3)
+                                    ], spacing=2, expand=True)
                                 ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
                                 bgcolor=get_card_bg_color(page),
                                 border_radius=12,
