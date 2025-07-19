@@ -96,7 +96,7 @@ def RoomListModernPage(page, lang="ko", on_create=None, on_select=None, on_back=
                     *[
                         ft.Container(
                             content=ft.Row([
-                                ft.Icon(ft.icons.GROUP, size=32, color=ft.Colors.BLUE_400),
+                                ft.Icon(ft.Icons.GROUP, size=32, color=ft.Colors.BLUE_400),
                                 ft.Column([
                                     ft.Text(room["title"], size=18, weight=ft.FontWeight.BOLD),
                                     ft.Text(room["desc"], size=13, color=ft.Colors.GREY_600),

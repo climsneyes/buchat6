@@ -27,6 +27,8 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             "target_lang_hint": "예: 영어, 일본어, 중국어 등",
             "purpose_label": "채팅 목적 선택 (선택사항)",
             "purpose_options": ["길안내", "음식 추천", "관광지 설명", "자유 대화", "긴급 도움 요청"],
+            "persistent_room_label": "고정 채팅방 만들기",
+            "persistent_room_desc": "체크하면 QR코드로 언제든지 같은 방에 접속할 수 있습니다 (식당, 가게 등에 적합)",
             "create_btn": "✅ 채팅방 만들기",
             "tip": "구체적인 방 제목을 작성하면 더 많은 사람들이 참여할 수 있어요!"
         },
@@ -40,6 +42,8 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             "target_lang_hint": "e.g. Korean, Japanese, Chinese",
             "purpose_label": "Purpose of Chat (optional)",
             "purpose_options": ["Directions", "Food Recommendations", "Tourist Info", "Casual Talk", "Emergency Help"],
+            "persistent_room_label": "Create Fixed Chat Room",
+            "persistent_room_desc": "Check to create a room that can be accessed anytime via QR code (suitable for restaurants, shops, etc.)",
             "create_btn": "✅ Create Chat Room",
             "tip": "If you write a specific room title, more people can join!"
         },
@@ -53,6 +57,8 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             "target_lang_hint": "例: 英語、韓国語、中国語など",
             "purpose_label": "チャットの目的（任意）",
             "purpose_options": ["道案内", "食事のおすすめ", "観光案内", "フリートーク", "緊急支援"],
+            "persistent_room_label": "固定チャットルームを作成",
+            "persistent_room_desc": "チェックするとQRコードでいつでも同じ部屋にアクセスできます（レストラン、店舗などに適しています）",
             "create_btn": "✅ チャットルーム作成",
             "tip": "具体的なルームタイトルを書くと、より多くの人が参加しやすくなります！"
         },
@@ -66,6 +72,8 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             "target_lang_hint": "例如：英语、日语、韩语等",
             "purpose_label": "聊天目的（可选）",
             "purpose_options": ["导航", "美食推荐", "旅游信息", "自由聊天", "紧急求助"],
+            "persistent_room_label": "创建固定聊天室",
+            "persistent_room_desc": "勾选后可通过二维码随时访问同一房间（适合餐厅、商店等）",
             "create_btn": "✅ 创建聊天室",
             "tip": "写一个具体的房间标题会有更多人加入哦！"
         },
@@ -79,6 +87,8 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             "target_lang_hint": "例如：英文、日文、韓文等",
             "purpose_label": "聊天目的（可選）",
             "purpose_options": ["導航", "美食推薦", "旅遊資訊", "自由聊天", "緊急求助"],
+            "persistent_room_label": "建立固定聊天室",
+            "persistent_room_desc": "勾選後可透過QR碼隨時存取同一房間（適合餐廳、商店等）",
             "create_btn": "✅ 建立聊天室",
             "tip": "寫下具體的房間標題，會有更多人參加喔！"
         },
@@ -92,6 +102,8 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             "target_lang_hint": "misal: Inggris, Jepang, Korea, dll",
             "purpose_label": "Tujuan Obrolan (opsional)",
             "purpose_options": ["Petunjuk Arah", "Rekomendasi Makanan", "Info Wisata", "Obrolan Bebas", "Bantuan Darurat"],
+            "persistent_room_label": "Buat Ruang Obrolan Tetap",
+            "persistent_room_desc": "Centang untuk membuat ruang yang dapat diakses kapan saja melalui QR code (cocok untuk restoran, toko, dll)",
             "create_btn": "✅ Buat Ruang Obrolan",
             "tip": "Jika Anda menulis judul ruang yang spesifik, lebih banyak orang dapat bergabung!"
         },
@@ -105,6 +117,8 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             "target_lang_hint": "ex : Anglais, Japonais, Chinois",
             "purpose_label": "But du chat (optionnel)",
             "purpose_options": ["Itinéraire", "Recommandation de nourriture", "Info touristique", "Discussion libre", "Aide d'urgence"],
+            "persistent_room_label": "Créer une salle de chat fixe",
+            "persistent_room_desc": "Cochez pour créer une salle accessible à tout moment via QR code (adapté aux restaurants, magasins, etc.)",
             "create_btn": "✅ Créer la salle",
             "tip": "Si vous écrivez un titre de salle précis, plus de personnes pourront rejoindre !"
         },
@@ -118,6 +132,8 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             "target_lang_hint": "z.B. Englisch, Japanisch, Chinesisch",
             "purpose_label": "Chat-Zweck (optional)",
             "purpose_options": ["Wegbeschreibung", "Essensempfehlung", "Touristeninfo", "Freies Gespräch", "Notfallhilfe"],
+            "persistent_room_label": "Festen Chatraum erstellen",
+            "persistent_room_desc": "Aktivieren Sie diese Option, um einen Raum zu erstellen, der jederzeit über QR-Code zugänglich ist (geeignet für Restaurants, Geschäfte usw.)",
             "create_btn": "✅ Chatraum erstellen",
             "tip": "Wenn Sie einen konkreten Raumnamen angeben, können mehr Leute teilnehmen!"
         },
@@ -131,6 +147,8 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             "target_lang_hint": "เช่น อังกฤษ ญี่ปุ่น จีน",
             "purpose_label": "วัตถุประสงค์ของแชท (ไม่บังคับ)",
             "purpose_options": ["นำทาง", "แนะนำอาหาร", "ข้อมูลท่องเที่ยว", "พูดคุยทั่วไป", "ขอความช่วยเหลือฉุกเฉิน"],
+            "persistent_room_label": "สร้างห้องแชทประจำ",
+            "persistent_room_desc": "เลือกเพื่อสร้างห้องที่สามารถเข้าถึงได้ตลอดเวลาผ่านQR code (เหมาะสำหรับร้านอาหาร ร้านค้า ฯลฯ)",
             "create_btn": "✅ สร้างห้องแชท",
             "tip": "หากตั้งชื่อห้องให้เฉพาะเจาะจง จะมีคนเข้าร่วมมากขึ้น!"
         },
@@ -144,6 +162,8 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             "target_lang_hint": "VD: Tiếng Anh, Tiếng Nhật, Tiếng Trung",
             "purpose_label": "Mục đích trò chuyện (tùy chọn)",
             "purpose_options": ["Chỉ đường", "Gợi ý món ăn", "Thông tin du lịch", "Trò chuyện tự do", "Yêu cầu khẩn cấp"],
+            "persistent_room_label": "Tạo phòng trò chuyện cố định",
+            "persistent_room_desc": "Chọn để tạo phòng có thể truy cập bất cứ lúc nào qua QR code (phù hợp cho nhà hàng, cửa hàng, v.v.)",
             "create_btn": "✅ Tạo phòng",
             "tip": "Nếu bạn đặt tên phòng cụ thể, sẽ có nhiều người tham gia hơn!"
         }
@@ -199,10 +219,26 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
         width=field_width
     )
     
-    # on_create 콜백 수정: 방 제목과 함께 선택된 상대방 언어(target_lang_dd.value)를 전달
+    # 영속적 채팅방 체크박스 추가
+    persistent_room_checkbox = ft.Checkbox(
+        label=t["persistent_room_label"],
+        value=False,
+        scale=1.0
+    )
+    
+    # 영속적 채팅방 설명 텍스트
+    persistent_room_desc = ft.Text(
+        t["persistent_room_desc"],
+        size=12,
+                        color=ft.Colors.GREY_600,
+        text_align=ft.TextAlign.START,
+        max_lines=3
+    )
+    
+    # on_create 콜백 수정: 방 제목, 상대방 언어, 영속적 채팅방 옵션을 전달
     create_button = ft.ElevatedButton(
         t["create_btn"],
-        on_click=lambda e: on_create(room_title_field.value, target_lang_dd.value) if on_create else None,
+        on_click=lambda e: on_create(room_title_field.value, target_lang_dd.value, persistent_room_checkbox.value) if on_create else None,
         width=field_width,
         bgcolor="#4ADE80",
         color=ft.Colors.WHITE
@@ -248,6 +284,14 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
                         margin=ft.margin.only(top=12)
                     ),
                     purpose_dd,
+                    ft.Container(
+                        content=persistent_room_checkbox,
+                        margin=ft.margin.only(top=12)
+                    ),
+                    ft.Container(
+                        content=persistent_room_desc,
+                        margin=ft.margin.only(top=4)
+                    ),
                     ft.Container(
                         content=create_button,
                         margin=ft.margin.only(top=16 if is_mobile else 20)

@@ -13,8 +13,8 @@ if not os.path.exists("config.py"):
     with open("config.py", "w", encoding="utf-8") as f:
         f.write(f'''
 import os
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+MODEL_NAME = os.getenv("MODEL_NAME", "gemini-pro")
 FIREBASE_DB_URL = os.getenv("FIREBASE_DB_URL", "https://pychat-25c45-default-rtdb.asia-southeast1.firebasedatabase.app/")
 FIREBASE_KEY_PATH = os.getenv("FIREBASE_KEY_PATH", "firebase_key.json")
 ''')
@@ -28,7 +28,7 @@ from pages.room_list import RoomListPage
 from pages.chat_room import ChatRoomPage
 from pages.foreign_country_select import ForeignCountrySelectPage
 import openai
-from config import OPENAI_API_KEY, MODEL_NAME, FIREBASE_DB_URL, FIREBASE_KEY_PATH
+from config import GEMINI_API_KEY, MODEL_NAME, FIREBASE_DB_URL, FIREBASE_KEY_PATH
 import uuid
 import qrcode
 import io
@@ -38,7 +38,7 @@ import time
 import firebase_admin
 from firebase_admin import credentials, db
 from rag_utils import get_or_create_vector_db, answer_with_rag, answer_with_rag_foreign_worker
-from rag_utils import SimpleVectorDB, OpenAIEmbeddings
+from rag_utils import SimpleVectorDB, GeminiEmbeddings
 
 
 IS_SERVER = os.environ.get("CLOUDTYPE") == "1"  # Cloudtype 환경변수 등으로 구분
@@ -76,12 +76,12 @@ except Exception as e:
     print("⚠️ Firebase 기능이 비활성화됩니다. 채팅방 생성 및 메시지 저장이 불가능합니다.")
     FIREBASE_AVAILABLE = False
 
-client = openai.OpenAI(api_key=OPENAI_API_KEY)
+# OpenAI 관련 client = openai.OpenAI(api_key=OPENAI_API_KEY) 제거
 
 # RAG용 벡터DB 준비 (무조건 병합본만 사용)
 print("RAG 벡터DB 준비 중...")
-VECTOR_DB_MERGED_PATH = "vector_db_merged.pkl"
-VECTOR_DB_FOREIGN_WORKER_PATH = "vector_db_multi2.pkl"
+VECTOR_DB_MERGED_PATH = "다문화.pkl"
+VECTOR_DB_FOREIGN_WORKER_PATH = "외국인근로자.pkl"
 vector_db_multicultural = None
 vector_db_foreign_worker = None
 
@@ -93,9 +93,8 @@ try:
         with open(VECTOR_DB_MERGED_PATH, "rb") as f:
             vector_db_multicultural = pickle.load(f)
         print(f"벡터DB 로드 완료. 문서 수: {len(vector_db_multicultural.documents) if hasattr(vector_db_multicultural, 'documents') else '알 수 없음'}")
-        vector_db_multicultural.embeddings = OpenAIEmbeddings(
-            openai_api_key=OPENAI_API_KEY,
-            model="text-embedding-3-small"
+        vector_db_multicultural.embeddings = GeminiEmbeddings(
+            gemini_api_key=GEMINI_API_KEY
         )
         print("다문화가족 벡터DB 로드 완료!")
     else:
@@ -112,9 +111,8 @@ try:
         with open(VECTOR_DB_FOREIGN_WORKER_PATH, "rb") as f:
             vector_db_foreign_worker = pickle.load(f)
         print(f"벡터DB 로드 완료. 문서 수: {len(vector_db_foreign_worker.documents) if hasattr(vector_db_foreign_worker, 'documents') else '알 수 없음'}")
-        vector_db_foreign_worker.embeddings = OpenAIEmbeddings(
-            openai_api_key=OPENAI_API_KEY,
-            model="text-embedding-3-small"
+        vector_db_foreign_worker.embeddings = GeminiEmbeddings(
+            gemini_api_key=GEMINI_API_KEY
         )
         print("외국인 권리구제 벡터DB 로드 완료!")
     else:
@@ -133,8 +131,6 @@ FIND_ROOM_TEXTS = {
         "title": "채팅방 찾기 방법을 선택하세요",
         "id": "ID로 찾기",
         "id_desc": "채팅방 ID를 입력하여 참여",
-        "qr": "QR코드로 찾기",
-        "qr_desc": "QR 코드를 스캔하여 빠른 참여",
         "rag": "다문화가족 한국생활안내",
         "rag_desc": "다누리 포털 기반 한국생활 안내 챗봇"
     },
@@ -142,8 +138,6 @@ FIND_ROOM_TEXTS = {
         "title": "Select a way to find a chat room",
         "id": "Find by ID",
         "id_desc": "Join by entering chat room ID",
-        "qr": "Find by QR code",
-        "qr_desc": "Quick join by scanning QR code",
         "rag": "Korean Life Guide for Multicultural Families",
         "rag_desc": "Chatbot based on Danuri - Korean Life Guide for Multicultural Families Portal materials"
     },
@@ -151,8 +145,6 @@ FIND_ROOM_TEXTS = {
         "title": "Chọn cách tìm phòng chat",
         "id": "Tìm bằng ID",
         "id_desc": "Tham gia bằng cách nhập ID phòng chat",
-        "qr": "Tìm bằng mã QR",
-        "qr_desc": "Tham gia nhanh bằng quét mã QR",
         "rag": "Hướng dẫn cuộc sống Hàn Quốc cho gia đình đa văn hóa",
         "rag_desc": "Chatbot dựa trên tài liệu Hướng dẫn cuộc sống Hàn Quốc của cổng thông tin Danuri cho gia đình đa văn hóa"
     },
@@ -160,8 +152,6 @@ FIND_ROOM_TEXTS = {
         "title": "チャットルームの探し方を選択してください",
         "id": "IDで探す",
         "id_desc": "IDでチャットルームに参加",
-        "qr": "QRコードで探す",
-        "qr_desc": "QRコードをスキャンして参加",
         "rag": "多文化家族のための韓国生活ガイド",
         "rag_desc": "多文化家族支援ポータル「ダヌリ」- 韓国生活案内資料に基づくチャットボット"
     },
@@ -169,8 +159,6 @@ FIND_ROOM_TEXTS = {
         "title": "请选择查找聊天室的方法",
         "id": "通过ID查找",
         "id_desc": "通过输入聊天室ID加入",
-        "qr": "通过二维码查找",
-        "qr_desc": "扫描二维码快速加入",
         "rag": "多文化家庭韩国生活指南",
         "rag_desc": "基于多文化家庭支援门户Danuri-韩国生活指南资料的聊天机器人"
     },
@@ -178,8 +166,6 @@ FIND_ROOM_TEXTS = {
         "title": "Sélectionnez une méthode pour trouver un salon de discussion",
         "id": "Rechercher par ID",
         "id_desc": "Rejoindre en entrant l'ID de la salle de discussion",
-        "qr": "Rechercher par QR code",
-        "qr_desc": "Rejoindre rapidement en scanant le code QR",
         "rag": "Guide de la vie en Corée pour les familles multiculturelles",
         "rag_desc": "Chatbot basé sur le portail Danuri - Guide de la vie en Corée pour les familles multiculturelles"
     },
@@ -187,8 +173,6 @@ FIND_ROOM_TEXTS = {
         "title": "Wählen Sie eine Methode, um einen Chatraum zu finden",
         "id": "Nach ID suchen",
         "id_desc": "Beitreten, indem Sie die Chatraum-ID eingeben",
-        "qr": "Mit QR-Code suchen",
-        "qr_desc": "Schnell beitreten, indem Sie den QR-Code scannen",
         "rag": "Koreanischer Lebensratgeber für multikulturelle Familien",
         "rag_desc": "Chatbot basierend auf dem Danuri-Portal - Koreanischer Lebensratgeber für multikulturelle Familien"
     },
@@ -196,8 +180,6 @@ FIND_ROOM_TEXTS = {
         "title": "เลือกวิธีค้นหาห้องแชท",
         "id": "ค้นหาด้วย ID",
         "id_desc": "เข้าร่วมโดยการป้อน IDห้องแชท",
-        "qr": "ค้นหาด้วย QR โค้ด",
-        "qr_desc": "เข้าร่วมอย่างรวดเร็วโดยสแกน QR โค้ด",
         "rag": "คู่มือการใช้ชีวิตในเกาหลีสำหรับครอบครัวพหุวัฒนธรรม",
         "rag_desc": "แชทบอทอ้างอิงจากข้อมูลคู่มือการใช้ชีวิตในเกาหลีของพอร์ทัล Danuri สำหรับครอบครัวพหุวัฒนธรรม"
     },
@@ -205,8 +187,6 @@ FIND_ROOM_TEXTS = {
         "title": "請選擇查找聊天室的方法",
         "id": "通過ID查找",
         "id_desc": "輸入聊天室ID參加",
-        "qr": "通過二維碼查找",
-        "qr_desc": "掃描二維碼快速參加",
         "rag": "多元文化家庭韓國生活指南",
         "rag_desc": "基於多元文化家庭支援門戶Danuri-韓國生活指南資料的聊天機器人"
     },
@@ -214,8 +194,6 @@ FIND_ROOM_TEXTS = {
         "title": "Pilih cara menemukan ruang obrolan",
         "id": "Cari dengan ID",
         "id_desc": "Gabung dengan memasukkan ID ruang obrolan",
-        "qr": "Cari dengan kode QR",
-        "qr_desc": "Gabung cepat dengan memindai kode QR",
         "rag": "Panduan Hidup di Korea untuk Keluarga Multikultural",
         "rag_desc": "Chatbot berdasarkan portal Danuri - Panduan Hidup di Korea untuk Keluarga Multikultural"
     },
@@ -247,70 +225,6 @@ NICKNAME_TEXTS = {
         "enter": "Masuk ke Ruang Obrolan",
         "back": "Kembali"
     },
-}
-
-# QR 코드 공유 다국어 텍스트 사전 추가
-QR_SHARE_TEXTS = {
-    "ko": {
-        "title": "방 '{room}' 공유",
-        "desc": "다른 사용자가 QR코드를 스캔하면 이 방으로 바로 참여할 수 있습니다.",
-        "room_id": "방 ID: {id}",
-        "close": "닫기"
-    },
-    "en": {
-        "title": "Share room '{room}'",
-        "desc": "Other users can join this room by scanning the QR code.",
-        "room_id": "Room ID: {id}",
-        "close": "Close"
-    },
-    "ja": {
-        "title": "ルーム『{room}』を共有",
-        "desc": "他のユーザーがQRコードをスキャンするとこのルームに参加できます。",
-        "room_id": "ルームID: {id}",
-        "close": "閉じる"
-    },
-    "zh": {
-        "title": "分享房间'{room}'",
-        "desc": "其他用户扫描二维码即可加入此房间。",
-        "room_id": "房间ID: {id}",
-        "close": "关闭"
-    },
-    "zh-TW": {
-        "title": "分享房間「{room}」",
-        "desc": "其他用戶掃描 QR 碼即可加入此房間。",
-        "room_id": "房間ID: {id}",
-        "close": "關閉"
-    },
-    "id": {
-        "title": "Bagikan ruang '{room}'",
-        "desc": "Pengguna lain dapat bergabung dengan memindai kode QR ini.",
-        "room_id": "ID Ruang: {id}",
-        "close": "Tutup"
-    },
-    "fr": {
-        "title": "Partager la salle '{room}'",
-        "desc": "D'autres utilisateurs peuvent rejoindre cette salle en scannant le QR code.",
-        "room_id": "ID de la salle : {id}",
-        "close": "Fermer"
-    },
-    "de": {
-        "title": "Raum '{room}' teilen",
-        "desc": "Andere Nutzer können diesem Raum per QR-Code beitreten.",
-        "room_id": "Raum-ID: {id}",
-        "close": "Schließen"
-    },
-    "th": {
-        "title": "แชร์ห้อง '{room}'",
-        "desc": "ผู้ใช้อื่นสามารถเข้าร่วมห้องนี้ได้โดยสแกน QR โค้ด",
-        "room_id": "รหัสห้อง: {id}",
-        "close": "ปิด"
-    },
-    "vi": {
-        "title": "Chia sẻ phòng '{room}'",
-        "desc": "Người khác có thể tham gia phòng này bằng cách quét mã QR.",
-        "room_id": "ID phòng: {id}",
-        "close": "Đóng"
-    }
 }
 
 # --- 외국인 근로자 권리구제 방 카드/버튼 다국어 사전 ---
@@ -350,6 +264,70 @@ def get_bg_color(page):
 def get_card_bg_color(page):
     return "#23272F" if page.theme_mode == ft.ThemeMode.DARK else ft.Colors.WHITE
 
+# --- QR 코드 공유 다국어 텍스트 복구 ---
+QR_SHARE_TEXTS = {
+    "ko": {
+        "title": "채팅방 공유하기: {room}",
+        "desc": "아래 QR코드를 스캔하거나 ID를 복사해 친구에게 공유하세요!",
+        "room_id": "채팅방 ID: {id}",
+        "close": "닫기"
+    },
+    "en": {
+        "title": "Share Chat Room: {room}",
+        "desc": "Scan the QR code below or copy the ID to share with friends!",
+        "room_id": "Room ID: {id}",
+        "close": "Close"
+    },
+    "ja": {
+        "title": "チャットルームを共有: {room}",
+        "desc": "下のQRコードをスキャンするかIDをコピーして友達に共有しましょう！",
+        "room_id": "チャットルームID: {id}",
+        "close": "閉じる"
+    },
+    "zh": {
+        "title": "分享聊天室: {room}",
+        "desc": "扫描下方二维码或复制ID与朋友分享！",
+        "room_id": "聊天室ID: {id}",
+        "close": "关闭"
+    },
+    "vi": {
+        "title": "Chia sẻ phòng chat: {room}",
+        "desc": "Quét mã QR bên dưới hoặc sao chép ID để chia sẻ với bạn bè!",
+        "room_id": "ID phòng: {id}",
+        "close": "Đóng"
+    },
+    "fr": {
+        "title": "Partager le salon: {room}",
+        "desc": "Scannez le QR code ci-dessous ou copiez l'ID pour le partager!",
+        "room_id": "ID du salon: {id}",
+        "close": "Fermer"
+    },
+    "de": {
+        "title": "Chatraum teilen: {room}",
+        "desc": "Scannen Sie den QR-Code unten oder kopieren Sie die ID zum Teilen!",
+        "room_id": "Chatraum-ID: {id}",
+        "close": "Schließen"
+    },
+    "th": {
+        "title": "แชร์ห้องแชท: {room}",
+        "desc": "สแกน QR ด้านล่างหรือคัดลอก ID เพื่อแชร์กับเพื่อน!",
+        "room_id": "รหัสห้อง: {id}",
+        "close": "ปิด"
+    },
+    "zh-TW": {
+        "title": "分享聊天室: {room}",
+        "desc": "掃描下方 QR 碼或複製 ID 與朋友分享！",
+        "room_id": "聊天室 ID: {id}",
+        "close": "關閉"
+    },
+    "id": {
+        "title": "Bagikan Ruang Obrolan: {room}",
+        "desc": "Pindai kode QR di bawah atau salin ID untuk dibagikan!",
+        "room_id": "ID Ruang: {id}",
+        "close": "Tutup"
+    },
+}
+
 def main(page: ft.Page):
     # 시스템 다크모드 감지(또는 강제 다크/라이트)
     page.theme_mode = ft.ThemeMode.SYSTEM
@@ -373,12 +351,35 @@ def main(page: ft.Page):
     
     # 웹폰트 적용 (Noto Sans KR, Noto Emoji)
     page.fonts = {
-        "NotoSansKR": "https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap",
-        "NotoEmoji": "https://fonts.googleapis.com/css2?family=Noto+Emoji&display=swap"
+        "NotoSansKR": "Noto Sans KR",
+        "NotoEmoji": "Noto Emoji"
     }
     page.theme = ft.Theme(font_family="NotoSansKR")
     
     # --- QR 코드 관련 함수 (Container를 직접 오버레이) ---
+    def copy_room_id(room_id):
+        """채팅방 ID를 클립보드에 복사하고 사용자에게 피드백 제공"""
+        try:
+            page.set_clipboard(room_id)
+            # 복사 성공 메시지 표시
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text(f"채팅방 ID가 복사되었습니다: {room_id}"),
+                action="확인",
+                duration=2000
+            )
+            page.snack_bar.open = True
+            page.update()
+        except Exception as e:
+            print(f"클립보드 복사 실패: {e}")
+            # 복사 실패 시 수동 복사 안내
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text(f"복사 실패. ID를 수동으로 복사하세요: {room_id}"),
+                action="확인",
+                duration=3000
+            )
+            page.snack_bar.open = True
+            page.update()
+    
     def show_qr_dialog(room_id, room_title):
         print(f"--- DEBUG: QR 코드 다이얼로그 생성 (Container 방식) ---")
         # 다국어 텍스트 적용
@@ -387,7 +388,7 @@ def main(page: ft.Page):
             if page.overlay:
                 page.overlay.pop()
                 page.update()
-        # QR코드에 전체 URL이 들어가도록 수정
+        # QR코드에 전체 URL이 들어가도록 수정 (영속적 채팅방 정보 포함)
         qr_data = f"{BASE_URL}/join_room/{room_id}"
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
         qr.add_data(qr_data)
@@ -397,12 +398,66 @@ def main(page: ft.Page):
         img.save(buffer, format="PNG")
         img_str = base64.b64encode(buffer.getvalue()).decode("utf-8")
         qr_code_image = ft.Image(src_base64=img_str, width=250, height=250)
+        # 고정 채팅방인지 확인
+        is_persistent = False
+        try:
+            room_ref = db.reference(f'/rooms/{room_id}')
+            room_data = room_ref.get()
+            if room_data and room_data.get('is_persistent'):
+                is_persistent = True
+        except:
+            pass
+        
+        # 고정 채팅방인 경우 인쇄 안내 추가
+        persistent_info = ""
+        if is_persistent:
+            persistent_info = ft.Text(
+                "🖨️ 이 QR코드를 인쇄하여 카메라로 찍으면 언제든지 같은 방에 접속할 수 있습니다!",
+                size=12,
+                color=ft.Colors.GREEN_600,
+                text_align="center",
+                max_lines=3
+            )
+        
         popup_content = ft.Container(
             content=ft.Column([
                 ft.Text(texts["title"].format(room=room_title), size=20, weight=ft.FontWeight.BOLD),
                 ft.Text(texts["desc"], text_align="center"),
                 qr_code_image,
-                ft.Text(texts["room_id"].format(id=room_id)),
+                # ID 부분을 드래그 가능하고 복사 버튼이 있는 형태로 수정
+                ft.Container(
+                    content=ft.Column([
+                        ft.Text(texts["room_id"].format(id=""), size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
+                        ft.Container(
+                            content=ft.Row([
+                                ft.Container(
+                                    content=ft.Text(
+                                        room_id,
+                                        size=16,
+                                        weight=ft.FontWeight.BOLD,
+                                        color=ft.Colors.BLUE_600,
+                                        selectable=True,
+                                        font_family="monospace"
+                                    ),
+                                    bgcolor=ft.Colors.GREY_100,
+                                    padding=12,
+                                    border_radius=8,
+                                    border=ft.border.all(1, ft.Colors.GREY_300),
+                                    expand=True
+                                ),
+                                ft.IconButton(
+                                    icon=ft.Icons.COPY,
+                                    icon_color=ft.Colors.BLUE_600,
+                                    tooltip="ID 복사",
+                                    on_click=lambda e: copy_room_id(room_id)
+                                )
+                            ], alignment=ft.MainAxisAlignment.START, spacing=8),
+                            width=300
+                        )
+                    ], spacing=8, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+                    width=350
+                ),
+                persistent_info if is_persistent else ft.Container(),
                 ft.ElevatedButton(texts["close"], on_click=close_dialog, width=300)
             ], tight=True, spacing=15, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
             width=350,
@@ -420,50 +475,62 @@ def main(page: ft.Page):
         )
         page.update()
 
-    def handle_create_room(room_title, target_lang):
+    def handle_create_room(room_title, target_lang, is_persistent=False):
         if not room_title:
             room_title = "새로운 채팅방"
         if not target_lang:
             target_lang = "en"
             print("상대방 언어가 선택되지 않아 기본값(en)으로 설정합니다.")
 
-        new_room_id = uuid.uuid4().hex[:8]
+        # 고정 채팅방인 경우 고정된 ID 생성 (방 제목 기반)
+        if is_persistent:
+            import hashlib
+            # 방 제목을 기반으로 고정된 ID 생성
+            room_id_base = hashlib.md5(room_title.encode()).hexdigest()[:8]
+            new_room_id = f"persistent_{room_id_base}"
+            print(f"고정 채팅방 ID 생성: {new_room_id}")
+        else:
+            new_room_id = uuid.uuid4().hex[:8]
         
         # Firebase 사용 가능 여부 확인
         if not FIREBASE_AVAILABLE:
             print("❌ Firebase가 초기화되지 않아 방을 생성할 수 없습니다.")
             # 사용자에게 오류 메시지 표시 (간단한 팝업)
-            page.show_snack_bar(
-                ft.SnackBar(
-                    content=ft.Text("Firebase 연결 오류로 방을 생성할 수 없습니다. 설정을 확인해주세요."),
-                    action="확인"
-                )
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text("Firebase 연결 오류로 방을 생성할 수 없습니다. 설정을 확인해주세요."),
+                action="확인"
             )
+            page.snack_bar.open = True
+            page.update()
             return
         
         # Firebase에 방 정보 저장
         try:
             rooms_ref = db.reference('/rooms')
-            rooms_ref.child(new_room_id).set({
+            room_data = {
                 'id': new_room_id,
                 'title': room_title,
                 'user_lang': lang,
                 'target_lang': target_lang,
-                'created_at': int(time.time() * 1000)
-            })
-            print(f"✅ Firebase에 방 '{room_title}' 정보 저장 성공")
+                'created_at': int(time.time() * 1000),
+                'is_persistent': is_persistent,
+                'created_by': page.session.get('nickname') or '익명',  # 방 생성자 정보 추가
+                'creator_id': page.session.get('user_id') or str(uuid.uuid4())  # 생성자 고유 ID 추가
+            }
+            rooms_ref.child(new_room_id).set(room_data)
+            print(f"✅ Firebase에 방 '{room_title}' 정보 저장 성공 (고정: {is_persistent}, 생성자: {room_data['created_by']})")
         except Exception as e:
             print(f"❌ Firebase 방 정보 저장 실패: {e}")
-            # 사용자에게 오류 메시지 표시
-            page.show_snack_bar(
-                ft.SnackBar(
-                    content=ft.Text("방 생성 중 오류가 발생했습니다. 다시 시도해주세요."),
-                    action="확인"
-                )
+            # 사용자에게 오류 메시지 표시 (간단한 팝업)
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text("Firebase 연결 오류로 방을 생성할 수 없습니다. 설정을 확인해주세요."),
+                action="확인"
             )
+            page.snack_bar.open = True
+            page.update()
             return
 
-        print(f"방 '{room_title}' 생성됨 (ID: {new_room_id}, 내 언어: {lang}, 상대 언어: {target_lang})")
+        print(f"방 '{room_title}' 생성됨 (ID: {new_room_id}, 내 언어: {lang}, 상대 언어: {target_lang}, 고정: {is_persistent})")
         go_chat(lang, target_lang, new_room_id, room_title)
 
     # --- 화면 이동 함수 ---
@@ -502,8 +569,6 @@ def main(page: ft.Page):
     def go_room_list(lang, e=None):
         def on_find_by_id(e):
             go_find_by_id(lang)
-        def on_find_by_qr(e):
-            go_find_by_qr(lang)
         texts = FIND_ROOM_TEXTS.get(lang, FIND_ROOM_TEXTS["ko"])
         page.views.clear()
         # 사용자별 고유 RAG 방 ID 생성 (UUID 사용)
@@ -541,23 +606,6 @@ def main(page: ft.Page):
                                 shadow=ft.BoxShadow(blur_radius=8, color="#B0BEC544"),
                                 padding=16,
                                 on_click=on_find_by_id
-                            ),
-                            ft.Container(
-                                content=ft.Row([
-                                    ft.Container(
-                                        content=ft.Icon(name=ft.Icons.QR_CODE, color="#A259FF", size=28),
-                                        bgcolor="#F3E8FF", border_radius=12, padding=10, margin=ft.margin.only(right=12)
-                                    ),
-                                    ft.Column([
-                                        ft.Text(texts["qr"], size=16, weight=ft.FontWeight.BOLD, color=get_text_color(page)),
-                                        ft.Text(texts["qr_desc"], size=12, color=get_sub_text_color(page), text_align=ft.TextAlign.START, max_lines=3)
-                                    ], spacing=2, expand=True)
-                                ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
-                                bgcolor=get_card_bg_color(page),
-                                border_radius=12,
-                                shadow=ft.BoxShadow(blur_radius=8, color="#B0BEC544"),
-                                padding=16,
-                                on_click=on_find_by_qr
                             ),
                             ft.Container(
                                 content=ft.Row([
@@ -643,102 +691,6 @@ def main(page: ft.Page):
         )
         page.go("/find_by_id")
 
-    def go_find_by_qr(lang):
-        def on_message(e):
-            qr_text = e.data  # JS에서 전달된 QR코드 텍스트
-            # QR코드에서 방 ID 추출
-            if "/join_room/" in qr_text:
-                room_id = qr_text.split("/join_room/")[-1].split("/")[0]
-            else:
-                room_id = qr_text
-            if room_id:
-                go_chat_from_list(room_id)
-
-        def on_manual_input(e):
-            manual_room_id = manual_input_field.value.strip()
-            if manual_room_id:
-                # URL에서 방 ID 추출
-                if "/join_room/" in manual_room_id:
-                    room_id = manual_room_id.split("/join_room/")[-1].split("/")[0]
-                else:
-                    room_id = manual_room_id
-                go_chat_from_list(room_id)
-
-        # 다국어 텍스트 사전
-        FIND_BY_QR_TEXTS = {
-            "ko": {"title": "QR 코드 스캔", "desc": "QR 코드를 스캔하거나 내용을 직접 입력하세요", "label": "QR 코드 내용을 직접 입력하세요", "enter": "입력한 내용으로 입장", "tip": "💡 팁: QR 코드를 스캔할 수 없는 경우,\n위 입력창에 QR 코드 내용을 복사해서 붙여넣으세요.", "back": "뒤로가기"},
-            "en": {"title": "Scan QR Code", "desc": "Scan the QR code or enter the content manually", "label": "Enter QR code content", "enter": "Enter with input", "tip": "💡 Tip: If you can't scan the QR code,\npaste the QR code content into the input box above.", "back": "Back"},
-            "ja": {"title": "QRコードスキャン", "desc": "QRコードをスキャンするか内容を直接入力してください", "label": "QRコード内容を直接入力してください", "enter": "入力内容で入室", "tip": "💡 ヒント: QRコードをスキャンできない場合、\n上の入力欄にQRコード内容を貼り付けてください。", "back": "戻る"},
-            "zh": {"title": "扫描二维码", "desc": "扫描二维码或手动输入内容", "label": "请直接输入二维码内容", "enter": "用输入内容进入", "tip": "💡 提示：如果无法扫描二维码，\n请将二维码内容粘贴到上方输入框。", "back": "返回"},
-            "zh-TW": {"title": "掃描二維碼", "desc": "掃描二維碼或手動輸入內容", "label": "請直接輸入二維碼內容", "enter": "用輸入內容進入", "tip": "💡 提示：若無法掃描二維碼，\n請將二維碼內容貼到上方輸入框。", "back": "返回"},
-            "id": {"title": "Pindai Kode QR", "desc": "Pindai kode QR atau masukkan isinya secara manual", "label": "Masukkan isi kode QR", "enter": "Masuk dengan input", "tip": "💡 Tips: Jika tidak dapat memindai kode QR,\ntempelkan isi kode QR ke kotak input di atas.", "back": "Kembali"},
-            "vi": {"title": "Quét mã QR", "desc": "Quét mã QR hoặc nhập nội dung thủ công", "label": "Nhập nội dung mã QR", "enter": "Vào bằng nội dung nhập", "tip": "💡 Mẹo: Nếu không quét được mã QR,\ndán nội dung mã QR vào ô nhập phía trên.", "back": "Quay lại"},
-            "fr": {"title": "Scanner le code QR", "desc": "Scannez le code QR ou saisissez le contenu manuellement", "label": "Saisissez le contenu du code QR", "enter": "Entrer avec le contenu saisi", "tip": "💡 Astuce : Si vous ne pouvez pas scanner le code QR,\ncollez le contenu du code QR dans la zone de saisie ci-dessus.", "back": "Retour"},
-            "de": {"title": "QR-Code scannen", "desc": "Scannen Sie den QR-Code oder geben Sie den Inhalt manuell ein", "label": "Geben Sie den QR-Code-Inhalt ein", "enter": "Mit Eingabe beitreten", "tip": "💡 Tipp: Wenn Sie den QR-Code nicht scannen können,\nfügen Sie den QR-Code-Inhalt in das obige Eingabefeld ein.", "back": "Zurück"},
-            "th": {"title": "สแกนคิวอาร์โค้ด", "desc": "สแกนคิวอาร์โค้ดหรือกรอกเนื้อหาด้วยตนเอง", "label": "กรอกเนื้อหาคิวอาร์โค้ด", "enter": "เข้าร่วมด้วยเนื้อหาที่กรอก", "tip": "💡 เคล็ดลับ: หากสแกนคิวอาร์โค้ดไม่ได้\nให้นำเนื้อหาคิวอาร์โค้ดไปวางในช่องกรอกด้านบน", "back": "ย้อนกลับ"},
-        }
-        t = FIND_BY_QR_TEXTS.get(lang, FIND_BY_QR_TEXTS["en"])
-        manual_input_field = ft.TextField(
-            label=t["label"],
-            hint_text=t["label"],
-            width=350,
-            on_submit=on_manual_input
-        )
-
-        # 안내 메시지와 수동 입력 옵션 제공
-        page.views.clear()
-        page.views.append(
-            ft.View(
-                "/find_by_qr",
-                controls=[
-                    ft.Container(
-                        content=ft.Column([
-                            ft.Icon(
-                                name=ft.Icons.QR_CODE,
-                                size=64,
-                                color=ft.Colors.BLUE_500
-                            ),
-                            ft.Text(
-                                t["title"],
-                                size=24,
-                                weight=ft.FontWeight.BOLD,
-                                text_align=ft.TextAlign.CENTER
-                            ),
-                            ft.Text(
-                                t["desc"],
-                                size=14,
-                                color=get_sub_text_color(page),
-                                text_align=ft.TextAlign.CENTER
-                            ),
-                            ft.Container(height=20),
-                            manual_input_field,
-                            ft.ElevatedButton(
-                                t["enter"],
-                                on_click=on_manual_input,
-                                width=350
-                            ),
-                            ft.Container(height=20),
-                            ft.Text(
-                                t["tip"],
-                                size=12,
-                                color=ft.Colors.GREY_500,
-                                text_align=ft.TextAlign.CENTER
-                            ),
-                        ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
-                        padding=32,
-                        bgcolor=get_card_bg_color(page),
-                        border_radius=20,
-                        shadow=ft.BoxShadow(blur_radius=20, color=ft.Colors.BLACK12),
-                    ),
-                    ft.ElevatedButton(t["back"], on_click=lambda e: go_room_list(lang), width=350)
-                ],
-                bgcolor=get_bg_color(page),
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                vertical_alignment=ft.MainAxisAlignment.CENTER
-            )
-        )
-        page.go("/find_by_qr")
-
     def go_chat_from_list(room_id):
         # RAG 채팅방인지 확인 (공용 RAG_ROOM_ID로 들어오면, 사용자별로 리다이렉트)
         if room_id == RAG_ROOM_ID or room_id.startswith(RAG_ROOM_ID):
@@ -773,15 +725,31 @@ def main(page: ft.Page):
             
             # 외국인 근로자 RAG 채팅방인지 확인
             if is_foreign_worker_rag:
+                # 대화 컨텍스트를 저장할 변수
+                conversation_context = {}
+                
                 def foreign_worker_rag_answer(query, target_lang):
                     try:
                         print(f"외국인 권리구제 RAG 질문: {query}")
                         print(f"타겟 언어: {target_lang}")
-                        if vector_db_foreign_worker is None:
-                            print("외국인 권리구제 벡터DB가 None입니다.")
-                            return "죄송합니다. RAG 기능이 현재 사용할 수 없습니다. (외국인 권리구제 벡터DB가 로드되지 않았습니다.)"
-                        print(f"외국인 권리구제 벡터DB 문서 수: {len(vector_db_foreign_worker.documents) if hasattr(vector_db_foreign_worker, 'documents') else '알 수 없음'}")
-                        result = answer_with_rag_foreign_worker(query, vector_db_foreign_worker, OPENAI_API_KEY, target_lang=target_lang)
+                        
+                        # 쓰레기 처리 관련 질문인지 확인
+                        from rag_utils import is_waste_related_query
+                        if is_waste_related_query(query):
+                            # 쓰레기 처리 관련 질문이면 다문화가족 벡터DB 사용
+                            if vector_db_multicultural is None:
+                                print("다문화가족 벡터DB가 None입니다.")
+                                return "죄송합니다. RAG 기능이 현재 사용할 수 없습니다. (다문화가족 벡터DB가 로드되지 않았습니다.)"
+                            print(f"쓰레기 처리 질문 - 다문화가족 벡터DB 사용")
+                            result = answer_with_rag_foreign_worker(query, vector_db_multicultural, GEMINI_API_KEY, target_lang=target_lang, conversation_context=conversation_context)
+                        else:
+                            # 일반 외국인 근로자 관련 질문이면 외국인 근로자 벡터DB 사용
+                            if vector_db_foreign_worker is None:
+                                print("외국인 권리구제 벡터DB가 None입니다.")
+                                return "죄송합니다. RAG 기능이 현재 사용할 수 없습니다. (외국인 권리구제 벡터DB가 로드되지 않았습니다.)"
+                            print(f"외국인 근로자 질문 - 외국인 근로자 벡터DB 사용")
+                            result = answer_with_rag_foreign_worker(query, vector_db_foreign_worker, GEMINI_API_KEY, target_lang=target_lang, conversation_context=conversation_context)
+                        
                         print(f"RAG 답변 생성 완료: {len(result)} 문자")
                         return result
                     except Exception as e:
@@ -804,6 +772,9 @@ def main(page: ft.Page):
                 ))
             # 기존 다문화 가족 RAG 채팅방인지 확인
             elif is_rag:
+                # 대화 컨텍스트를 저장할 변수
+                conversation_context = {}
+                
                 def multicultural_rag_answer(query, target_lang):
                     try:
                         print(f"다문화 가족 RAG 질문: {query}")
@@ -812,7 +783,7 @@ def main(page: ft.Page):
                             print("다문화가족 벡터DB가 None입니다.")
                             return "죄송합니다. RAG 기능이 현재 사용할 수 없습니다. (다문화가족 벡터DB가 로드되지 않았습니다.)"
                         print(f"다문화가족 벡터DB 문서 수: {len(vector_db_multicultural.documents) if hasattr(vector_db_multicultural, 'documents') else '알 수 없음'}")
-                        result = answer_with_rag(query, vector_db_multicultural, OPENAI_API_KEY, target_lang=target_lang)
+                        result = answer_with_rag(query, vector_db_multicultural, GEMINI_API_KEY, target_lang=target_lang, conversation_context=conversation_context)
                         print(f"RAG 답변 생성 완료: {len(result)} 문자")
                         return result
                     except Exception as e:
@@ -944,4 +915,5 @@ def main(page: ft.Page):
     page.on_route_change = route_change
     page.go(page.route)
 
-ft.app(target=main)
+if __name__ == "__main__":
+    ft.app(target=main, port=8000, view=ft.WEB_BROWSER)

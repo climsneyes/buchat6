@@ -1,16 +1,81 @@
 import flet as ft
-import openai
-from config import OPENAI_API_KEY, MODEL_NAME
 import os
+from config import GEMINI_API_KEY, MODEL_NAME
 from flet import Column, Switch
 import time
 from firebase_admin import db
 import uuid
 import threading
+import google.generativeai as genai
+import atexit
+import re
 
-IS_SERVER = os.environ.get("CLOUDTYPE") == "1"  # Cloudtype 환경변수 등으로 구분
+IS_SERVER = os.environ.get("CLOUDTYPE") == "1"
 
-client = openai.OpenAI(api_key=OPENAI_API_KEY)
+# 부적절한 단어 필터링 (욕설, 스팸 등)
+INAPPROPRIATE_WORDS = [
+    # 한국어 욕설
+    "씨발", "개새끼", "병신", "미친", "바보", "멍청이", "등신", "개자식", "새끼", "좆", "보지", "자지",
+    # 영어 욕설
+    "fuck", "shit", "bitch", "asshole", "dick", "pussy", "cock", "cunt", "whore", "slut",
+    # 스팸 단어
+    "광고", "홍보", "판매", "구매", "돈", "돈벌이", "수익", "투자", "부업", "부자", "돈많은",
+    # 반복 스팸
+    "ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ", "ㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎ", "!!!!!", "?????", "ㅠㅠㅠㅠㅠㅠㅠㅠㅠㅠ"
+]
+
+def is_inappropriate_message(message):
+    """부적절한 메시지인지 확인"""
+    message_lower = message.lower()
+    
+    # 부적절한 단어 포함 여부 확인
+    for word in INAPPROPRIATE_WORDS:
+        if word in message_lower:
+            return True, f"부적절한 단어가 포함되어 있습니다: {word}"
+    
+    # 반복 문자 체크 (같은 문자 5번 이상 반복)
+    repeated_chars = re.findall(r'(.)\1{4,}', message)
+    if repeated_chars:
+        return True, "반복되는 문자가 너무 많습니다"
+    
+    # 메시지 길이 체크 (너무 긴 메시지)
+    if len(message) > 500:
+        return True, "메시지가 너무 깁니다 (500자 제한)"
+    
+    # URL 스팸 체크
+    url_count = message.count('http') + message.count('www')
+    if url_count > 2:
+        return True, "URL이 너무 많습니다"
+    
+    return False, ""
+
+def filter_message(message):
+    """메시지 필터링 (부적절한 단어 마스킹)"""
+    filtered_message = message
+    for word in INAPPROPRIATE_WORDS:
+        if word.lower() in filtered_message.lower():
+            # 부적절한 단어를 *로 마스킹
+            import re
+            pattern = re.compile(re.escape(word), re.IGNORECASE)
+            filtered_message = pattern.sub('*' * len(word), filtered_message)
+    
+    return filtered_message
+
+# Gemini 기반 번역 함수 (예시: 실제 구현 필요)
+def translate_message(text, target_lang):
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        # 언어 코드 → 영어 언어명 매핑
+        lang_map = {
+            "en": "English", "ko": "Korean", "ja": "Japanese", "zh": "Chinese", "zh-TW": "Traditional Chinese", "id": "Indonesian", "vi": "Vietnamese", "fr": "French", "de": "German", "th": "Thai", "uz": "Uzbek", "ne": "Nepali", "tet": "Tetum", "lo": "Lao", "mn": "Mongolian", "my": "Burmese", "bn": "Bengali", "si": "Sinhala", "km": "Khmer", "ky": "Kyrgyz", "ur": "Urdu"
+        }
+        target_lang_name = lang_map.get(target_lang, target_lang)
+        prompt = f"Translate the following text to {target_lang_name} and return only the translation.\n{text}"
+        response = model.generate_content(prompt, generation_config={"max_output_tokens": 512, "temperature": 0.2})
+        return response.text.strip()
+    except Exception as e:
+        return f"[번역 오류] {e}"
 
 # 언어 코드에 따른 전체 언어 이름 매핑
 LANG_NAME_MAP = {
@@ -41,7 +106,7 @@ RAG_GUIDE_TEXTS = {
         "example_title": "질문 예시:",
         "examples": [
             "• 외국인등록을 하려면 어디로 가요?",
-            "• 대한민국에서 더 살게 됐는데 어떡하죠?",
+            "• 체류기간이 3개월 남았는데 연장하려면 어떻게 해요?",
             "• 외국인은 핸드폰을 어떻게 사용하나요?",
             "• 전셋집이 뭐예요?",
             "• 공인중개사무소가 뭐죠?",
@@ -77,7 +142,7 @@ RAG_GUIDE_TEXTS = {
         "example_title": "Example questions:",
         "examples": [
             "• Where do I go to register as a foreigner?",
-            "• I need to stay longer in Korea, what should I do?",
+            "• My stay period expires in 3 months, how do I extend it?",
             "• How do foreigners use mobile phones?",
             "• What is jeonse (deposit-based housing)?",
             "• What is a real estate agency?",
@@ -113,7 +178,7 @@ RAG_GUIDE_TEXTS = {
         "example_title": "質問例:",
         "examples": [
             "• 外国人登録はどこで行いますか？",
-            "• 韓国でより長く滞在する必要がありますが、どうすればいいですか？",
+            "• 滞在期間が3ヶ月残っていますが、延長するにはどうすればいいですか？",
             "• 外国人は携帯電話をどのように使用しますか？",
             "• 全税（保証金ベースの住宅）とは何ですか？",
             "• 不動産会社とは何ですか？",
@@ -149,7 +214,7 @@ RAG_GUIDE_TEXTS = {
         "example_title": "问题示例:",
         "examples": [
             "• 我要去哪里办理外国人登记？",
-            "• 我需要在韩国停留更久，该怎么办？",
+            "• 我的停留期限还剩3个月，如何延长？",
             "• 外国人如何使用手机？",
             "• 什么是全租房？",
             "• 什么是房地产中介？",
@@ -159,7 +224,7 @@ RAG_GUIDE_TEXTS = {
             "• 我该如何丢垃圾？",
             "• 我生病了该怎么办？",
             "• 去医院需要的健康保险卡是什么？",
-            "• 韩医院和一般医院有什麽不同？",
+            "• 韩医院和一般医院有什么不同？",
             "• 如果没有处方怎么办？",
             "• 我该如何开银行账户？",
             "• 我该如何寄东西到国外？",
@@ -185,7 +250,7 @@ RAG_GUIDE_TEXTS = {
         "example_title": "問題範例:",
         "examples": [
             "• 我要去哪裡辦理外國人登記？",
-            "• 我需要在韓國停留更久，該怎麽辦？",
+            "• 我的停留期限還剩3個月，如何延長？",
             "• 外國人如何使用手機？",
             "• 什麽是全租房？",
             "• 什麽是房地產仲介？",
@@ -221,7 +286,7 @@ RAG_GUIDE_TEXTS = {
         "example_title": "Contoh pertanyaan:",
         "examples": [
             "• Ke mana saya harus pergi untuk mendaftar sebagai orang asing?",
-            "• Saya perlu tinggal lebih lama di Korea, apa yang harus saya lakukan?",
+            "• Masa tinggal saya tersisa 3 bulan, bagaimana cara memperpanjangnya?",
             "• Bagaimana orang asing menggunakan ponsel?",
             "• Apa itu jeonse (rumah sewa deposit)?",
             "• Apa itu agen real estat?",
@@ -257,7 +322,7 @@ RAG_GUIDE_TEXTS = {
         "example_title": "Ví dụ câu hỏi:",
         "examples": [
             "• Tôi đi đâu để đăng ký người nước ngoài?",
-            "• Tôi cần ở lại Hàn Quốc lâu hơn, tôi nên làm gì?",
+            "• Thời gian lưu trú của tôi còn lại 3 tháng, làm thế nào để gia hạn?",
             "• Người nước ngoài sử dụng điện thoại di động như thế nào?",
             "• Jeonse (nhà ở theo tiền đặt cọc) là gì?",
             "• Công ty bất động sản là gì?",
@@ -292,10 +357,24 @@ RAG_GUIDE_TEXTS = {
         ],
         "example_title": "Exemples de questions :",
         "examples": [
-            "• Comment inscrire mon enfant à l'école coréenne ?",
-            "• Comment demander l'assurance maladie coréenne ?",
-            "• Parlez-moi de la culture culinaire coréenne",
-            "• Comment utiliser les transports publics coréens ?"
+            "• Où dois-je aller pour m'enregistrer en tant qu'étranger ?",
+            "• Ma période de séjour expire dans 3 mois, comment la prolonger ?",
+            "• Comment les étrangers utilisent-ils les téléphones portables ?",
+            "• Qu'est-ce que le jeonse (logement basé sur un dépôt) ?",
+            "• Qu'est-ce qu'une agence immobilière ?",
+            "• Comment rédiger un contrat de logement ?",
+            "• Quel est le processus pour obtenir un permis de conduire coréen ?",
+            "• Où acheter des sacs poubelle ?",
+            "• Comment jeter les déchets ?",
+            "• Je suis malade, que dois-je faire ?",
+            "• Qu'est-ce que la carte d'assurance maladie pour les hôpitaux ?",
+            "• La médecine orientale est-elle différente des hôpitaux ordinaires ?",
+            "• Que faire si je n'ai pas d'ordonnance ?",
+            "• Comment ouvrir un compte bancaire ?",
+            "• Comment envoyer des objets à l'étranger ?",
+            "• Quels sont les numéros de centre d'appels 24h ?",
+            "• Quels sont les numéros d'urgence ?",
+            "• Comment puis-je apprendre le coréen ?"
         ],
         "input_hint": "Tapez votre question ci-dessous ! 💬"
     },
@@ -314,10 +393,24 @@ RAG_GUIDE_TEXTS = {
         ],
         "example_title": "Beispielfragen:",
         "examples": [
-            "• Wie melde ich mein Kind in einer koreanischen Schule an?",
-            "• Wie beantrage ich koreanische Krankenversicherung?",
-            "• Erzählen Sie mir von der koreanischen Esskultur",
-            "• Wie benutze ich koreanische öffentliche Verkehrsmittel?"
+            "• Wo muss ich mich als Ausländer registrieren?",
+            "• Mein Aufenthalt läuft in 3 Monaten ab, wie verlängere ich ihn?",
+            "• Wie nutzen Ausländer Mobiltelefone?",
+            "• Was ist Jeonse (Mietwohnung mit Kaution)?",
+            "• Was ist eine Immobilienagentur?",
+            "• Wie schreibe ich einen Wohnungsvertrag?",
+            "• Was ist der Prozess für einen koreanischen Führerschein?",
+            "• Wo kaufe ich Müllbeutel?",
+            "• Wie entsorge ich Müll?",
+            "• Ich bin krank, was soll ich tun?",
+            "• Was ist die Krankenversicherungskarte für Krankenhäuser?",
+            "• Ist orientalische Medizin anders als normale Krankenhäuser?",
+            "• Was, wenn ich kein Rezept habe?",
+            "• Wie eröffne ich ein Bankkonto?",
+            "• Wie sende ich Dinge ins Ausland?",
+            "• Was sind die 24-Stunden-Callcenter-Nummern?",
+            "• Was sind die Notrufnummern?",
+            "• Wie kann ich Koreanisch lernen?"
         ],
         "input_hint": "Geben Sie Ihre Frage unten ein! 💬"
     },
@@ -336,10 +429,24 @@ RAG_GUIDE_TEXTS = {
         ],
         "example_title": "ตัวอย่างคำถาม:",
         "examples": [
-            "• ฉันจะลงทะเบียนลูกในโรงเรียนเกาหลีได้อย่างไร?",
-            "• ฉันจะสมัครประกันสุขภาพเกาหลีได้อย่างไร?",
-            "• บอกฉันเกี่ยวกับวัฒนธรรมอาหารเกาหลี",
-            "• ฉันจะใช้ระบบขนส่งสาธารณะของเกาหลีได้อย่างไร?"
+            "• ฉันจะไปลงทะเบียนเป็นชาวต่างชาติที่ไหน?",
+            "• ระยะเวลาพำนักของฉันเหลือ 3 เดือน จะขยายอย่างไร?",
+            "• ชาวต่างชาติใช้โทรศัพท์มือถืออย่างไร?",
+            "• Jeonse (บ้านเช่าตามเงินมัดจำ) คืออะไร?",
+            "• บริษัทอสังหาริมทรัพย์คืออะไร?",
+            "• ฉันเขียนสัญญาบ้านอย่างไร?",
+            "• กระบวนการขอใบขับขี่เกาหลีคืออะไร?",
+            "• ฉันซื้อถุงขยะที่ไหน?",
+            "• ฉันทิ้งขยะอย่างไร?",
+            "• ฉันป่วย ฉันควรทำอย่างไร?",
+            "• บัตรประกันสุขภาพที่จำเป็นสำหรับโรงพยาบาลคืออะไร?",
+            "• การแพทย์แผนตะวันออกแตกต่างจากโรงพยาบาลทั่วไปหรือไม่?",
+            "• ถ้าฉันไม่มีใบสั่งยาล่ะ?",
+            "• ฉันเปิดบัญชีธนาคารอย่างไร?",
+            "• ฉันส่งของไปต่างประเทศอย่างไร?",
+            "• เบอร์ศูนย์บริการ 24 ชั่วโมงคืออะไร?",
+            "• เบอร์ฉุกเฉินคืออะไร?",
+            "• ฉันจะเรียนภาษาเกาหลีได้อย่างไร?"
         ],
         "input_hint": "พิมพ์คำถามของคุณด้านล่าง! 💬"
     },
@@ -573,7 +680,7 @@ RAG_GUIDE_TEXTS = {
         ],
         "example_title": "Суроо мисалдары:",
         "examples": [
-            "• Менин жумуш акысым калтырылган",
+            "• Менинг жумуш акысым калтырылган",
             "• Мен адилетсиз түрдө жумуштан келтирилдим",
             "• Мен жумушта жаракат алдым",
             "• Мен жумуш орундунда жыныстык зомбулукка дуушар болдум",
@@ -867,22 +974,6 @@ FOREIGN_WORKER_GUIDE_TEXTS = {
     }
 }
 
-def translate_message(text, target_lang):
-    try:
-        target_lang_name = LANG_NAME_MAP.get(target_lang, "영어")
-        response = client.chat.completions.create(
-            model=MODEL_NAME,
-            messages=[
-                {"role": "system", "content": "You are a helpful translator."},
-                {"role": "user", "content": f"다음 문장을 {target_lang_name}로 번역만 해줘. 설명 없이 번역 결과만 출력:\n{text}"}
-            ],
-            max_tokens=1000,
-            temperature=0.2,
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        return f"[번역 오류] {e}"
-
 def transcribe_from_mic(input_box: ft.TextField, page: ft.Page, mic_button: ft.IconButton):
     if IS_SERVER:
         input_box.hint_text = "서버에서는 음성 입력이 지원되지 않습니다."
@@ -1174,12 +1265,13 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         ("ky", "🇰🇬 Kyrgyz"),
         ("ur", "🇵🇰 Urdu"),
     ]
+    # 드롭다운 항상 생성
     target_lang_dropdown = ft.Dropdown(
         value=current_target_lang[0],
         options=[ft.dropdown.Option(key, text) for key, text in target_lang_options],
         width=180 if is_mobile else 220,
         on_change=on_target_lang_change
-    ) if not is_rag_room or (is_foreign_worker_rag or room_id == "foreign_worker_rights_rag") else None
+    )
 
     def create_message_bubble(msg_data, is_me):
         # 닉네임이 '익명'이고 본문/번역문이 모두 비어있으면 말풍선 생성하지 않음
@@ -1197,8 +1289,34 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         nickname = msg_data.get('nickname', '')
         is_guide = is_rag and msg_data.get('is_guide', False)
         nickname_color = ft.Colors.WHITE if is_me else ft.Colors.BLACK87
+        
+        # 차단 버튼 (방장이고, 자신의 메시지가 아니고, 시스템/RAG 메시지가 아닐 때만 표시)
+        block_button = None
+        if not is_me and nickname not in ['시스템', 'RAG', '익명']:
+            # 방장 권한 확인
+            current_nickname = page.session.get('nickname') or ''
+            current_user_id = page.session.get('user_id')
+            if is_room_owner(room_id, current_nickname, current_user_id):
+                block_button = ft.IconButton(
+                    icon=ft.Icons.BLOCK,
+                    icon_color=ft.Colors.RED_400,
+                    icon_size=16,
+                    tooltip="사용자 차단 (방장 전용)",
+                    on_click=lambda e, nickname=nickname: block_user_from_message(nickname)
+                )
+        
         controls = [
+            ft.Row([
             ft.Text(
+                    nickname,
+                    size=(base_size - 2) + (2 if is_guide else 0),
+                    color=nickname_color,
+                    italic=True,
+                    font_family=font_family,
+                    selectable=True,
+                ),
+                block_button if block_button else ft.Container()
+            ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN) if block_button else ft.Text(
                 nickname,
                 size=(base_size - 2) + (2 if is_guide else 0),
                 color=nickname_color,
@@ -1238,43 +1356,165 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             )
         ], alignment=ft.MainAxisAlignment.END if is_me else ft.MainAxisAlignment.START)
 
+    # --- 시스템 안내 메시지(가운데 정렬) 생성 함수 ---
+    def create_system_message_bubble(text):
+        return ft.Row([
+            ft.Container(
+                content=ft.Text(text, size=15 if is_mobile else 17, color=ft.Colors.GREY_700, weight=ft.FontWeight.BOLD),
+                padding=10,
+                bgcolor=ft.Colors.GREY_100,
+                border_radius=12,
+                alignment=ft.alignment.center,
+            )
+        ], alignment=ft.MainAxisAlignment.CENTER)
+
+    # --- 입장/퇴장 감지용 유저 세트 ---
+    current_users = set()
+
     # --- Firebase 리스너 콜백 ---
     def on_message(event):
-        if event.data:
-            try:
-                data = event.data
-                if isinstance(data, str):
-                    import json
-                    data = json.loads(data)
-                msg_data = {
-                    'text': data.get('text', ''),
-                    'nickname': data.get('nickname', '익명'),
-                    'timestamp': str(data.get('timestamp', '')),
-                    'translated': data.get('translated', '')
-                }
-                # 중복 메시지 방지: 최근 5개 메시지의 (nickname, text, timestamp)와 비교
-                def get_msg_id(msg):
-                    return f"{msg['nickname']}|{msg['text']}|{msg['timestamp']}"
-                new_id = get_msg_id(msg_data)
-                for c in chat_messages.controls[-5:]:
-                    if hasattr(c, 'content') and hasattr(c.content, 'controls'):
-                        try:
-                            last_nickname = c.content.controls[0].value
-                            last_text = c.content.controls[1].value
-                            last_timestamp = getattr(c, 'timestamp', None) or ''
-                            last_id = f"{last_nickname}|{last_text}|{last_timestamp}"
-                            if last_id == new_id:
-                                return  # 중복
-                        except Exception:
-                            continue
-                # 메시지 말풍선 생성
-                is_me = msg_data['nickname'] == (page.session.get('nickname') or '')
-                message_bubble = create_message_bubble(msg_data, is_me)
+        if not event or not event.data:
+            return  # 데이터가 없으면 무시
+        
+        try:
+            data = event.data
+            if isinstance(data, str):
+                import json
+                data = json.loads(data)
+            
+            # 데이터가 유효한지 확인
+            if not isinstance(data, dict):
+                print(f"유효하지 않은 메시지 데이터 형식: {type(data)}")
+                return
+            
+            msg_data = {
+                'text': data.get('text', ''),
+                'nickname': data.get('nickname', '익명'),
+                'timestamp': str(data.get('timestamp', '')),
+                'translated': data.get('translated', '')
+            }
+            
+            # 차단된 사용자의 메시지는 무시
+            if is_user_blocked(msg_data['nickname']):
+                print(f"차단된 사용자 {msg_data['nickname']}의 메시지 필터링됨")
+                return
+            
+            # 시스템 메시지면 무조건 가운데 정렬로 append
+            if msg_data['nickname'] == '시스템':
+                system_bubble = create_system_message_bubble(msg_data['text'])
+                if system_bubble:  # None이 아닌 경우만 추가
+                    chat_messages.controls.append(system_bubble)
+                    page.update()
+                return
+            
+            # 중복 메시지 방지: 최근 5개 메시지의 (nickname, text, timestamp)와 비교 (일반 메시지에만 적용)
+            def get_msg_id(msg):
+                return f"{msg['nickname']}|{msg['text']}|{msg['timestamp']}"
+            new_id = get_msg_id(msg_data)
+            for c in chat_messages.controls[-5:]:
+                if hasattr(c, 'content') and hasattr(c.content, 'controls'):
+                    try:
+                        last_nickname = c.content.controls[0].value
+                        last_text = c.content.controls[1].value
+                        last_timestamp = getattr(c, 'timestamp', None) or ''
+                        last_id = f"{last_nickname}|{last_text}|{last_timestamp}"
+                        if last_id == new_id:
+                            return  # 중복
+                    except Exception:
+                        continue
+            
+            # --- 입장/퇴장 감지 및 안내 메시지 ---
+            nickname = msg_data['nickname']
+            if nickname != '익명' and nickname != 'RAG' and nickname != '시스템':
+                # 입장 감지
+                if nickname not in current_users:
+                    current_users.add(nickname)
+                    join_text = f"{nickname}님이 채팅방에 들어왔습니다."
+                    join_bubble = create_system_message_bubble(join_text)
+                    if join_bubble:  # None이 아닌 경우만 추가
+                        chat_messages.controls.append(join_bubble)
+                        page.update()
+            
+            # 메시지 말풍선 생성
+            is_me = msg_data['nickname'] == (page.session.get('nickname') or '')
+            message_bubble = create_message_bubble(msg_data, is_me)
+            
+            # message_bubble이 유효한 경우에만 처리
+            if message_bubble:
                 setattr(message_bubble, 'timestamp', msg_data['timestamp'])
                 chat_messages.controls.append(message_bubble)
                 page.update()
+            else:
+                print(f"메시지 버블 생성 실패: {msg_data}")
+                
+        except Exception as e:
+            print(f"메시지 처리 오류: {e}")
+            import traceback
+            traceback.print_exc()
+
+    # --- 사용자 차단 함수 ---
+    def block_user_from_message(nickname):
+        """메시지에서 사용자 차단"""
+        def confirm_block(e):
+            # 로컬 차단 목록에 추가
+            BLOCKED_USERS.add(nickname)
+            
+            # Firebase에 차단 정보 저장
+            try:
+                db.reference(f'rooms/{room_id}/blocked_users').child(nickname).set({
+                    'blocked_at': time.time(),
+                    'blocked_by': '방장'
+                })
+                print(f"사용자 {nickname} 차단됨 (방: {room_id})")
             except Exception as e:
-                print(f"메시지 처리 오류: {e}")
+                print(f"차단 정보 저장 오류: {e}")
+            
+            # 차단 메시지 표시
+            block_msg_data = {
+                'text': f"🚫 {nickname}님이 차단되었습니다.",
+                'nickname': '시스템',
+                'timestamp': time.time(),
+                'translated': ''
+            }
+            block_bubble = create_message_bubble(block_msg_data, False)
+            if block_bubble:  # None이 아닌 경우만 처리
+                setattr(block_bubble, 'timestamp', block_msg_data['timestamp'])
+                chat_messages.controls.append(block_bubble)
+            page.update()
+            
+            # 다이얼로그 닫기
+            if page.dialog:
+                page.dialog.open = False
+                page.update()
+        
+        def cancel_block(e):
+            if page.dialog:
+                page.dialog.open = False
+                page.update()
+        
+        # 확인 다이얼로그 표시
+        confirm_dialog = ft.AlertDialog(
+            title=ft.Text("사용자 차단"),
+            content=ft.Text(f"{nickname}님을 차단하시겠습니까?\n차단된 사용자의 메시지는 더 이상 표시되지 않습니다."),
+            actions=[
+                ft.TextButton("취소", on_click=cancel_block),
+                ft.TextButton("차단", on_click=confirm_block, style=ft.ButtonStyle(color=ft.Colors.RED))
+            ]
+        )
+        
+        page.dialog = confirm_dialog
+        confirm_dialog.open = True
+        page.update()
+
+    # --- 퇴장 감지용(페이지 언로드) ---
+    def on_exit():
+        nickname = page.session.get('nickname')
+        if nickname and nickname in current_users:
+            leave_text = f"{nickname}님이 채팅방을 나가셨습니다."
+            chat_messages.controls.append(create_system_message_bubble(leave_text))
+            current_users.remove(nickname)
+            page.update()
+    atexit.register(on_exit)
 
     # --- 메시지 전송 함수 ---
     def send_message(e=None):
@@ -1282,6 +1522,28 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             return
         message_text = input_box.value.strip()
         nickname = page.session.get('nickname') or '익명'
+        
+        # 부적절한 메시지 체크
+        is_inappropriate, reason = is_inappropriate_message(message_text)
+        if is_inappropriate:
+            # 경고 메시지 표시
+            warning_msg_data = {
+                'text': f"⚠️ {reason}",
+                'nickname': '시스템',
+                'timestamp': time.time(),
+                'translated': ''
+            }
+            warning_bubble = create_message_bubble(warning_msg_data, False)
+            if warning_bubble:  # None이 아닌 경우만 처리
+                setattr(warning_bubble, 'timestamp', warning_msg_data['timestamp'])
+                chat_messages.controls.append(warning_bubble)
+            page.update()
+            return
+        
+        # 메시지 필터링 (부적절한 단어 마스킹)
+        filtered_message = filter_message(message_text)
+        if filtered_message != message_text:
+            message_text = filtered_message
         
         # 입력창 초기화 (먼저 초기화하여 UI 반응성 향상)
         input_box.value = ""
@@ -1318,13 +1580,14 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                 'translated': translated_text
             }
             user_bubble = create_message_bubble(user_msg_data, True)
-            setattr(user_bubble, 'timestamp', user_msg_data['timestamp'])
-            chat_messages.controls.append(user_bubble)
-            page.update()
+            if user_bubble:  # None이 아닌 경우만 처리
+                setattr(user_bubble, 'timestamp', user_msg_data['timestamp'])
+                chat_messages.controls.append(user_bubble)
+                page.update()
             
             # RAG 답변 추가 (더 안전한 처리)
             try:
-                # 로딩 메시지 먼저 표시
+                # 로딩 메시지 먼저 표시 (질문 바로 아래에 위치)
                 loading_msg_data = {
                     'text': "답변을 생성하고 있습니다...",
                     'nickname': 'RAG',
@@ -1332,8 +1595,10 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                     'translated': ''
                 }
                 loading_bubble = create_message_bubble(loading_msg_data, False)
-                setattr(loading_bubble, 'timestamp', loading_msg_data['timestamp'])
-                chat_messages.controls.append(loading_bubble)
+                if loading_bubble:  # None이 아닌 경우만 처리
+                    setattr(loading_bubble, 'timestamp', loading_msg_data['timestamp'])
+                    # 질문 바로 아래에 insert
+                    chat_messages.controls.insert(len(chat_messages.controls), loading_bubble)
                 page.update()
                 
                 # 외국인 근로자 RAG 방에서는 선택된 언어로 답변 생성
@@ -1344,9 +1609,9 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                     # 일반 RAG 방에서는 기존 방식 사용
                     rag_answer = custom_translate_message(message_text, user_lang)
                 
-                # 로딩 메시지 제거
+                # 로딩 메시지 위치에 답변을 insert (replace)
+                idx = chat_messages.controls.index(loading_bubble)
                 chat_messages.controls.remove(loading_bubble)
-                
                 if rag_answer and rag_answer.strip():  # 답변이 있을 때만 추가
                     rag_msg_data = {
                         'text': rag_answer,
@@ -1355,24 +1620,20 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                         'translated': ''
                     }
                     rag_bubble = create_message_bubble(rag_msg_data, False)
-                    setattr(rag_bubble, 'timestamp', rag_msg_data['timestamp'])
-                    chat_messages.controls.append(rag_bubble)
+                    if rag_bubble:  # None이 아닌 경우만 처리
+                        setattr(rag_bubble, 'timestamp', rag_msg_data['timestamp'])
+                        chat_messages.controls.insert(idx, rag_bubble)
                     page.update()
                 else:
-                    # 답변이 없어도 화면 업데이트
                     page.update()
             except Exception as e:
                 print(f'RAG 답변 오류: {e}')
-                # 로딩 메시지가 있다면 제거
                 try:
                     if 'loading_bubble' in locals():
                         chat_messages.controls.remove(loading_bubble)
                 except:
                     pass
-                
-                # 오류 발생 시에도 화면 업데이트
                 page.update()
-                # 오류 메시지도 표시
                 error_msg_data = {
                     'text': f"죄송합니다. 답변을 생성하는 중 오류가 발생했습니다: {str(e)}",
                     'nickname': '시스템',
@@ -1394,16 +1655,15 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                     'translated': ''
                 }
                 loading_bubble = create_message_bubble(loading_msg_data, False)
-                setattr(loading_bubble, 'timestamp', loading_msg_data['timestamp'])
-                chat_messages.controls.append(loading_bubble)
+                if loading_bubble:  # None이 아닌 경우만 처리
+                    setattr(loading_bubble, 'timestamp', loading_msg_data['timestamp'])
+                    chat_messages.controls.append(loading_bubble)
                 page.update()
-                
-                # RAG 답변 생성
-                rag_answer = custom_translate_message(message_text, user_lang)
-                
+                # RAG 답변 생성 (선택된 언어로)
+                selected_lang = current_target_lang[0] if current_target_lang[0] else user_lang
+                rag_answer = custom_translate_message(message_text, selected_lang)
                 # 로딩 메시지 제거
                 chat_messages.controls.remove(loading_bubble)
-                
                 if rag_answer and rag_answer.strip():  # 답변이 있을 때만 추가
                     rag_msg_data = {
                         'text': rag_answer,
@@ -1412,8 +1672,9 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                         'translated': ''
                     }
                     message_bubble = create_message_bubble(rag_msg_data, False)
-                    setattr(message_bubble, 'timestamp', rag_msg_data['timestamp'])
-                    chat_messages.controls.append(message_bubble)
+                    if message_bubble:  # None이 아닌 경우만 처리
+                        setattr(message_bubble, 'timestamp', rag_msg_data['timestamp'])
+                        chat_messages.controls.append(message_bubble)
                     page.update()
                 else:
                     # 답변이 없어도 화면 업데이트
@@ -1426,7 +1687,6 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                         chat_messages.controls.remove(loading_bubble)
                 except:
                     pass
-                
                 # 오류 발생 시에도 화면 업데이트
                 page.update()
                 # 오류 메시지도 표시
@@ -1437,8 +1697,9 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                     'translated': ''
                 }
                 error_bubble = create_message_bubble(error_msg_data, False)
-                setattr(error_bubble, 'timestamp', error_msg_data['timestamp'])
-                chat_messages.controls.append(error_bubble)
+                if error_bubble:  # None이 아닌 경우만 처리
+                    setattr(error_bubble, 'timestamp', error_msg_data['timestamp'])
+                    chat_messages.controls.append(error_bubble)
                 page.update()
 
     # --- 뒤로가기 함수 ---
@@ -1447,10 +1708,11 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             on_back(e)
 
     # --- Firebase 리스너 설정 ---
+    firebase_listener = None  # 리스너 객체 저장용 변수
     if firebase_available:
         try:
             # Firebase 리스너 설정
-            db.reference(f'rooms/{room_id}/messages').listen(on_message)
+            firebase_listener = db.reference(f'rooms/{room_id}/messages').listen(on_message)
         except Exception as e:
             print(f"Firebase 리스너 설정 오류: {e}")
 
@@ -1512,14 +1774,243 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             rag_title = FOREIGN_WORKER_GUIDE_TEXTS.get(user_lang, FOREIGN_WORKER_GUIDE_TEXTS["ko"])['title']
         else:
             rag_title = RAG_GUIDE_TEXTS.get(user_lang, RAG_GUIDE_TEXTS["en"])['title']
-    # 헤더 (뒤로가기 + 방 제목 + 공유 버튼)
+    # --- 채팅방 관리 함수 ---
+    def show_room_settings(e):
+        """채팅방 설정 다이얼로그 표시"""
+        def close_settings(e):
+            if page.overlay:
+                page.overlay.pop()
+                page.update()
+        
+        # 방장 권한 확인
+        current_nickname = page.session.get('nickname') or ''
+        current_user_id = page.session.get('user_id')
+        is_owner = is_room_owner(room_id, current_nickname, current_user_id)
+        
+        # 차단된 사용자 목록 가져오기 (방장만)
+        blocked_list = []
+        if is_owner:
+            try:
+                blocked_ref = db.reference(f'rooms/{room_id}/blocked_users')
+                blocked_data = blocked_ref.get()
+                if blocked_data:
+                    for nickname, data in blocked_data.items():
+                        blocked_list.append(nickname)
+            except:
+                pass
+        
+        # 설정 다이얼로그 내용
+        settings_content = ft.Column([
+            ft.Text("채팅방 관리", size=18, weight=ft.FontWeight.BOLD),
+            ft.Divider(),
+            ft.Text(f"방 제목: {display_room_title}", size=14),
+            ft.Text(f"방 ID: {room_id}", size=12, color=ft.Colors.GREY_600),
+            ft.Text(f"방장: {current_nickname if is_owner else '다른 사용자'}", size=12, color=ft.Colors.GREEN_600 if is_owner else ft.Colors.GREY_600),
+            ft.Divider(),
+            # 방장 전용 기능들
+            ft.Text("방장 전용 기능", size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_600) if is_owner else ft.Container(),
+            ft.Text("차단된 사용자", size=14, weight=ft.FontWeight.BOLD),
+            ft.Text(f"총 {len(blocked_list)}명", size=12, color=ft.Colors.GREY_600),
+            ft.ElevatedButton(
+                "차단 목록 보기",
+                on_click=lambda e: show_blocked_users(blocked_list),
+                style=ft.ButtonStyle(bgcolor=ft.Colors.RED_50, color=ft.Colors.RED_700)
+            ) if is_owner and blocked_list else ft.Text("차단된 사용자가 없습니다.", size=12, color=ft.Colors.GREY_500) if is_owner else ft.Container(),
+            ft.Divider(),
+            ft.ElevatedButton(
+                "채팅방 초기화",
+                on_click=lambda e: clear_chat_history(),
+                style=ft.ButtonStyle(bgcolor=ft.Colors.ORANGE_50, color=ft.Colors.ORANGE_700)
+            ) if is_owner else ft.Container(),
+            ft.ElevatedButton("닫기", on_click=close_settings)
+        ], spacing=12, horizontal_alignment=ft.CrossAxisAlignment.CENTER)
+        
+        # 오버레이로 표시
+        settings_dialog = ft.Container(
+            content=ft.Container(
+                content=settings_content,
+                padding=24,
+                bgcolor=ft.Colors.WHITE,
+                border_radius=16,
+                shadow=ft.BoxShadow(blur_radius=20, color=ft.Colors.BLACK26)
+            ),
+            alignment=ft.alignment.center,
+            expand=True
+        )
+        
+        page.overlay.append(settings_dialog)
+        page.update()
+    
+    def show_blocked_users(blocked_list):
+        """차단된 사용자 목록 표시"""
+        def unblock_user_from_list(nickname):
+            unblock_user(nickname, room_id)
+            # 목록 새로고침
+            if page.overlay:
+                page.overlay.pop()
+                page.update()
+            show_room_settings(None)
+        
+        # 방장 권한 재확인
+        current_nickname = page.session.get('nickname') or ''
+        current_user_id = page.session.get('user_id')
+        is_owner = is_room_owner(room_id, current_nickname, current_user_id)
+        
+        if not is_owner:
+            # 방장이 아니면 접근 거부
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text("방장만 차단 목록을 볼 수 있습니다."),
+                action="확인"
+            )
+            page.snack_bar.open = True
+            page.update()
+            return
+        
+        blocked_content = ft.Column([
+            ft.Text("차단된 사용자 목록", size=16, weight=ft.FontWeight.BOLD),
+            ft.Text("방장 전용 기능", size=12, color=ft.Colors.BLUE_600),
+            ft.Divider(),
+            *[ft.Row([
+                ft.Text(nickname, size=14),
+                ft.ElevatedButton(
+                    "차단 해제",
+                    on_click=lambda e, n=nickname: unblock_user_from_list(n),
+                    style=ft.ButtonStyle(bgcolor=ft.Colors.GREEN_50, color=ft.Colors.GREEN_700)
+                )
+            ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN) for nickname in blocked_list],
+            ft.ElevatedButton("뒤로가기", on_click=lambda e: [page.overlay.pop(), page.update()])
+        ], spacing=12, horizontal_alignment=ft.CrossAxisAlignment.CENTER)
+        
+        blocked_dialog = ft.Container(
+            content=ft.Container(
+                content=blocked_content,
+                padding=24,
+                bgcolor=ft.Colors.WHITE,
+                border_radius=16,
+                shadow=ft.BoxShadow(blur_radius=20, color=ft.Colors.BLACK26)
+            ),
+            alignment=ft.alignment.center,
+            expand=True
+        )
+        
+        page.overlay.append(blocked_dialog)
+        page.update()
+    
+    def clear_chat_history():
+        """채팅 기록 초기화"""
+        # 방장 권한 확인
+        current_nickname = page.session.get('nickname') or ''
+        current_user_id = page.session.get('user_id')
+        is_owner = is_room_owner(room_id, current_nickname, current_user_id)
+        
+        if not is_owner:
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text("방장만 채팅 기록을 초기화할 수 있습니다."),
+                action="확인"
+            )
+            page.snack_bar.open = True
+            page.update()
+            return
+        
+        def confirm_clear(e):
+            nonlocal firebase_listener  # 외부 변수 접근
+            try:
+                # Firebase에서 메시지 삭제
+                db.reference(f'rooms/{room_id}/messages').delete()
+                
+                # 화면 메시지 초기화
+                chat_messages.controls.clear()
+                
+                # 현재 사용자 목록도 초기화 (입장/퇴장 메시지 방지)
+                current_users.clear()
+                
+                # Firebase 리스너 재설정 (기존 리스너 제거 후 새로 설정)
+                if firebase_listener and firebase_available:
+                    try:
+                        firebase_listener.close()  # 기존 리스너 제거
+                    except:
+                        pass
+                    # 새 리스너 설정
+                    firebase_listener = db.reference(f'rooms/{room_id}/messages').listen(on_message)
+                
+                # 페이지 업데이트
+                page.update()
+                
+                # 확인 메시지 표시 (Firebase에 저장하지 않고 화면에만 표시)
+                clear_msg_data = {
+                    'text': "채팅 기록이 초기화되었습니다.",
+                    'nickname': '시스템',
+                    'timestamp': time.time(),
+                    'translated': ''
+                }
+                clear_bubble = create_message_bubble(clear_msg_data, False)
+                if clear_bubble:  # None이 아닌 경우만 처리
+                    setattr(clear_bubble, 'timestamp', clear_msg_data['timestamp'])
+                    chat_messages.controls.append(clear_bubble)
+                    page.update()
+                
+                # 성공 메시지 표시
+                page.snack_bar = ft.SnackBar(
+                    content=ft.Text("채팅 기록이 성공적으로 초기화되었습니다."),
+                    action="확인",
+                    duration=2000
+                )
+                page.snack_bar.open = True
+                page.update()
+                
+                # 다이얼로그 닫기
+                if page.dialog:
+                    page.dialog.open = False
+                    page.update()
+                    
+            except Exception as e:
+                print(f"채팅 기록 초기화 오류: {e}")
+                import traceback
+                traceback.print_exc()
+                page.snack_bar = ft.SnackBar(
+                    content=ft.Text("채팅 기록 초기화 중 오류가 발생했습니다."),
+                    action="확인"
+                )
+                page.snack_bar.open = True
+                page.update()
+        
+        def cancel_clear(e):
+            if page.dialog:
+                page.dialog.open = False
+                page.update()
+        
+        # 확인 다이얼로그 표시
+        confirm_dialog = ft.AlertDialog(
+            title=ft.Text("채팅 기록 초기화"),
+            content=ft.Text("정말로 모든 채팅 기록을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다."),
+            actions=[
+                ft.TextButton("취소", on_click=cancel_clear),
+                ft.TextButton("초기화", on_click=confirm_clear, style=ft.ButtonStyle(color=ft.Colors.RED))
+            ]
+        )
+        
+        page.dialog = confirm_dialog
+        confirm_dialog.open = True
+        page.update()
+
+    # 헤더 (뒤로가기 + 방 제목 + 설정 버튼 + 공유 버튼)
     display_room_title = rag_title if is_rag_room else (
         QUICK_ROOM_TITLES.get(user_lang, "Quick Chat Room") if room_title in ["빠른 채팅방", "Quick Chat Room"] else room_title
     )
+    
+    # 방장 권한 확인
+    current_nickname = page.session.get('nickname') or ''
+    current_user_id = page.session.get('user_id')
+    is_owner = is_room_owner(room_id, current_nickname, current_user_id)
+    
+    # 방장 표시 추가
+    title_with_owner = f"{display_room_title} {'👑' if is_owner else ''}"
+    
     header = ft.Container(
         content=ft.Row([
             ft.IconButton(ft.Icons.ARROW_BACK, on_click=go_back),
-            ft.Text(display_room_title, size=title_size, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87, expand=True, selectable=True),
+            ft.Text(title_with_owner, size=title_size, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87, expand=True, selectable=True),
+            ft.IconButton(ft.Icons.SETTINGS, on_click=show_room_settings, tooltip="채팅방 관리"),
             ft.IconButton(ft.Icons.SHARE, on_click=on_share) if on_share else ft.Container(),
         ], alignment=ft.MainAxisAlignment.START, vertical_alignment=ft.CrossAxisAlignment.CENTER),
         padding=header_padding,
@@ -1574,41 +2065,35 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         ),
     ], alignment=ft.MainAxisAlignment.CENTER, vertical_alignment=ft.CrossAxisAlignment.CENTER)
 
-    # 번역 스위치 + 드롭다운 (RAG 채팅방이 아닐 때만, 외국인 근로자 RAG 방에서는 언어 선택만)
-    if is_foreign_worker_rag or room_id == "foreign_worker_rights_rag":
-        # 외국인 근로자 RAG 방에서는 언어 선택 드롭다운만 표시
-        switch_row = ft.Container(
+    # 입력창 위에 드롭다운 항상 표시
+    input_area = ft.Column([
+        ft.Container(
             content=ft.Row([
                 ft.Text("답변 언어:", size=14, weight=ft.FontWeight.BOLD),
-                target_lang_dropdown if target_lang_dropdown else ft.Container(),
-            ], alignment=ft.MainAxisAlignment.CENTER, spacing=12),
+                target_lang_dropdown
+            ], alignment=ft.MainAxisAlignment.START, spacing=12),
             padding=8 if is_mobile else 12,
-            margin=ft.margin.only(bottom=8)
-        ) if target_lang_dropdown else ft.Container()
-    else:
-        # 일반 채팅방에서는 번역 스위치 + 드롭다운
-        switch_row = ft.Container(
-            content=ft.Row([
-                translate_switch,
-                target_lang_dropdown if target_lang_dropdown else ft.Container(),
-            ], alignment=ft.MainAxisAlignment.CENTER, spacing=12),
-            padding=8 if is_mobile else 12,
-            margin=ft.margin.only(bottom=8)
-        ) if translate_switch else ft.Container()
+            margin=ft.margin.only(bottom=4)
+        ),
+        input_row
+    ], spacing=4)
 
-    # chat_column은 다문화 RAG 채팅방에서만 가이드+메시지, 일반 채팅방에서는 메시지 Column만 포함
+    # chat_column을 스크롤 가능하게 만듦
     if is_rag_room:
         chat_column = ft.Column(
             controls=[get_rag_guide_message(), chat_messages],
             expand=True,
-            scroll=ft.ScrollMode.ALWAYS,
+            spacing=0,
+            scroll=ft.ScrollMode.ALWAYS
         )
     else:
         chat_column = ft.Column(
             controls=[chat_messages],
             expand=True,
-            scroll=ft.ScrollMode.ALWAYS,
+            scroll=ft.ScrollMode.ALWAYS
         )
+
+    # chat_area는 scroll 없이 Container만 사용
     chat_area = ft.Container(
         content=chat_column,
         expand=True,
@@ -1618,27 +2103,58 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         margin=ft.margin.only(bottom=8, left=8, right=8, top=8),
         border=ft.border.all(1, "#E0E7EF"),
         alignment=ft.alignment.center,
-        width=min(page.width, 900),
+        width=min(page.width, 900)
     )
-    # 입력 영역
-    input_area = ft.Container(
-        content=input_row,
-        padding=header_padding,
-        bgcolor=ft.Colors.WHITE,
-        border_radius=16,
-        margin=ft.margin.only(left=8, right=8, bottom=8),
-        shadow=ft.BoxShadow(blur_radius=4, color="#B0BEC544")
-    )
+
+    # --- 채팅방 입장 시 시스템 메시지 push 함수 ---
+    def push_join_system_message():
+        nickname = page.session.get('nickname')
+        if not (firebase_available and nickname and nickname not in ['익명', 'RAG', '시스템']):
+            return
+        try:
+            messages_ref = db.reference(f'rooms/{room_id}/messages')
+            messages = messages_ref.get()
+            import time
+            now = time.time()
+            # 1. 방장(최초 입장자)만 예외 처리: 방에 메시지가 0개이고, 내가 방을 만든 사람일 때만 return
+            if not messages or len(messages) == 0:
+                # 방장 여부는 room_id 생성 직후 바로 입장하는 경우로 추정 (정확히 하려면 DB에 생성자 정보 필요)
+                # 일단 최초 입장자만 안내 메시지 push 안 함
+                return
+            # 2. 최근 2분 내 같은 닉네임의 시스템 메시지가 이미 있으면 push 안 함
+            for msg in messages.values():
+                if (
+                    msg.get('nickname') == '시스템'
+                    and msg.get('text', '').startswith(f'{nickname}님이 채팅방에 들어왔습니다')
+                    and now - float(msg.get('timestamp', 0)) < 120
+                ):
+                    return  # 중복 방지
+            # 3. 안내 메시지 push (메시지 1개 이상이면 무조건 push)
+            join_text = f"{nickname}님이 채팅방에 들어왔습니다."
+            system_msg = {
+                'text': join_text,
+                'nickname': '시스템',
+                'timestamp': now,
+                'translated': ''
+            }
+            messages_ref.push(system_msg)
+        except Exception as e:
+            print(f"입장 시스템 메시지 push 오류: {e}")
+
+    # --- 최초 진입 시 시스템 메시지 push ---
+    push_join_system_message()
+
+    # 전체 레이아웃
     return ft.View(
         f"/chat/{room_id}",
         controls=[
             header,
             chat_area,
-            switch_row,
             input_area,
-            mic_dialog,  # AlertDialog를 컨트롤에 포함
         ],
-        bgcolor=ft.LinearGradient(["#F8FAFC", "#F1F5F9"], begin=ft.alignment.top_left, end=ft.alignment.bottom_right)
+        bgcolor="#F5F7FF",
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        vertical_alignment=ft.MainAxisAlignment.END
     )
 
 # 환경변수에서 firebase_key.json 내용을 읽어서 파일로 저장
@@ -1646,3 +2162,50 @@ firebase_key_json = os.getenv("FIREBASE_KEY_JSON")
 if firebase_key_json:
     with open("firebase_key.json", "w", encoding="utf-8") as f:
         f.write(firebase_key_json)
+
+# 차단된 사용자 목록 (세션별로 관리)
+BLOCKED_USERS = set()
+
+def block_user(nickname, room_id):
+    """사용자 차단"""
+    BLOCKED_USERS.add(nickname)
+    # Firebase에 차단 정보 저장
+    try:
+        db.reference(f'rooms/{room_id}/blocked_users').child(nickname).set({
+            'blocked_at': time.time(),
+            'blocked_by': '방장'
+        })
+        print(f"사용자 {nickname} 차단됨")
+    except Exception as e:
+        print(f"차단 정보 저장 오류: {e}")
+
+def unblock_user(nickname, room_id):
+    """사용자 차단 해제"""
+    BLOCKED_USERS.discard(nickname)
+    # Firebase에서 차단 정보 삭제
+    try:
+        db.reference(f'rooms/{room_id}/blocked_users').child(nickname).delete()
+        print(f"사용자 {nickname} 차단 해제됨")
+    except Exception as e:
+        print(f"차단 해제 오류: {e}")
+
+def is_user_blocked(nickname):
+    """사용자가 차단되었는지 확인"""
+    return nickname in BLOCKED_USERS
+
+def is_room_owner(room_id, nickname, user_id=None):
+    """방장인지 확인"""
+    try:
+        room_ref = db.reference(f'/rooms/{room_id}')
+        room_data = room_ref.get()
+        if room_data:
+            # 닉네임으로 확인
+            if room_data.get('created_by') == nickname:
+                return True
+            # 사용자 ID로 확인 (더 정확함)
+            if user_id and room_data.get('creator_id') == user_id:
+                return True
+        return False
+    except Exception as e:
+        print(f"방장 권한 확인 오류: {e}")
+        return False

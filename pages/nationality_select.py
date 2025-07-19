@@ -73,7 +73,8 @@ def NationalitySelectPage(page, on_select, on_foreign_select, on_back=None):
                             ft.Text("실시간 채팅", weight=ft.FontWeight.BOLD, size=12 if is_mobile else 14),
                             ft.Text("부산 지역 사람들과 실시간으로 대화하세요", size=10 if is_mobile else 12, color=ft.Colors.GREY_600)
                         ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=4 if is_mobile else 5),
-                        bgcolor="#F5F7FF", border_radius=15 if is_mobile else 20, padding=15 if is_mobile else 20, expand=1
+                        bgcolor="#F5F7FF", border_radius=15 if is_mobile else 20, padding=15 if is_mobile else 20,
+                        width=300 if not is_mobile else None
                     ),
                     ft.Container(
                         content=ft.Column([
@@ -81,9 +82,10 @@ def NationalitySelectPage(page, on_select, on_foreign_select, on_back=None):
                             ft.Text("다국어 지원", weight=ft.FontWeight.BOLD, size=12 if is_mobile else 14),
                             ft.Text("한국어와 영어로 자유롭게 소통하세요", size=10 if is_mobile else 12, color=ft.Colors.GREY_600)
                         ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=4 if is_mobile else 5),
-                        bgcolor="#F5F7FF", border_radius=15 if is_mobile else 20, padding=15 if is_mobile else 20, expand=1
+                        bgcolor="#F5F7FF", border_radius=15 if is_mobile else 20, padding=15 if is_mobile else 20,
+                        width=300 if not is_mobile else None
                     ),
-                ], alignment=ft.MainAxisAlignment.CENTER, spacing=10 if is_mobile else 20),
+                ], alignment=ft.MainAxisAlignment.CENTER, spacing=40 if not is_mobile else 10),
                 padding=ft.padding.only(top=30 if is_mobile else 40)
             ),
         ],
