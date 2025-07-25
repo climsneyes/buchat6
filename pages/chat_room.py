@@ -65,7 +65,7 @@ def filter_message(message):
 def translate_message(text, target_lang):
     try:
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-2.0-flash-lite")
         # 언어 코드 → 영어 언어명 매핑
         lang_map = {
             "en": "English", "ko": "Korean", "ja": "Japanese", "zh": "Chinese", "zh-TW": "Traditional Chinese", "id": "Indonesian", "vi": "Vietnamese", "fr": "French", "de": "German", "th": "Thai", "uz": "Uzbek", "ne": "Nepali", "tet": "Tetum", "lo": "Lao", "mn": "Mongolian", "my": "Burmese", "bn": "Bengali", "si": "Sinhala", "km": "Khmer", "ky": "Kyrgyz", "ur": "Urdu"
@@ -86,6 +86,270 @@ LANG_NAME_MAP = {
     "uz": "우즈베키스탄어", "ne": "네팔어", "tet": "동티모르어", "lo": "라오스어",
     "mn": "몽골어", "my": "미얀마어", "bn": "방글라데시어", "si": "스리랑카어",
     "km": "캄보디아어", "ky": "키르기스스탄어", "ur": "파키스탄어"
+}
+
+# 부산 맛집 가이드 텍스트 다국어 사전
+BUSAN_FOOD_GUIDE_TEXTS = {
+    "ko": {
+        "title": "부산 맛집 검색",
+        "info": "다음과 같은 정보를 질문할 수 있습니다:",
+        "items": [
+            "🍜 부산의 유명한 국수 맛집",
+            "🦐 회와 해산물 전문점",
+            "🍖 삼겹살과 고기집",
+            "🍲 국밥과 탕 요리",
+            "🍰 카페와 디저트",
+            "🍺 술집과 포장마차",
+            "🥢 지역별 맛집 추천",
+            "💰 가격대별 음식점"
+        ],
+        "example_title": "질문 예시:",
+        "examples": [
+            "• 부산에서 가장 유명한 돼지국밥집은?",
+            "• 해운대 근처 회 맛집 추천해줘",
+            "• 부산역 주변에 가성비 좋은 국수집 있을까?",
+            "• 서면에서 깔끔한 삼겹살집은?",
+            "• 광안리 해변가 카페 추천",
+            "• 부산 야시장에서 먹을 만한 음식은?",
+            "• 남포동 먹거리골목 인기 메뉴는?",
+            "• 5만원 이하로 4명이 먹을 수 있는 곳은?"
+        ],
+        "input_hint": "부산 맛집에 대해 궁금한 것을 물어보세요! 🍽️"
+    },
+    "en": {
+        "title": "Busan Restaurant Search",
+        "info": "You can ask about:",
+        "items": [
+            "🍜 Famous noodle restaurants in Busan",
+            "🦐 Sashimi and seafood specialists",
+            "🍖 BBQ and meat restaurants",
+            "🍲 Soup and stew dishes",
+            "🍰 Cafes and desserts",
+            "🍺 Bars and street food stalls",
+            "🥢 Regional restaurant recommendations",
+            "💰 Restaurants by price range"
+        ],
+        "example_title": "Example questions:",
+        "examples": [
+            "• What's the most famous pork soup restaurant in Busan?",
+            "• Recommend sashimi restaurants near Haeundae",
+            "• Are there any good value noodle shops around Busan Station?",
+            "• Clean BBQ restaurants in Seomyeon?",
+            "• Recommend cafes near Gwangalli Beach",
+            "• What food should I try at Busan night markets?",
+            "• Popular dishes in Nampo-dong food alley?",
+            "• Places for 4 people under 50,000 won?"
+        ],
+        "input_hint": "Ask anything about Busan restaurants! 🍽️"
+    },
+    "ja": {
+        "title": "釜山グルメ検索",
+        "info": "以下について質問できます:",
+        "items": [
+            "🍜 釜山の有名な麺料理店",
+            "🦐 刺身・海鮮専門店",
+            "🍖 焼肉・肉料理店",
+            "🍲 スープ・鍋料理",
+            "🍰 カフェ・デザート",
+            "🍺 居酒屋・屋台",
+            "🥢 地域別レストラン推薦",
+            "💰 価格帯別レストラン"
+        ],
+        "example_title": "質問例:",
+        "examples": [
+            "• 釜山で一番有名な豚骨スープ店は？",
+            "• 海雲台近くの刺身店を教えて",
+            "• 釜山駅周辺でコスパの良い麺店は？",
+            "• 西面できれいな焼肉店は？",
+            "• 広安里ビーチ近くのカフェ推薦",
+            "• 釜山夜市で食べるべき料理は？",
+            "• 南浦洞グルメ街の人気メニューは？",
+            "• 5万ウォン以下で4人が食べられる店は？"
+        ],
+        "input_hint": "釜山グルメについて何でも聞いてください！🍽️"
+    },
+    "zh": {
+        "title": "釜山美食搜索",
+        "info": "您可以询问:",
+        "items": [
+            "🍜 釜山著名面条店",
+            "🦐 生鱼片和海鲜专门店",
+            "🍖 烤肉和肉类餐厅",
+            "🍲 汤类和炖菜",
+            "🍰 咖啡厅和甜点",
+            "🍺 酒吧和小吃摊",
+            "🥢 地区餐厅推荐",
+            "💰 按价位分类的餐厅"
+        ],
+        "example_title": "问题示例:",
+        "examples": [
+            "• 釜山最有名的猪肉汤饭店是哪家？",
+            "• 推荐海云台附近的生鱼片店",
+            "• 釜山站周围有性价比好的面条店吗？",
+            "• 西面有干净的烤肉店吗？",
+            "• 推荐广安里海滩咖啡厅",
+            "• 釜山夜市有什么值得吃的？",
+            "• 南浦洞美食街热门菜品？",
+            "• 5万韩元以下4人用餐的地方？"
+        ],
+        "input_hint": "请询问釜山美食相关问题！🍽️"
+    },
+    "zh-TW": {
+        "title": "釜山美食搜尋",
+        "info": "您可以詢問:",
+        "items": [
+            "🍜 釜山著名麵條店",
+            "🦐 生魚片和海鮮專門店",
+            "🍖 烤肉和肉類餐廳",
+            "🍲 湯類和燉菜",
+            "🍰 咖啡廳和甜點",
+            "🍺 酒吧和小吃攤",
+            "🥢 地區餐廳推薦",
+            "💰 按價位分類的餐廳"
+        ],
+        "example_title": "問題示例:",
+        "examples": [
+            "• 釜山最有名的豬肉湯飯店是哪家？",
+            "• 推薦海雲臺附近的生魚片店",
+            "• 釜山站周圍有性價比好的麵條店嗎？",
+            "• 西面有乾淨的烤肉店嗎？",
+            "• 推薦廣安里海灘咖啡廳",
+            "• 釜山夜市有什麼值得吃的？",
+            "• 南浦洞美食街熱門菜品？",
+            "• 5萬韓元以下4人用餐的地方？"
+        ],
+        "input_hint": "請詢問釜山美食相關問題！🍽️"
+    },
+    "vi": {
+        "title": "Tìm kiếm nhà hàng Busan",
+        "info": "Bạn có thể hỏi về:",
+        "items": [
+            "🍜 Các nhà hàng mì nổi tiếng ở Busan",
+            "🦐 Chuyên gia sashimi và hải sản",
+            "🍖 Nhà hàng BBQ và thịt nướng",
+            "🍲 Súp và món hầm",
+            "🍰 Quán cà phê và tráng miệng",
+            "🍺 Quán bar và xe đẩy thức ăn",
+            "🥢 Gợi ý nhà hàng theo vùng",
+            "💰 Nhà hàng theo mức giá"
+        ],
+        "example_title": "Ví dụ câu hỏi:",
+        "examples": [
+            "• Nhà hàng súp thịt heo nổi tiếng nhất ở Busan là gì?",
+            "• Gợi ý nhà hàng sashimi gần Haeundae",
+            "• Có quán mì giá rẻ nào quanh ga Busan không?",
+            "• Nhà hàng BBQ sạch sẽ ở Seomyeon?",
+            "• Gợi ý quán cà phê gần bãi biển Gwangalli",
+            "• Nên ăn gì ở chợ đêm Busan?",
+            "• Món phổ biến ở phố ẩm thực Nampo-dong?",
+            "• Chỗ nào cho 4 người dưới 50,000 won?"
+        ],
+        "input_hint": "Hãy hỏi bất cứ điều gì về nhà hàng Busan! 🍽️"
+    },
+    "th": {
+        "title": "ค้นหาร้านอาหารปูซาน",
+        "info": "คุณสามารถถามเกี่ยวกับ:",
+        "items": [
+            "🍜 ร้านก๋วยเตี๋ยวที่มีชื่อเสียงในปูซาน",
+            "🦐 ร้านซาชิมิและอาหารทะเล",
+            "🍖 ร้านบาร์บีคิวและเนื้อย่าง",
+            "🍲 ซุปและอาหารต้ม",
+            "🍰 คาเฟ่และของหวาน",
+            "🍺 บาร์และแผงลอยน้ำ",
+            "🥢 แนะนำร้านอาหารตามพื้นที่",
+            "💰 ร้านอาหารตามช่วงราคา"
+        ],
+        "example_title": "ตัวอย่างคำถาม:",
+        "examples": [
+            "• ร้านซุปหมูที่มีชื่อเสียงที่สุดในปูซานคือร้านไหน?",
+            "• แนะนำร้านซาชิมิใกล้แฮอุนแด",
+            "• มีร้านก๋วยเตี๋ยวคุ้มค่ารอบสถานีปูซานไหม?",
+            "• ร้านบาร์บีคิวสะอาดในซอมยอน?",
+            "• แนะนำคาเฟ่ใกล้หาดกวางอันลี",
+            "• ควรกินอะไรที่ตลาดกลางคืนปูซาน?",
+            "• เมนูยอดนิยมในซอยอาหารนัมโปดง?",
+            "• ที่ไหนสำหรับ 4 คนต่ำกว่า 50,000 วอน?"
+        ],
+        "input_hint": "ถามอะไรก็ได้เกี่ยวกับร้านอาหารปูซาน! 🍽️"
+    },
+    "fr": {
+        "title": "Recherche de restaurants Busan",
+        "info": "Vous pouvez demander des informations sur:",
+        "items": [
+            "🍜 Restaurants de nouilles célèbres à Busan",
+            "🦐 Spécialistes de sashimi et fruits de mer",
+            "🍖 Restaurants de barbecue et viande",
+            "🍲 Soupes et ragoûts",
+            "🍰 Cafés et desserts",
+            "🍺 Bars et stands de nourriture de rue",
+            "🥢 Recommandations de restaurants par région",
+            "💰 Restaurants par gamme de prix"
+        ],
+        "example_title": "Exemples de questions:",
+        "examples": [
+            "• Quel est le restaurant de soupe de porc le plus célèbre à Busan?",
+            "• Recommandez des restaurants de sashimi près de Haeundae",
+            "• Y a-t-il de bons restaurants de nouilles bon marché près de la gare de Busan?",
+            "• Restaurants de barbecue propres à Seomyeon?",
+            "• Recommandez des cafés près de la plage de Gwangalli",
+            "• Que devrais-je manger aux marchés nocturnes de Busan?",
+            "• Plats populaires dans l'allée gastronomique de Nampo-dong?",
+            "• Endroits pour 4 personnes sous 50 000 wons?"
+        ],
+        "input_hint": "Demandez tout ce que vous voulez sur les restaurants de Busan! 🍽️"
+    },
+    "de": {
+        "title": "Busan Restaurant-Suche",
+        "info": "Sie können fragen nach:",
+        "items": [
+            "🍜 Berühmte Nudelrestaurants in Busan",
+            "🦐 Sashimi- und Meeresfrüchte-Spezialisten",
+            "🍖 Grill- und Fleischrestaurants",
+            "🍲 Suppen und Eintöpfe",
+            "🍰 Cafés und Desserts",
+            "🍺 Bars und Straßenimbisse",
+            "🥢 Regionale Restaurant-Empfehlungen",
+            "💰 Restaurants nach Preiskategorie"
+        ],
+        "example_title": "Beispielfragen:",
+        "examples": [
+            "• Was ist das berühmteste Schweinefleischsuppen-Restaurant in Busan?",
+            "• Empfehlen Sie Sashimi-Restaurants in der Nähe von Haeundae",
+            "• Gibt es gute preiswerte Nudelrestaurants um den Busaner Bahnhof?",
+            "• Saubere Grillrestaurants in Seomyeon?",
+            "• Empfehlen Sie Cafés in der Nähe von Gwangalli Beach",
+            "• Was sollte ich auf den Nachtmärkten von Busan essen?",
+            "• Beliebte Gerichte in der Nampo-dong Fressmeile?",
+            "• Orte für 4 Personen unter 50.000 Won?"
+        ],
+        "input_hint": "Fragen Sie alles über Restaurants in Busan! 🍽️"
+    },
+    "id": {
+        "title": "Pencarian Restoran Busan",
+        "info": "Anda dapat bertanya tentang:",
+        "items": [
+            "🍜 Restoran mie terkenal di Busan",
+            "🦐 Spesialis sashimi dan makanan laut",
+            "🍖 Restoran BBQ dan daging",
+            "🍲 Sup dan semur",
+            "🍰 Kafe dan makanan penutup",
+            "🍺 Bar dan warung kaki lima",
+            "🥢 Rekomendasi restoran regional",
+            "💰 Restoran berdasarkan kisaran harga"
+        ],
+        "example_title": "Contoh pertanyaan:",
+        "examples": [
+            "• Apa restoran sup babi paling terkenal di Busan?",
+            "• Rekomendasikan restoran sashimi dekat Haeundae",
+            "• Apakah ada toko mie murah yang bagus di sekitar Stasiun Busan?",
+            "• Restoran BBQ bersih di Seomyeon?",
+            "• Rekomendasikan kafe dekat Pantai Gwangalli",
+            "• Apa yang harus saya makan di pasar malam Busan?",
+            "• Hidangan populer di gang makanan Nampo-dong?",
+            "• Tempat untuk 4 orang di bawah 50.000 won?"
+        ],
+        "input_hint": "Tanyakan apa saja tentang restoran Busan! 🍽️"
+    }
 }
 
 # RAG 가이드 텍스트 다국어 사전 (상세 구조)
@@ -1175,7 +1439,7 @@ def safe_text(text):
     t = t.replace('㏾', '㎛')
     return t
 
-def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None, on_share=None, custom_translate_message=None, firebase_available=True, is_foreign_worker_rag=False):
+def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None, on_share=None, custom_translate_message=None, firebase_available=True, is_foreign_worker_rag=False, is_busan_food_rag=False):
     # 화면 크기에 따른 반응형 설정
     is_mobile = page.width < 600
     is_tablet = 600 <= page.width < 1024
@@ -1226,7 +1490,10 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
     }.get(user_lang, "Type a message")
     input_box = ft.TextField(hint_text=input_hint, expand=True, height=input_height)
     if is_rag_room:
-        if is_foreign_worker_rag or room_id == "foreign_worker_rights_rag":
+        if is_busan_food_rag or room_id == "busan_food_search_rag":
+            # 부산 맛집 RAG 방에서는 번역 스위치 제거
+            translate_switch = None
+        elif is_foreign_worker_rag or room_id == "foreign_worker_rights_rag":
             # 외국인 근로자 RAG 방에서는 언어 선택 드롭다운 표시
             translate_switch = None
         else:
@@ -1557,8 +1824,8 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             except Exception as e:
                 translated_text = f"[번역 오류: {e}]"
         
-        # Firebase에 메시지 저장 (외국인 근로자 RAG 방이 아닐 때만)
-        if firebase_available and not (is_foreign_worker_rag or room_id == "foreign_worker_rights_rag"):
+        # Firebase에 메시지 저장 (RAG 방이 아닐 때만)
+        if firebase_available and not (is_busan_food_rag or room_id == "busan_food_search_rag" or is_foreign_worker_rag or room_id == "foreign_worker_rights_rag"):
             try:
                 message_data = {
                     'text': message_text,
@@ -1570,8 +1837,8 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             except Exception as e:
                 print(f"Firebase 저장 오류: {e}")
         
-        # 외국인 근로자 RAG 방이면 사용자 메시지와 RAG 답변을 직접 추가
-        if is_foreign_worker_rag or room_id == "foreign_worker_rights_rag":
+        # RAG 방이면 사용자 메시지와 RAG 답변을 직접 추가
+        if is_busan_food_rag or room_id == "busan_food_search_rag" or is_foreign_worker_rag or room_id == "foreign_worker_rights_rag":
             # 사용자 메시지 추가
             user_msg_data = {
                 'text': message_text,
@@ -1601,8 +1868,11 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                     chat_messages.controls.insert(len(chat_messages.controls), loading_bubble)
                 page.update()
                 
-                # 외국인 근로자 RAG 방에서는 선택된 언어로 답변 생성
-                if is_foreign_worker_rag or room_id == "foreign_worker_rights_rag":
+                # RAG 방에서는 선택된 언어로 답변 생성
+                if is_busan_food_rag or room_id == "busan_food_search_rag":
+                    selected_lang = current_target_lang[0] if current_target_lang[0] else user_lang
+                    rag_answer = custom_translate_message(message_text, selected_lang)
+                elif is_foreign_worker_rag or room_id == "foreign_worker_rights_rag":
                     selected_lang = current_target_lang[0] if current_target_lang[0] else user_lang
                     rag_answer = custom_translate_message(message_text, selected_lang)
                 else:
@@ -1719,8 +1989,11 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
     # --- UI 구성 ---
     # RAG 채팅방이면 예시/가이드 메시지를 항상 맨 위에 추가 (중복 방지)
     def get_rag_guide_message():
+        # 부산 맛집 검색 RAG 방인지 확인
+        if is_busan_food_rag or room_id == "busan_food_search_rag":
+            guide_texts = BUSAN_FOOD_GUIDE_TEXTS.get(user_lang, BUSAN_FOOD_GUIDE_TEXTS["ko"])
         # 외국인 근로자 권리구제 RAG 방인지 확인 (방 ID와 파라미터 모두 확인)
-        if is_foreign_worker_rag or room_id == "foreign_worker_rights_rag":
+        elif is_foreign_worker_rag or room_id == "foreign_worker_rights_rag":
             guide_texts = FOREIGN_WORKER_GUIDE_TEXTS.get(user_lang, FOREIGN_WORKER_GUIDE_TEXTS["ko"])
         else:
             guide_texts = RAG_GUIDE_TEXTS.get(user_lang, RAG_GUIDE_TEXTS["ko"])
@@ -1770,7 +2043,9 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
     is_rag_room = custom_translate_message is not None
     rag_title = None
     if is_rag_room:
-        if is_foreign_worker_rag or room_id == "foreign_worker_rights_rag":
+        if is_busan_food_rag or room_id == "busan_food_search_rag":
+            rag_title = BUSAN_FOOD_GUIDE_TEXTS.get(user_lang, BUSAN_FOOD_GUIDE_TEXTS["ko"])['title']
+        elif is_foreign_worker_rag or room_id == "foreign_worker_rights_rag":
             rag_title = FOREIGN_WORKER_GUIDE_TEXTS.get(user_lang, FOREIGN_WORKER_GUIDE_TEXTS["ko"])['title']
         else:
             rag_title = RAG_GUIDE_TEXTS.get(user_lang, RAG_GUIDE_TEXTS["en"])['title']

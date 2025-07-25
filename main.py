@@ -14,7 +14,7 @@ if not os.path.exists("config.py"):
         f.write(f'''
 import os
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-MODEL_NAME = os.getenv("MODEL_NAME", "gemini-pro")
+MODEL_NAME = os.getenv("MODEL_NAME", "gemini-2.0-flash-lite")
 FIREBASE_DB_URL = os.getenv("FIREBASE_DB_URL", "https://pychat-25c45-default-rtdb.asia-southeast1.firebasedatabase.app/")
 FIREBASE_KEY_PATH = os.getenv("FIREBASE_KEY_PATH", "firebase_key.json")
 ''')
@@ -37,7 +37,7 @@ import geocoder
 import time
 import firebase_admin
 from firebase_admin import credentials, db
-from rag_utils import get_or_create_vector_db, answer_with_rag, answer_with_rag_foreign_worker
+from rag_utils import get_or_create_vector_db, answer_with_rag, answer_with_rag_foreign_worker, answer_with_rag_busan_food, answer_with_busan_food_json
 from rag_utils import SimpleVectorDB, GeminiEmbeddings
 
 
@@ -82,8 +82,16 @@ except Exception as e:
 print("RAG 벡터DB 준비 중...")
 VECTOR_DB_MERGED_PATH = "다문화.pkl"
 VECTOR_DB_FOREIGN_WORKER_PATH = "외국인근로자.pkl"
+VECTOR_DB_BUSAN_FOOD_PATH = "부산의맛.pkl"
 vector_db_multicultural = None
 vector_db_foreign_worker = None
+vector_db_busan_food = None
+
+# 부산 맛집 JSON 파일 경로
+BUSAN_FOOD_JSON_PATH = "부산의맛(2025).json"
+TAEK_SULLING_JSON_PATH = "택슐랭(2025).json"
+busan_food_json_data = None
+taek_sulling_json_data = None
 
 # 다문화가족 한국생활안내 벡터DB 로드
 try:
@@ -121,10 +129,38 @@ except Exception as e:
     print(f"외국인 권리구제 벡터DB 로드 중 오류 발생: {e}")
     vector_db_foreign_worker = None
 
+# 부산 맛집 벡터DB는 더 이상 사용하지 않음 (JSON 파일 직접 사용)
+print("부산 맛집 기능은 JSON 파일을 직접 사용합니다.")
+
+# 부산 맛집 JSON 파일 로드
+print("부산 맛집 JSON 파일 로드 중...")
+try:
+    import json
+    
+    # 부산의맛(2025).json 로드
+    if os.path.exists(BUSAN_FOOD_JSON_PATH):
+        with open(BUSAN_FOOD_JSON_PATH, "r", encoding="utf-8") as f:
+            busan_food_json_data = json.load(f)
+        print(f"✅ 부산의맛(2025).json 로드 완료")
+    else:
+        print(f"❌ {BUSAN_FOOD_JSON_PATH} 파일이 없습니다.")
+    
+    # 택슐랭(2025).json 로드
+    if os.path.exists(TAEK_SULLING_JSON_PATH):
+        with open(TAEK_SULLING_JSON_PATH, "r", encoding="utf-8") as f:
+            taek_sulling_json_data = json.load(f)
+        print(f"✅ 택슐랭(2025).json 로드 완료")
+    else:
+        print(f"❌ {TAEK_SULLING_JSON_PATH} 파일이 없습니다.")
+        
+except Exception as e:
+    print(f"❌ JSON 파일 로드 중 오류 발생: {e}")
+
 # RAG 기능 사용 가능 여부 설정 (vector_db 정의 후)
 RAG_AVAILABLE = vector_db_multicultural is not None and vector_db_foreign_worker is not None
+BUSAN_FOOD_RAG_AVAILABLE = busan_food_json_data is not None and taek_sulling_json_data is not None
 
-print("RAG 벡터DB 준비 완료!")
+print("RAG 벡터DB 및 JSON 파일 준비 완료!")
 
 FIND_ROOM_TEXTS = {
     "ko": {
@@ -250,6 +286,31 @@ FOREIGN_WORKER_ROOM_CARD_TEXTS = {
     "km": {"title": "ការការពារសិទ្ធិកម្មករជាតិផ្សេង", "desc": "RAG chatbot ផ្អែកលើមគ្គុទ្ទេសក៍សិទ្ធិកម្មករជាតិផ្សេង"},
     "ky": {"title": "Чет эл жумушчуларынын укуктарын коргоо", "desc": "Чет эл жумушчуларынын укук колдонмосуна негизделген RAG чатбот"},
     "ur": {"title": "غیر ملکی مزدوروں کے حقوق کا تحفظ", "desc": "غیر ملکی مزدوروں کے حقوق کی گائیڈ بک پر مبنی RAG چیٹ بوٹ"}
+}
+
+# --- 부산 맛집 검색 방 카드/버튼 다국어 사전 ---
+BUSAN_FOOD_ROOM_CARD_TEXTS = {
+    "ko": {"title": "부산 맛집 검색", "desc": "부산의맛 & 택슐랭 기반 맛집 검색 챗봇"},
+    "en": {"title": "Busan Restaurant Search", "desc": "Restaurant search chatbot based on Busan Taste & Taксулing"},
+    "vi": {"title": "Tìm kiếm nhà hàng Busan", "desc": "Chatbot tìm kiếm nhà hàng dựa trên Busan Taste & Taксулing"},
+    "ja": {"title": "釜山グルメ検索", "desc": "釜山の味 & Taксулингに基づくレストラン検索チャットボット"},
+    "zh": {"title": "釜山美食搜索", "desc": "基于釜山美味 & Taксулing的餐厅搜索聊天机器人"},
+    "zh-TW": {"title": "釜山美食搜尋", "desc": "基於釜山美味 & Taксулing的餐廳搜尋聊天機器人"},
+    "id": {"title": "Pencarian Restoran Busan", "desc": "Chatbot pencarian restoran berdasarkan Busan Taste & Taксулing"},
+    "th": {"title": "ค้นหาร้านอาหารปูซาน", "desc": "แชทบอทค้นหาร้านอาหารโดยใช้ Busan Taste & Taксулing"},
+    "fr": {"title": "Recherche de restaurants Busan", "desc": "Chatbot de recherche de restaurants basé sur Busan Taste & Taксулing"},
+    "de": {"title": "Busan Restaurant-Suche", "desc": "Restaurant-Such-Chatbot basierend auf Busan Taste & Taксулing"},
+    "uz": {"title": "Пусан ресторанларини қидириш", "desc": "Busan Taste & Taксулing асосидаги ресторан қидирув чатботи"},
+    "ne": {"title": "बुसान रेस्टुरेन्ट खोजी", "desc": "Busan Taste & Taксулing मा आधारित रेस्टुरेन्ट खोज च्याटबोट"},
+    "tet": {"title": "Buka Restoran Busan", "desc": "Chatbot buka restoran tuir Busan Taste & Taксулing"},
+    "lo": {"title": "ຊອກຫາຮ້ານອາຫານ Busan", "desc": "Chatbot ຊອກຫາຮ້ານອາຫານອີງຕາມ Busan Taste & Taксулing"},
+    "mn": {"title": "Бусаны ресторан хайх", "desc": "Busan Taste & Taксулing дээр суурилсан ресторан хайх чатбот"},
+    "my": {"title": "ဘူဆန် စားသောက်ဆိုင် ရှာဖွေခြင်း", "desc": "Busan Taste & Taксулing အပေါ်အခြေခံသော စားသောက်ဆိုင် ရှာဖွေမှု chatbot"},
+    "bn": {"title": "বুসান রেস্টুরেন্ট অনুসন্ধান", "desc": "Busan Taste & Taксулing ভিত্তিক রেস্টুরেন্ট অনুসন্ধান চ্যাটবট"},
+    "si": {"title": "Busan අවන්හල් සෙවීම", "desc": "Busan Taste & Taксулing මත පදනම් වූ අවන්හල් සෙවීමේ චැට්බොට්"},
+    "km": {"title": "ស្វែងរកភោជនីយដ្ឋាន Busan", "desc": "Chatbot ស្វែងរកភោជនីយដ្ឋានដែលផ្អែកលើ Busan Taste & Taксулing"},
+    "ky": {"title": "Бусан ресторандарын издөө", "desc": "Busan Taste & Taксулing негизиндеги ресторан издөө чатботу"},
+    "ur": {"title": "بوسان ریستوران تلاش", "desc": "Busan Taste & Taксулing پر مبنی ریستوران تلاش چیٹ بوٹ"}
 }
 
 def get_text_color(page):
@@ -644,6 +705,26 @@ def main(page: ft.Page):
                                 margin=ft.margin.only(bottom=16),
                                 on_click=lambda e: go_foreign_worker_rag_chat(lang)
                             ),
+                            # --- 부산 맛집 검색 버튼 추가 ---
+                            ft.Container(
+                                content=ft.Row([
+                                    ft.Container(
+                                        content=ft.Icon(name=ft.Icons.RESTAURANT, color="#E91E63", size=28),
+                                        bgcolor="#FCE4EC", border_radius=12, padding=10, margin=ft.margin.only(right=12)
+                                    ),
+                                    ft.Column([
+                                        ft.Text(BUSAN_FOOD_ROOM_CARD_TEXTS.get(lang, BUSAN_FOOD_ROOM_CARD_TEXTS["ko"])["title"], size=16, weight=ft.FontWeight.BOLD, color=get_text_color(page)),
+                                        ft.Text(BUSAN_FOOD_ROOM_CARD_TEXTS.get(lang, BUSAN_FOOD_ROOM_CARD_TEXTS["ko"])["desc"], size=12, color=get_sub_text_color(page), text_align=ft.TextAlign.START, max_lines=3)
+                                    ], spacing=2, expand=True)
+                                ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
+                                bgcolor=get_card_bg_color(page),
+                                border_radius=12,
+                                shadow=ft.BoxShadow(blur_radius=8, color="#B0BEC544"),
+                                padding=16,
+                                margin=ft.margin.only(bottom=16),
+                                on_click=lambda e: go_busan_food_rag_chat(lang) if BUSAN_FOOD_RAG_AVAILABLE else None,
+                                opacity=1.0 if BUSAN_FOOD_RAG_AVAILABLE else 0.5
+                            ),
                         ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
                         padding=ft.padding.only(top=32),
                         alignment=ft.alignment.center,
@@ -718,13 +799,47 @@ def main(page: ft.Page):
         except Exception as e:
             print(f"Firebase에서 방 정보 가져오기 실패: {e}")
 
-    def go_chat(user_lang, target_lang, room_id, room_title="채팅방", is_rag=False, is_foreign_worker_rag=False):
+    def go_chat(user_lang, target_lang, room_id, room_title="채팅방", is_rag=False, is_foreign_worker_rag=False, is_busan_food_rag=False):
         def after_nickname(nickname):
             page.session.set("nickname", nickname)
             page.views.clear()
             
+            # 부산 맛집 검색 RAG 채팅방인지 확인
+            if is_busan_food_rag:
+                # 대화 컨텍스트를 저장할 변수
+                conversation_context = {}
+                
+                def busan_food_rag_answer(query, target_lang):
+                    try:
+                        print(f"부산 맛집 JSON 기반 질문: {query}")
+                        print(f"타겟 언어: {target_lang}")
+                        if busan_food_json_data is None or taek_sulling_json_data is None:
+                            print("부산 맛집 JSON 데이터가 None입니다.")
+                            return "죄송합니다. 부산 맛집 검색 기능이 현재 사용할 수 없습니다. (JSON 데이터가 로드되지 않았습니다.)"
+                        
+                        result = answer_with_busan_food_json(query, busan_food_json_data, taek_sulling_json_data, GEMINI_API_KEY, target_lang=target_lang)
+                        print(f"JSON 기반 답변 생성 완료: {len(result)} 문자")
+                        return result
+                    except Exception as e:
+                        print(f"부산 맛집 JSON 기반 답변 오류: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return "죄송합니다. 부산 맛집 정보를 처리하는 중에 오류가 발생했습니다."
+                
+                page.views.append(ChatRoomPage(
+                    page,
+                    room_id=room_id,
+                    room_title=room_title,
+                    user_lang=user_lang,
+                    target_lang=target_lang,
+                    on_back=lambda e: go_room_list(lang),
+                    on_share=on_share_clicked,
+                    custom_translate_message=busan_food_rag_answer,
+                    firebase_available=FIREBASE_AVAILABLE,
+                    is_busan_food_rag=True
+                ))
             # 외국인 근로자 RAG 채팅방인지 확인
-            if is_foreign_worker_rag:
+            elif is_foreign_worker_rag:
                 # 대화 컨텍스트를 저장할 변수
                 conversation_context = {}
                 
@@ -894,6 +1009,14 @@ def main(page: ft.Page):
         # 채팅방 진입 (is_foreign_worker_rag=True로 설정)
         go_chat(lang, lang, room_id, room_title, is_rag=False, is_foreign_worker_rag=True)
 
+    # --- 부산 맛집 검색 RAG 채팅방 진입 함수 ---
+    def go_busan_food_rag_chat(lang):
+        # 고유 방 ID 및 타이틀
+        room_id = "busan_food_search_rag"
+        room_title = BUSAN_FOOD_ROOM_CARD_TEXTS.get(lang, BUSAN_FOOD_ROOM_CARD_TEXTS["ko"])["title"]
+        # 채팅방 진입 (is_busan_food_rag=True로 설정)
+        go_chat(lang, lang, room_id, room_title, is_rag=False, is_foreign_worker_rag=False, is_busan_food_rag=True)
+
     # --- 라우팅 처리 ---
     def route_change(route):
         print(f"Route: {page.route}")
@@ -916,4 +1039,4 @@ def main(page: ft.Page):
     page.go(page.route)
 
 if __name__ == "__main__":
-    ft.app(target=main, port=8000, view=ft.WEB_BROWSER)
+    ft.app(target=main, port=8001, view=ft.WEB_BROWSER)

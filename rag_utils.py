@@ -563,7 +563,7 @@ def get_foreign_worker_prompt_template(target_lang):
 
 # 4. Gemini 기반 RAG 답변 생성 함수
 def answer_with_rag(query, vector_db, gemini_api_key, model=None, target_lang=None, conversation_context=None):
-    model = "models/gemini-1.5-flash-latest"
+    model = "models/gemini-2.0-flash-lite"
     print(f"  - Gemini RAG 답변 생성 시작")
     lang = detect_language(query)
     prompt_lang = target_lang if target_lang else lang
@@ -630,7 +630,7 @@ def answer_with_rag(query, vector_db, gemini_api_key, model=None, target_lang=No
                 prompt = multicultural_prompt_template.format(context=context, query=combined_query)
                 
                 genai.configure(api_key=gemini_api_key)
-                model = genai.GenerativeModel("gemini-1.5-flash-latest")
+                model = genai.GenerativeModel("gemini-2.0-flash-lite")
                 response = model.generate_content(prompt, generation_config={"max_output_tokens": 1000, "temperature": 0.1})
                 answer = response.text.strip()
                 return answer
@@ -713,10 +713,13 @@ def answer_with_rag(query, vector_db, gemini_api_key, model=None, target_lang=No
     prompt = multicultural_prompt_template.format(context=context, query=query)
     
     genai.configure(api_key=gemini_api_key)
-    model = genai.GenerativeModel("gemini-1.5-flash-latest")
+    model = genai.GenerativeModel("gemini-2.0-flash-lite")
     response = model.generate_content(prompt, generation_config={"max_output_tokens": 1000, "temperature": 0.1})
     answer = response.text.strip()
-    return answer
+    
+    # 마크다운 문법 정리
+    clean_answer = clean_markdown_text(answer)
+    return clean_answer
 
 def get_district_contact_info(district):
     """구별 연락처 정보를 반환합니다."""
@@ -801,8 +804,363 @@ def get_district_contact_info(district):
 해당 구청 홈페이지에서 확인하시기 바랍니다.
 """)
 
+# 5. 부산 맛집 검색을 위한 프롬프트 템플릿
+def get_busan_food_prompt_template(target_lang):
+    """부산 맛집 검색용 프롬프트 템플릿을 반환합니다."""
+    templates = {
+        "ko": """다음은 부산의 맛집 정보입니다. 정확하고 도움이 되는 답변을 한국어로 해주세요.
+
+[참고 정보]
+{context}
+
+질문: {query}
+
+답변: 부산 맛집 정보를 바탕으로 한국어로 답변해주세요. 가게 이름, 위치, 메뉴, 가격, 특징 등을 포함해서 자세히 설명해주세요.""",
+
+        "en": """Here is restaurant information from Busan. Please provide accurate and helpful answers in English.
+
+[Reference Information]
+{context}
+
+Question: {query}
+
+Answer: Please provide a detailed answer in English based on Busan restaurant information. Include restaurant names, locations, menus, prices, and special features.""",
+
+        "ja": """以下は釜山のレストラン情報です。正確で役立つ回答を日本語でお願いします。
+
+[参考情報]
+{context}
+
+質問: {query}
+
+回答: 釜山のレストラン情報に基づいて日本語で詳しく回答してください。店名、場所、メニュー、価格、特徴などを含めて説明してください。""",
+
+        "zh": """以下是釜山的餐厅信息。请用中文提供准确且有帮助的回答。
+
+[参考信息]
+{context}
+
+问题: {query}
+
+回答: 请基于釜山餐厅信息用中文详细回答。包括餐厅名称、位置、菜单、价格、特色等。""",
+
+        "vi": """Đây là thông tin về nhà hàng ở Busan. Vui lòng cung cấp câu trả lời chính xác và hữu ích bằng tiếng Việt.
+
+[Thông tin tham khảo]
+{context}
+
+Câu hỏi: {query}
+
+Trả lời: Vui lòng trả lời chi tiết bằng tiếng Việt dựa trên thông tin nhà hàng Busan. Bao gồm tên nhà hàng, vị trí, thực đơn, giá cả và đặc điểm.""",
+
+        "th": """ต่อไปนี้เป็นข้อมูลร้านอาหารในปูซาน กรุณาให้คำตอบที่ถูกต้องและเป็นประโยชน์เป็นภาษาไทย
+
+[ข้อมูลอ้างอิง]
+{context}
+
+คำถาม: {query}
+
+คำตอบ: กรุณาตอบโดยละเอียดเป็นภาษาไทยตามข้อมูลร้านอาหารปูซาน รวมถึงชื่อร้าน สถานที่ เมนู ราคา และความพิเศษ""",
+
+        "fr": """Voici les informations sur les restaurants de Busan. Veuillez fournir des réponses précises et utiles en français.
+
+[Informations de référence]
+{context}
+
+Question: {query}
+
+Réponse: Veuillez répondre en détail en français basé sur les informations des restaurants de Busan. Incluez les noms des restaurants, emplacements, menus, prix et caractéristiques spéciales.""",
+
+        "de": """Hier sind Restaurantinformationen aus Busan. Bitte geben Sie genaue und hilfreiche Antworten auf Deutsch.
+
+[Referenzinformationen]
+{context}
+
+Frage: {query}
+
+Antwort: Bitte antworten Sie detailliert auf Deutsch basierend auf Busan Restaurantinformationen. Schließen Sie Restaurantnamen, Standorte, Menüs, Preise und besondere Merkmale ein.""",
+
+        "id": """Berikut adalah informasi restoran dari Busan. Mohon berikan jawaban yang akurat dan membantu dalam bahasa Indonesia.
+
+[Informasi Referensi]
+{context}
+
+Pertanyaan: {query}
+
+Jawaban: Mohon jawab secara detail dalam bahasa Indonesia berdasarkan informasi restoran Busan. Sertakan nama restoran, lokasi, menu, harga, dan fitur khusus.""",
+    }
+    return templates.get(target_lang, templates["ko"])
+
+# 6. JSON 기반 부산 맛집 검색 답변 함수
+def clean_markdown_text(text):
+    """마크다운 문법을 제거하고 읽기 쉬운 텍스트로 변환합니다."""
+    if not text:
+        return text
+    
+    # ** 굵은 글씨 마크다운을 제거 (내용은 유지)
+    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
+    
+    # * 기울임 마크다운을 제거 (내용은 유지)
+    text = re.sub(r'\*(.*?)\*', r'\1', text)
+    
+    # ### 헤딩 마크다운을 제거하고 구분자 추가
+    text = re.sub(r'###\s*(.*)', r'📍 \1', text)
+    text = re.sub(r'##\s*(.*)', r'🔶 \1', text)
+    text = re.sub(r'#\s*(.*)', r'📋 \1', text)
+    
+    # - 리스트를 • 로 변경
+    text = re.sub(r'^-\s+', '• ', text, flags=re.MULTILINE)
+    
+    # 연속된 줄바꿈을 정리
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    
+    return text.strip()
+
+def extract_location_from_query(query):
+    """사용자 질문에서 지역/구 정보를 추출합니다."""
+    # 부산 구/지역 매핑 (실제 JSON 키와 매칭)
+    district_keywords = {
+        "해운대구": ["해운대", "해운대구", "해운대역", "해운대해수욕장", "센텀시티"],
+        "부산진구": ["서면", "부산진구", "전포동", "양정", "가야", "개금"],
+        "동래구": ["동래", "동래구", "온천장", "명륜동", "사직", "안락"],
+        "남구": ["남구", "대연", "용호", "용당", "문현", "감만"],
+        "연제구": ["연제구", "연산", "거제", "연산동"],
+        "사상구": ["사상구", "사상", "덕포", "괘법", "감전"],
+        "금정구": ["금정구", "부산대", "장전", "구서", "금샘"],
+        "강서구": ["강서구", "대저", "명지", "가락", "녹산"],
+        "사하구": ["사하구", "하단", "신평", "괴정", "당리"],
+        "중구": ["중구", "남포동", "국제시장", "자갈치", "BIFF광장", "광복로"],
+        "동구": ["동구", "범일동", "초량", "수정"],
+        "서구": ["서구", "암남동", "동대신", "충무동"],
+        "북구": ["북구", "구포", "덕천", "화명"],
+        "영도구": ["영도구", "영도", "태종대", "절영도", "봉래"],
+        "기장군": ["기장군", "기장", "일광", "정관"],
+        "수영구": ["수영구", "광안리", "수영", "민락", "망미"]
+    }
+    
+    found_districts = []
+    query_lower = query.lower()
+    
+    for district, keywords in district_keywords.items():
+        for keyword in keywords:
+            if keyword in query:
+                found_districts.append(district)
+                break
+    
+    print(f"  - 질문에서 추출된 지역: {found_districts}")
+    return found_districts
+
+def filter_restaurants_by_location(busan_food_data, taek_sulling_data, target_districts):
+    """지역에 따라 맛집 데이터를 필터링합니다."""
+    filtered_busan_food = {}
+    filtered_taek_sulling = []
+    
+    # 부산의맛 데이터 필터링
+    if busan_food_data and "부산의 맛 2025" in busan_food_data:
+        for district in target_districts:
+            if district in busan_food_data["부산의 맛 2025"]:
+                filtered_busan_food[district] = busan_food_data["부산의 맛 2025"][district]
+    
+    # 택슐랭 데이터 필터링 (district 필드 기준)
+    if taek_sulling_data and "restaurants" in taek_sulling_data:
+        for restaurant in taek_sulling_data["restaurants"]:
+            restaurant_district = restaurant.get("district", "")
+            for target_district in target_districts:
+                if target_district in restaurant_district or restaurant_district in target_district:
+                    filtered_taek_sulling.append(restaurant)
+                    break
+    
+    print(f"  - 필터링된 부산의맛 구: {list(filtered_busan_food.keys())}")
+    print(f"  - 필터링된 택슐랭 레스토랑 수: {len(filtered_taek_sulling)}")
+    
+    return filtered_busan_food, filtered_taek_sulling
+
+def answer_with_busan_food_json(query, busan_food_data, taek_sulling_data, gemini_api_key, target_lang=None):
+    """JSON 파일을 직접 참조하여 부산 맛집 정보 답변을 생성합니다."""
+    print(f"  - JSON 기반 부산 맛집 답변 생성 시작")
+    
+    # 1. 질문에서 지역 정보 추출
+    target_districts = extract_location_from_query(query)
+    
+    # 2. 지역이 명시된 경우 해당 지역 데이터만 필터링
+    if target_districts:
+        print(f"  - 지역별 필터링 적용: {target_districts}")
+        busan_food_data_filtered, taek_sulling_data_filtered = filter_restaurants_by_location(
+            busan_food_data, taek_sulling_data, target_districts
+        )
+        
+        # 택슐랭 데이터가 필터링되어 비어있으면 전체 데이터 사용
+        if not taek_sulling_data_filtered and taek_sulling_data:
+            print(f"  - 택슐랭 지역 필터링 결과 없음, 전체 데이터 사용")
+            taek_sulling_data_filtered = taek_sulling_data.get("restaurants", [])[:10]
+    else:
+        print(f"  - 지역 정보 없음, 전체 데이터 사용 (일부만)")
+        busan_food_data_filtered = busan_food_data
+        taek_sulling_data_filtered = taek_sulling_data.get("restaurants", [])[:15] if taek_sulling_data else []
+    
+    # JSON 데이터를 텍스트로 변환 (필터링된 데이터 사용)
+    import json
+    
+    # 부산의맛 데이터 요약 (필터링된 데이터 사용)
+    busan_food_summary = "부산의맛(2025) 데이터:\n"
+    if target_districts and busan_food_data_filtered:
+        # 지역별 필터링된 데이터 사용
+        for district, restaurants in busan_food_data_filtered.items():
+            busan_food_summary += f"\n[{district}]\n"
+            for restaurant in restaurants:  # 필터링된 데이터는 모두 사용
+                name = restaurant.get("식당이름", {}).get("한글", "알 수 없음")
+                overview = restaurant.get("개요", {}).get("한글", "정보 없음")
+                menu = restaurant.get("메뉴", {}).get("한글", "정보 없음")
+                address = restaurant.get("주소", "정보 없음")
+                phone = restaurant.get("전화번호", "정보 없음")
+                hours = restaurant.get("영업시간", "정보 없음")
+                
+                busan_food_summary += f"• {name}: {overview}\n"
+                busan_food_summary += f"  메뉴: {menu}\n"
+                busan_food_summary += f"  주소: {address} | 전화: {phone} | 영업시간: {hours}\n\n"
+    elif busan_food_data and "부산의 맛 2025" in busan_food_data:
+        # 지역 정보가 없으면 전체 데이터에서 일부만 사용
+        for district, restaurants in list(busan_food_data["부산의 맛 2025"].items())[:3]:
+            busan_food_summary += f"\n[{district}]\n"
+            for restaurant in restaurants[:2]:  # 각 구별로 최대 2개만
+                name = restaurant.get("식당이름", {}).get("한글", "알 수 없음")
+                overview = restaurant.get("개요", {}).get("한글", "정보 없음")
+                menu = restaurant.get("메뉴", {}).get("한글", "정보 없음")
+                address = restaurant.get("주소", "정보 없음")
+                phone = restaurant.get("전화번호", "정보 없음")
+                hours = restaurant.get("영업시간", "정보 없음")
+                
+                busan_food_summary += f"• {name}: {overview}\n"
+                busan_food_summary += f"  메뉴: {menu}\n"
+                busan_food_summary += f"  주소: {address} | 전화: {phone} | 영업시간: {hours}\n\n"
+    
+    # 택슐랭 데이터 요약 (필터링된 데이터 사용)
+    taek_sulling_summary = "\n택슐랭(2025) 데이터:\n"
+    restaurants_to_use = taek_sulling_data_filtered if target_districts else (taek_sulling_data.get("restaurants", [])[:10] if taek_sulling_data else [])
+    
+    for restaurant in restaurants_to_use:
+        name = restaurant.get("name", "알 수 없음")
+        district = restaurant.get("district", "알 수 없음")
+        overview = restaurant.get("overview", "정보 없음")
+        address = restaurant.get("address", "정보 없음")
+        phone = restaurant.get("phoneNumber", "정보 없음")
+        hours = restaurant.get("businessHours", "정보 없음")
+        menus = restaurant.get("recommendedMenu", [])
+        
+        taek_sulling_summary += f"\n[{district}] {name}: {overview}\n"
+        if menus:
+            menu_text = ", ".join([f"{menu['name']} {menu['price']}" for menu in menus])
+            taek_sulling_summary += f"  추천메뉴: {menu_text}\n"
+        taek_sulling_summary += f"  주소: {address} | 전화: {phone} | 영업시간: {hours}\n"
+    
+    # 전체 컨텍스트 구성
+    context = busan_food_summary + taek_sulling_summary
+    
+    # 언어별 프롬프트 템플릿
+    lang_prompts = {
+        "ko": f"""다음은 2025년 최신 부산 맛집 정보입니다. 질문에 대해 정확하고 자세한 답변을 해주세요.
+
+{context}
+
+질문: {query}
+
+답변: 위의 부산 맛집 정보를 바탕으로 질문에 대해 구체적이고 도움이 되는 답변을 해주세요. 가게 이름, 위치, 메뉴, 가격, 연락처, 영업시간 등을 포함해서 상세히 설명해주세요. 만약 질문과 정확히 일치하는 정보가 없다면 유사한 정보나 대안을 제시해주세요.""",
+
+        "en": f"""Here is the latest 2025 Busan restaurant information. Please provide accurate and detailed answers to the question.
+
+{context}
+
+Question: {query}
+
+Answer: Based on the Busan restaurant information above, please provide specific and helpful answers to the question. Include restaurant names, locations, menus, prices, contact information, business hours, etc. in detail. If there is no exact match for the question, please suggest similar information or alternatives.""",
+
+        "ja": f"""以下は2025年最新の釜山グルメ情報です。質問に対して正確で詳細な回答をお願いします。
+
+{context}
+
+質問: {query}
+
+回答: 上記の釜山グルメ情報に基づいて、質問に対して具体的で役立つ回答をしてください。店名、場所、メニュー、価格、連絡先、営業時間などを詳しく説明してください。質問と正確に一致する情報がない場合は、類似の情報や代替案を提示してください。""",
+
+        "zh": f"""以下是2025年最新釜山美食信息。请对问题提供准确详细的回答。
+
+{context}
+
+问题: {query}
+
+回答: 基于上述釜山美食信息，请对问题提供具体有用的回答。请详细说明餐厅名称、位置、菜单、价格、联系方式、营业时间等。如果没有与问题完全匹配的信息，请提供类似信息或替代方案。""",
+
+        "vi": f"""Sau đây là thông tin nhà hàng Busan mới nhất năm 2025. Vui lòng cung cấp câu trả lời chính xác và chi tiết cho câu hỏi.
+
+{context}
+
+Câu hỏi: {query}
+
+Trả lời: Dựa trên thông tin nhà hàng Busan ở trên, vui lòng cung cấp câu trả lời cụ thể và hữu ích cho câu hỏi. Bao gồm tên nhà hàng, vị trí, thực đơn, giá cả, thông tin liên hệ, giờ mở cửa, v.v. một cách chi tiết. Nếu không có thông tin khớp chính xác với câu hỏi, vui lòng đề xuất thông tin tương tự hoặc giải pháp thay thế."""
+    }
+    
+    # 타겟 언어에 맞는 프롬프트 선택
+    prompt = lang_prompts.get(target_lang, lang_prompts["ko"])
+    
+    # Gemini로 답변 생성
+    try:
+        genai.configure(api_key=gemini_api_key)
+        model = genai.GenerativeModel("gemini-2.0-flash-lite")
+        response = model.generate_content(prompt, generation_config={
+            "max_output_tokens": 1500,
+            "temperature": 0.3
+        })
+        answer = response.text.strip()
+        
+        # 마크다운 문법 정리
+        clean_answer = clean_markdown_text(answer)
+        print(f"  - JSON 기반 답변 생성 완료: {len(clean_answer)} 문자 (마크다운 정리됨)")
+        return clean_answer
+    except Exception as e:
+        print(f"  - Gemini 답변 생성 중 오류: {e}")
+        return "죄송합니다. 부산 맛집 정보를 처리하는 중에 오류가 발생했습니다."
+
+def answer_with_rag_busan_food(query, vector_db, gemini_api_key, model=None, target_lang=None, conversation_context=None):
+    model = "models/gemini-2.0-flash-lite"
+    print(f"  - Gemini 부산 맛집 RAG 답변 생성 시작")
+    lang = detect_language(query)
+    prompt_lang = target_lang if target_lang else lang
+    
+    # embeddings 속성이 없으면 임시로 생성
+    if not hasattr(vector_db, 'embeddings') or vector_db.embeddings is None:
+        print(f"  - 벡터DB에 embeddings가 없어서 임시로 생성합니다...")
+        try:
+            vector_db.embeddings = GeminiEmbeddings(gemini_api_key)
+        except:
+            # embeddings 설정이 불가능한 경우, 직접 임베딩 생성
+            print(f"  - embeddings 설정 실패, 직접 유사도 검색을 수행합니다...")
+    
+    print(f"  - 유사 청크 검색 중...")
+    try:
+        relevant_chunks = retrieve_relevant_chunks(query, vector_db, k=5)
+    except Exception as e:
+        print(f"  - 유사 청크 검색 중 오류: {e}")
+        # 검색 실패 시 처음 5개 문서 사용
+        relevant_chunks = vector_db.documents[:5] if hasattr(vector_db, 'documents') else []
+    
+    if not relevant_chunks:
+        return "참고 정보에서 관련 내용을 찾을 수 없습니다."
+    
+    context = "\n\n".join([doc['page_content'] if isinstance(doc, dict) and 'page_content' in doc else str(doc) for doc in relevant_chunks])
+    busan_food_prompt_template = get_busan_food_prompt_template(prompt_lang)
+    prompt = busan_food_prompt_template.format(context=context, query=query)
+    
+    genai.configure(api_key=gemini_api_key)
+    model = genai.GenerativeModel("gemini-2.0-flash-lite")
+    response = model.generate_content(prompt, generation_config={"max_output_tokens": 1000, "temperature": 0.1})
+    answer = response.text.strip()
+    
+    # 마크다운 문법 정리
+    clean_answer = clean_markdown_text(answer)
+    return clean_answer
+
 def answer_with_rag_foreign_worker(query, vector_db, gemini_api_key, model=None, target_lang=None, conversation_context=None):
-    model = "models/gemini-1.5-flash-latest"
+    model = "models/gemini-2.0-flash-lite"
     print(f"  - Gemini 외국인 근로자 RAG 답변 생성 시작")
     lang = detect_language(query)
     prompt_lang = target_lang if target_lang else lang
@@ -869,7 +1227,7 @@ def answer_with_rag_foreign_worker(query, vector_db, gemini_api_key, model=None,
                 prompt = foreign_worker_prompt_template.format(context=context, query=combined_query)
                 
                 genai.configure(api_key=gemini_api_key)
-                model = genai.GenerativeModel("gemini-1.5-flash-latest")
+                model = genai.GenerativeModel("gemini-2.0-flash-lite")
                 response = model.generate_content(prompt, generation_config={"max_output_tokens": 1000, "temperature": 0.1})
                 answer = response.text.strip()
                 return answer
@@ -952,10 +1310,13 @@ def answer_with_rag_foreign_worker(query, vector_db, gemini_api_key, model=None,
     prompt = foreign_worker_prompt_template.format(context=context, query=query)
     
     genai.configure(api_key=gemini_api_key)
-    model = genai.GenerativeModel("gemini-1.5-flash-latest")
+    model = genai.GenerativeModel("gemini-2.0-flash-lite")
     response = model.generate_content(prompt, generation_config={"max_output_tokens": 1000, "temperature": 0.1})
     answer = response.text.strip()
-    return answer
+    
+    # 마크다운 문법 정리
+    clean_answer = clean_markdown_text(answer)
+    return clean_answer
 
 def get_or_create_vector_db_multi(pdf_paths, gemini_api_key):
     """여러 PDF를 한 번에 임베딩해서 하나의 벡터DB로 저장합니다."""
