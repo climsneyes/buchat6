@@ -1992,6 +1992,154 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         # 부산 맛집 검색 RAG 방인지 확인
         if is_busan_food_rag or room_id == "busan_food_search_rag":
             guide_texts = BUSAN_FOOD_GUIDE_TEXTS.get(user_lang, BUSAN_FOOD_GUIDE_TEXTS["ko"])
+            
+            # 부산 맛집 데이터 소개 및 다운로드 버튼 추가
+            def download_busan_taste(e):
+                import webbrowser
+                webbrowser.open("https://www.visitbusan.net/board/download.do?boardId=BBS_0000007&dataSid=4208&fileSid=7458")
+            
+            def download_taek_sulling(e):
+                import webbrowser
+                webbrowser.open("https://www.visitbusan.net/board/download.do?boardId=BBS_0000007&dataSid=4277&fileSid=7886")
+            
+            # 다국어 소개 텍스트
+            intro_texts = {
+                "ko": {
+                    "title": "📚 부산 맛집 데이터 소개",
+                    "busan_taste": "부산의맛(2025): 부산시에서 제공하는 공식 맛집 가이드로, 16개 구군별로 선별된 맛집 정보를 포함합니다.",
+                    "taek_sulling": "택슐랭(2025): 부산원도심활성화축제에서 제작한 맛집 가이드로, 지역별 특색 있는 맛집들을 소개합니다.",
+                    "download_busan": "부산의맛(2025) 다운로드",
+                    "download_taek": "택슐랭(2025) 다운로드"
+                },
+                "en": {
+                    "title": "📚 Busan Restaurant Data Introduction",
+                    "busan_taste": "Busan Taste (2025): Official restaurant guide provided by Busan City, including selected restaurants from 16 districts.",
+                    "taek_sulling": "Taek Sulling (2025): Restaurant guide produced by Busan Old Downtown Revitalization Festival, featuring unique local restaurants.",
+                    "download_busan": "Download Busan Taste (2025)",
+                    "download_taek": "Download Taek Sulling (2025)"
+                },
+                "ja": {
+                    "title": "📚 釜山グルメデータ紹介",
+                    "busan_taste": "釜山の味(2025): 釜山市が提供する公式グルメガイドで、16区郡別に選ばれたレストラン情報を含みます。",
+                    "taek_sulling": "택슐랭(2025): 釜山原都心活性化祭りで制作されたグルメガイドで、地域別の特色あるレストランを紹介します。",
+                    "download_busan": "釜山の味(2025)ダウンロード",
+                    "download_taek": "택슐랭(2025)ダウンロード"
+                },
+                "zh": {
+                    "title": "📚 釜山美食数据介绍",
+                    "busan_taste": "釜山美味(2025): 釜山市提供的官方美食指南，包含16个区郡精选餐厅信息。",
+                    "taek_sulling": "택슐랭(2025): 釜山原都心活化节制作的美食指南，介绍各地特色餐厅。",
+                    "download_busan": "下载釜山美味(2025)",
+                    "download_taek": "下载택슐랭(2025)"
+                },
+                "vi": {
+                    "title": "📚 Giới thiệu dữ liệu nhà hàng Busan",
+                    "busan_taste": "Busan Taste (2025): Hướng dẫn nhà hàng chính thức do thành phố Busan cung cấp, bao gồm thông tin nhà hàng được chọn lọc từ 16 quận.",
+                    "taek_sulling": "Taek Sulling (2025): Hướng dẫn nhà hàng được sản xuất bởi Lễ hội Phục hưng Trung tâm Cũ Busan, giới thiệu các nhà hàng địa phương độc đáo.",
+                    "download_busan": "Tải xuống Busan Taste (2025)",
+                    "download_taek": "Tải xuống Taek Sulling (2025)"
+                },
+                "th": {
+                    "title": "📚 แนะนำข้อมูลร้านอาหารปูซาน",
+                    "busan_taste": "Busan Taste (2025): คู่มือร้านอาหารอย่างเป็นทางการที่จัดทำโดยเมืองปูซาน รวมข้อมูลร้านอาหารที่คัดสรรมาแล้วจาก 16 เขต",
+                    "taek_sulling": "Taek Sulling (2025): คู่มือร้านอาหารที่จัดทำโดยเทศกาลฟื้นฟูใจกลางเมืองเก่าปูซาน นำเสนอร้านอาหารท้องถิ่นที่มีเอกลักษณ์",
+                    "download_busan": "ดาวน์โหลด Busan Taste (2025)",
+                    "download_taek": "ดาวน์โหลด Taek Sulling (2025)"
+                },
+                "fr": {
+                    "title": "📚 Introduction aux données de restaurants de Busan",
+                    "busan_taste": "Busan Taste (2025): Guide de restaurants officiel fourni par la ville de Busan, incluant des restaurants sélectionnés de 16 districts.",
+                    "taek_sulling": "Taek Sulling (2025): Guide de restaurants produit par le Festival de revitalisation du centre-ville de Busan, présentant des restaurants locaux uniques.",
+                    "download_busan": "Télécharger Busan Taste (2025)",
+                    "download_taek": "Télécharger Taek Sulling (2025)"
+                },
+                "de": {
+                    "title": "📚 Busan Restaurant-Daten Einführung",
+                    "busan_taste": "Busan Taste (2025): Offizieller Restaurantführer der Stadt Busan mit ausgewählten Restaurants aus 16 Bezirken.",
+                    "taek_sulling": "Taek Sulling (2025): Restaurantführer des Busan Altstadt-Revitalisierungsfestivals mit einzigartigen lokalen Restaurants.",
+                    "download_busan": "Busan Taste (2025) herunterladen",
+                    "download_taek": "Taek Sulling (2025) herunterladen"
+                },
+                "zh-TW": {
+                    "title": "📚 釜山美食資料介紹",
+                    "busan_taste": "釜山美味(2025): 釜山市提供的官方美食指南，包含16個區郡精選餐廳資訊。",
+                    "taek_sulling": "택슐랭(2025): 釜山原都心活化節製作的美食指南，介紹各地特色餐廳。",
+                    "download_busan": "下載釜山美味(2025)",
+                    "download_taek": "下載택슐랭(2025)"
+                },
+                "id": {
+                    "title": "📚 Pengenalan Data Restoran Busan",
+                    "busan_taste": "Busan Taste (2025): Panduan restoran resmi yang disediakan oleh Kota Busan, termasuk informasi restoran pilihan dari 16 distrik.",
+                    "taek_sulling": "Taek Sulling (2025): Panduan restoran yang diproduksi oleh Festival Revitalisasi Pusat Kota Lama Busan, menampilkan restoran lokal yang unik.",
+                    "download_busan": "Unduh Busan Taste (2025)",
+                    "download_taek": "Unduh Taek Sulling (2025)"
+                }
+            }
+            
+            intro_text = intro_texts.get(user_lang, intro_texts["ko"])
+            
+            # 데이터 소개 및 다운로드 버튼
+            data_intro = ft.Container(
+                content=ft.Column([
+                    ft.Text(intro_text["title"], size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_600),
+                    ft.Container(height=8),
+                    ft.Text(intro_text["busan_taste"], size=13, color=ft.Colors.GREY_700, selectable=True),
+                    ft.Container(height=4),
+                    ft.Text(intro_text["taek_sulling"], size=13, color=ft.Colors.GREY_700, selectable=True),
+                    ft.Container(height=12),
+                    ft.Row([
+                        ft.ElevatedButton(
+                            intro_text["download_busan"],
+                            icon=ft.Icons.DOWNLOAD,
+                            on_click=download_busan_taste,
+                            style=ft.ButtonStyle(bgcolor=ft.Colors.BLUE_600, color=ft.Colors.WHITE),
+                            width=150
+                        ),
+                        ft.ElevatedButton(
+                            intro_text["download_taek"],
+                            icon=ft.Icons.DOWNLOAD,
+                            on_click=download_taek_sulling,
+                            style=ft.ButtonStyle(bgcolor=ft.Colors.GREEN_600, color=ft.Colors.WHITE),
+                            width=150
+                        )
+                    ], alignment=ft.MainAxisAlignment.CENTER, spacing=10)
+                ], spacing=4),
+                padding=12,
+                bgcolor=ft.LinearGradient(["#FFF3E0", "#FFE0B2"], begin=ft.alignment.top_left, end=ft.alignment.bottom_right),
+                border_radius=8,
+                border=ft.border.all(1, "#FF9800"),
+                margin=ft.margin.only(bottom=12)
+            )
+            
+            guide_items = []
+            for item in guide_texts["items"]:
+                guide_items.append(ft.Text(item, size=14 if is_mobile else 16, color=ft.Colors.GREY_700, selectable=True))
+            example_items = []
+            for example in guide_texts["examples"]:
+                example_items.append(ft.Text(example, size=13 if is_mobile else 14, color=ft.Colors.GREY_600, selectable=True))
+            bubble_width = int(page.width * 0.9) if is_mobile else 400
+            return ft.Container(
+                content=ft.Column([
+                    ft.Text(guide_texts["title"], size=18 if is_mobile else 20, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_600, selectable=True),
+                    ft.Container(height=8),
+                    data_intro,  # 데이터 소개 및 다운로드 버튼 추가
+                    ft.Text(guide_texts["info"], size=15 if is_mobile else 16, color=ft.Colors.GREY_700, selectable=True),
+                    ft.Container(height=8),
+                    *guide_items,
+                    ft.Container(height=12),
+                    ft.Text(guide_texts["example_title"], size=15 if is_mobile else 16, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700, selectable=True),
+                    ft.Container(height=6),
+                    *example_items,
+                    ft.Container(height=12),
+                    ft.Text(guide_texts["input_hint"], size=15 if is_mobile else 16, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_600, text_align=ft.TextAlign.CENTER, selectable=True),
+                ], spacing=4),
+                padding=16 if is_mobile else 20,
+                bgcolor=ft.LinearGradient(["#E3F2FD", "#BBDEFB"], begin=ft.alignment.top_left, end=ft.alignment.bottom_right),
+                border_radius=12,
+                margin=ft.margin.only(bottom=16),
+                border=ft.border.all(1, "#2196F3"),
+                width=bubble_width,
+            )
         # 외국인 근로자 권리구제 RAG 방인지 확인 (방 ID와 파라미터 모두 확인)
         elif is_foreign_worker_rag or room_id == "foreign_worker_rights_rag":
             guide_texts = FOREIGN_WORKER_GUIDE_TEXTS.get(user_lang, FOREIGN_WORKER_GUIDE_TEXTS["ko"])

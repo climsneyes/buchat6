@@ -561,6 +561,122 @@ def get_foreign_worker_prompt_template(target_lang):
     }
     return templates.get(target_lang, templates["ko"])
 
+def get_waste_management_prompt_template(target_lang):
+    """쓰레기 처리 관련 프롬프트 템플릿을 반환합니다."""
+    templates = {
+        "ko": """다음은 {district}의 쓰레기 처리 관련 정보입니다:
+
+{context}
+
+위 정보를 바탕으로 다음 질문에 답변해주세요: {query}
+
+답변은 다음 조건을 만족해야 합니다:
+1. {district}의 구체적인 쓰레기 처리 방법 설명
+2. 외국인이 이해하기 쉽도록 단계별로 설명
+3. 필요한 경우 구청 연락처 및 수수료 정보 포함
+4. 한국어로 답변""",
+        "en": """The following is waste disposal information for {district}:
+
+{context}
+
+Based on the above information, please answer the following question: {query}
+
+The answer should meet the following conditions:
+1. Explain specific waste disposal methods for {district}
+2. Explain step by step in a way that foreigners can easily understand
+3. Include district office contact information and fees if necessary
+4. Answer in English""",
+        "ja": """以下は{district}の廃棄物処理に関する情報です：
+
+{context}
+
+上記の情報に基づいて、以下の質問に答えてください：{query}
+
+回答は以下の条件を満たす必要があります：
+1. {district}の具体的な廃棄物処理方法の説明
+2. 外国人が理解しやすいように段階的に説明
+3. 必要に応じて区役所の連絡先と手数料情報を含む
+4. 日本語で回答""",
+        "zh": """以下是{district}的垃圾处理相关信息：
+
+{context}
+
+基于上述信息，请回答以下问题：{query}
+
+答案应满足以下条件：
+1. 解释{district}的具体垃圾处理方法
+2. 以外籍人士容易理解的方式逐步解释
+3. 必要时包含区政府联系方式和费用信息
+4. 用中文回答""",
+        "vi": """Sau đây là thông tin về xử lý rác thải cho {district}:
+
+{context}
+
+Dựa trên thông tin trên, vui lòng trả lời câu hỏi sau: {query}
+
+Câu trả lời phải đáp ứng các điều kiện sau:
+1. Giải thích phương pháp xử lý rác thải cụ thể cho {district}
+2. Giải thích từng bước theo cách mà người nước ngoài có thể dễ dàng hiểu
+3. Bao gồm thông tin liên hệ văn phòng quận và phí nếu cần thiết
+4. Trả lời bằng tiếng Việt""",
+        "th": """ต่อไปนี้เป็นข้อมูลการจัดการขยะสำหรับ {district}:
+
+{context}
+
+จากข้อมูลข้างต้น โปรดตอบคำถามต่อไปนี้: {query}
+
+คำตอบต้องเป็นไปตามเงื่อนไขต่อไปนี้:
+1. อธิบายวิธีการจัดการขยะที่เฉพาะเจาะจงสำหรับ {district}
+2. อธิบายทีละขั้นตอนในลักษณะที่ชาวต่างชาติเข้าใจง่าย
+3. รวมข้อมูลติดต่อสำนักงานเขตและค่าธรรมเนียมหากจำเป็น
+4. ตอบเป็นภาษาไทย""",
+        "fr": """Voici les informations sur l'élimination des déchets pour {district} :
+
+{context}
+
+Basé sur les informations ci-dessus, veuillez répondre à la question suivante : {query}
+
+La réponse doit satisfaire aux conditions suivantes :
+1. Expliquer les méthodes d'élimination des déchets spécifiques pour {district}
+2. Expliquer étape par étape de manière compréhensible pour les étrangers
+3. Inclure les coordonnées du bureau de district et les frais si nécessaire
+4. Répondre en français""",
+        "de": """Hier sind Informationen zur Abfallentsorgung für {district}:
+
+{context}
+
+Basierend auf den obigen Informationen, beantworten Sie bitte die folgende Frage: {query}
+
+Die Antwort sollte die folgenden Bedingungen erfüllen:
+1. Erklären Sie spezifische Abfallentsorgungsmethoden für {district}
+2. Erklären Sie Schritt für Schritt auf eine Weise, die Ausländer leicht verstehen können
+3. Bei Bedarf Kontaktinformationen des Bezirksbüros und Gebühren einschließen
+4. Auf Deutsch antworten""",
+        "zh-TW": """以下是{district}的垃圾處理相關資訊：
+
+{context}
+
+基於上述資訊，請回答以下問題：{query}
+
+答案應滿足以下條件：
+1. 解釋{district}的具體垃圾處理方法
+2. 以外籍人士容易理解的方式逐步解釋
+3. 必要時包含區政府聯絡方式和費用資訊
+4. 用繁體中文回答""",
+        "id": """Berikut adalah informasi pengelolaan sampah untuk {district}:
+
+{context}
+
+Berdasarkan informasi di atas, silakan jawab pertanyaan berikut: {query}
+
+Jawaban harus memenuhi kondisi berikut:
+1. Jelaskan metode pengelolaan sampah spesifik untuk {district}
+2. Jelaskan langkah demi langkah dengan cara yang mudah dipahami oleh orang asing
+3. Sertakan informasi kontak kantor distrik dan biaya jika diperlukan
+4. Menjawab dalam bahasa Indonesia"""
+    }
+    return templates.get(target_lang, templates["ko"])
+
 # 4. Gemini 기반 RAG 답변 생성 함수
 def answer_with_rag(query, vector_db, gemini_api_key, model=None, target_lang=None, conversation_context=None):
     model = "models/gemini-2.0-flash-lite"
@@ -1223,8 +1339,9 @@ def answer_with_rag_foreign_worker(query, vector_db, gemini_api_key, model=None,
                     district_contact_info = get_district_contact_info(district)
                     context += f"\n\n{district_contact_info}"
                 
-                foreign_worker_prompt_template = get_foreign_worker_prompt_template(prompt_lang)
-                prompt = foreign_worker_prompt_template.format(context=context, query=combined_query)
+                # 쓰레기 처리 관련 구체적인 프롬프트 사용
+                waste_prompt_template = get_waste_management_prompt_template(prompt_lang)
+                prompt = waste_prompt_template.format(context=context, query=combined_query, district=district)
                 
                 genai.configure(api_key=gemini_api_key)
                 model = genai.GenerativeModel("gemini-2.0-flash-lite")
@@ -1288,8 +1405,9 @@ def answer_with_rag_foreign_worker(query, vector_db, gemini_api_key, model=None,
                     district_contact_info = get_district_contact_info(district)
                     context += f"\n\n{district_contact_info}"
                 
-                foreign_worker_prompt_template = get_foreign_worker_prompt_template(prompt_lang)
-                prompt = foreign_worker_prompt_template.format(context=context, query=query)
+                # 쓰레기 처리 관련 구체적인 프롬프트 사용
+                waste_prompt_template = get_waste_management_prompt_template(prompt_lang)
+                prompt = waste_prompt_template.format(context=context, query=query, district=district)
             else:
                 print(f"  - {district} 관련 쓰레기 처리 문서를 찾을 수 없음, 전체 문서 사용")
                 relevant_chunks = retrieve_relevant_chunks(query, vector_db)
