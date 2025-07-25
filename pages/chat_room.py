@@ -105,14 +105,14 @@ BUSAN_FOOD_GUIDE_TEXTS = {
         ],
         "example_title": "질문 예시:",
         "examples": [
-            "• 부산에서 가장 유명한 돼지국밥집은?",
-            "• 해운대 근처 회 맛집 추천해줘",
-            "• 부산역 주변에 가성비 좋은 국수집 있을까?",
-            "• 서면에서 깔끔한 삼겹살집은?",
-            "• 광안리 해변가 카페 추천",
-            "• 부산 야시장에서 먹을 만한 음식은?",
-            "• 남포동 먹거리골목 인기 메뉴는?",
-            "• 5만원 이하로 4명이 먹을 수 있는 곳은?"
+            "• 부산에서 유명한 돼지국밥집 추천해줘",
+            "• 해운대구에 있는 맛집 알려줘",
+            "• 부산역 근처 돼지국밥골목 맛집은?",
+            "• 남포동에 있는 오래된 맛집은?",
+            "• 부산에서 카페 추천해줘",
+            "• 강서구에 있는 맛집은?",
+            "• 금정구 국수 맛집은?",
+            "• 부산에서 해산물 맛집 추천해줘"
         ],
         "input_hint": "부산 맛집에 대해 궁금한 것을 물어보세요! 🍽️"
     },
@@ -131,14 +131,14 @@ BUSAN_FOOD_GUIDE_TEXTS = {
         ],
         "example_title": "Example questions:",
         "examples": [
-            "• What's the most famous pork soup restaurant in Busan?",
-            "• Recommend sashimi restaurants near Haeundae",
-            "• Are there any good value noodle shops around Busan Station?",
-            "• Clean BBQ restaurants in Seomyeon?",
-            "• Recommend cafes near Gwangalli Beach",
-            "• What food should I try at Busan night markets?",
-            "• Popular dishes in Nampo-dong food alley?",
-            "• Places for 4 people under 50,000 won?"
+            "• Recommend famous pork soup restaurants in Busan",
+            "• Tell me about restaurants in Haeundae-gu",
+            "• Restaurants near Busan Station pork soup alley",
+            "• Old restaurants in Nampo-dong",
+            "• Recommend cafes in Busan",
+            "• Restaurants in Gangseo-gu",
+            "• Noodle restaurants in Geumjeong-gu",
+            "• Recommend seafood restaurants in Busan"
         ],
         "input_hint": "Ask anything about Busan restaurants! 🍽️"
     },
@@ -157,14 +157,14 @@ BUSAN_FOOD_GUIDE_TEXTS = {
         ],
         "example_title": "質問例:",
         "examples": [
-            "• 釜山で一番有名な豚骨スープ店は？",
-            "• 海雲台近くの刺身店を教えて",
-            "• 釜山駅周辺でコスパの良い麺店は？",
-            "• 西面できれいな焼肉店は？",
-            "• 広安里ビーチ近くのカフェ推薦",
-            "• 釜山夜市で食べるべき料理は？",
-            "• 南浦洞グルメ街の人気メニューは？",
-            "• 5万ウォン以下で4人が食べられる店は？"
+            "• 釜山で有名な豚骨スープ店を推薦して",
+            "• 海雲台区にあるレストランを教えて",
+            "• 釜山駅近くの豚骨スープ通りにあるレストランは？",
+            "• 南浦洞にある古いレストランは？",
+            "• 釜山でカフェを推薦して",
+            "• 江西区にあるレストランは？",
+            "• 金井区の麺店は？",
+            "• 釜山で海鮮料理店を推薦して"
         ],
         "input_hint": "釜山グルメについて何でも聞いてください！🍽️"
     },
@@ -183,14 +183,14 @@ BUSAN_FOOD_GUIDE_TEXTS = {
         ],
         "example_title": "问题示例:",
         "examples": [
-            "• 釜山最有名的猪肉汤饭店是哪家？",
-            "• 推荐海云台附近的生鱼片店",
-            "• 釜山站周围有性价比好的面条店吗？",
-            "• 西面有干净的烤肉店吗？",
-            "• 推荐广安里海滩咖啡厅",
-            "• 釜山夜市有什么值得吃的？",
-            "• 南浦洞美食街热门菜品？",
-            "• 5万韩元以下4人用餐的地方？"
+            "• 推荐釜山有名的猪肉汤饭店",
+            "• 告诉我海云台区的餐厅",
+            "• 釜山站附近猪肉汤饭街的餐厅",
+            "• 南浦洞的老餐厅",
+            "• 推荐釜山的咖啡厅",
+            "• 江西区的餐厅",
+            "• 金井区的面条店",
+            "• 推荐釜山海鲜餐厅"
         ],
         "input_hint": "请询问釜山美食相关问题！🍽️"
     },
@@ -209,14 +209,14 @@ BUSAN_FOOD_GUIDE_TEXTS = {
         ],
         "example_title": "Ví dụ câu hỏi:",
         "examples": [
-            "• Nhà hàng súp thịt heo nổi tiếng nhất ở Busan là gì?",
-            "• Gợi ý nhà hàng sashimi gần Haeundae",
-            "• Có quán mì giá rẻ nào quanh ga Busan không?",
-            "• Nhà hàng BBQ sạch sẽ ở Seomyeon?",
-            "• Gợi ý quán cà phê gần bãi biển Gwangalli",
-            "• Nên ăn gì ở chợ đêm Busan?",
-            "• Món phổ biến ở phố ẩm thực Nampo-dong?",
-            "• Chỗ nào cho 4 người dưới 50,000 won?"
+            "• Gợi ý nhà hàng súp thịt heo nổi tiếng ở Busan",
+            "• Cho tôi biết về nhà hàng ở Haeundae-gu",
+            "• Nhà hàng gần phố súp thịt heo ga Busan",
+            "• Nhà hàng cũ ở Nampo-dong",
+            "• Gợi ý quán cà phê ở Busan",
+            "• Nhà hàng ở Gangseo-gu",
+            "• Nhà hàng mì ở Geumjeong-gu",
+            "• Gợi ý nhà hàng hải sản ở Busan"
         ],
         "input_hint": "Hãy hỏi bất cứ điều gì về nhà hàng Busan! 🍽️"
     },
@@ -235,14 +235,14 @@ BUSAN_FOOD_GUIDE_TEXTS = {
         ],
         "example_title": "ตัวอย่างคำถาม:",
         "examples": [
-            "• ร้านซุปหมูที่มีชื่อเสียงที่สุดในปูซานคืออะไร?",
-            "• แนะนำร้านซาชิมิใกล้ฮันอุนแด",
-            "• มีร้านก๋วยเตี๋ยวราคาถูกรอบสถานีปูซานไหม?",
-            "• ร้านบาร์บีคิวสะอาดในซอมยอน?",
-            "• แนะนำคาเฟ่ใกล้ชายหาดควางอัลลี",
-            "• ควรกินอะไรในตลาดกลางคืนปูซาน?",
-            "• เมนูยอดนิยมในถนนอาหารนัมโปดง?",
-            "• ที่ไหนสำหรับ 4 คนต่ำกว่า 50,000 วอน?"
+            "• แนะนำร้านซุปหมูที่มีชื่อเสียงในปูซาน",
+            "• บอกฉันเกี่ยวกับร้านอาหารในฮันอุนแด-กู",
+            "• ร้านอาหารใกล้ถนนซุปหมูสถานีปูซาน",
+            "• ร้านอาหารเก่าในนัมโปดง",
+            "• แนะนำคาเฟ่ในปูซาน",
+            "• ร้านอาหารในกังซอ-กู",
+            "• ร้านก๋วยเตี๋ยวในกึมจอง-กู",
+            "• แนะนำร้านอาหารทะเลในปูซาน"
         ],
         "input_hint": "ถามอะไรก็ได้เกี่ยวกับร้านอาหารปูซาน! 🍽️"
     },
@@ -261,14 +261,14 @@ BUSAN_FOOD_GUIDE_TEXTS = {
         ],
         "example_title": "Exemples de questions:",
         "examples": [
-            "• Quel est le restaurant de soupe de porc le plus célèbre à Busan?",
-            "• Recommandez des restaurants de sashimi près de Haeundae",
-            "• Y a-t-il de bons restaurants de nouilles autour de la gare de Busan?",
-            "• Restaurants BBQ propres à Seomyeon?",
-            "• Recommandez des cafés près de la plage de Gwangalli",
-            "• Que manger aux marchés nocturnes de Busan?",
-            "• Plats populaires dans l'allée gastronomique de Nampo-dong?",
-            "• Endroits pour 4 personnes sous 50,000 won?"
+            "• Recommandez des restaurants de soupe de porc célèbres à Busan",
+            "• Parlez-moi des restaurants dans Haeundae-gu",
+            "• Restaurants près de l'allée de soupe de porc de la gare de Busan",
+            "• Vieux restaurants à Nampo-dong",
+            "• Recommandez des cafés à Busan",
+            "• Restaurants dans Gangseo-gu",
+            "• Restaurants de nouilles dans Geumjeong-gu",
+            "• Recommandez des restaurants de fruits de mer à Busan"
         ],
         "input_hint": "Demandez tout sur les restaurants de Busan! 🍽️"
     },
@@ -287,14 +287,14 @@ BUSAN_FOOD_GUIDE_TEXTS = {
         ],
         "example_title": "Beispielfragen:",
         "examples": [
-            "• Was ist das berühmteste Schweinefleischsuppen-Restaurant in Busan?",
-            "• Empfehlen Sie Sashimi-Restaurants in der Nähe von Haeundae",
-            "• Gibt es gute Nudelrestaurants um den Busan-Bahnhof?",
-            "• Saubere BBQ-Restaurants in Seomyeon?",
-            "• Empfehlen Sie Cafés in der Nähe des Gwangalli-Strands",
-            "• Was sollte man auf den Nachtmärkten von Busan essen?",
-            "• Beliebte Gerichte in der Nampo-dong Food Alley?",
-            "• Orte für 4 Personen unter 50.000 Won?"
+            "• Empfehlen Sie berühmte Schweinefleischsuppen-Restaurants in Busan",
+            "• Erzählen Sie mir von Restaurants in Haeundae-gu",
+            "• Restaurants in der Nähe der Schweinefleischsuppen-Gasse am Busan-Bahnhof",
+            "• Alte Restaurants in Nampo-dong",
+            "• Empfehlen Sie Cafés in Busan",
+            "• Restaurants in Gangseo-gu",
+            "• Nudelrestaurants in Geumjeong-gu",
+            "• Empfehlen Sie Meeresfrüchte-Restaurants in Busan"
         ],
         "input_hint": "Fragen Sie alles über Busan-Restaurants! 🍽️"
     },
@@ -313,14 +313,14 @@ BUSAN_FOOD_GUIDE_TEXTS = {
         ],
         "example_title": "問題範例:",
         "examples": [
-            "• 釜山最有名的豬肉湯飯店是哪家？",
-            "• 推薦海雲台附近的生魚片店",
-            "• 釜山站周圍有性價比好的麵條店嗎？",
-            "• 西面有乾淨的烤肉店嗎？",
-            "• 推薦廣安里海灘咖啡廳",
-            "• 釜山夜市有什麼值得吃的？",
-            "• 南浦洞美食街熱門菜品？",
-            "• 5萬韓元以下4人用餐的地方？"
+            "• 推薦釜山有名的豬肉湯飯店",
+            "• 告訴我海雲台區的餐廳",
+            "• 釜山站附近豬肉湯飯街的餐廳",
+            "• 南浦洞的老餐廳",
+            "• 推薦釜山的咖啡廳",
+            "• 江西區的餐廳",
+            "• 金井區的麵條店",
+            "• 推薦釜山海鮮餐廳"
         ],
         "input_hint": "請詢問釜山美食相關問題！🍽️"
     },
@@ -339,14 +339,14 @@ BUSAN_FOOD_GUIDE_TEXTS = {
         ],
         "example_title": "Contoh pertanyaan:",
         "examples": [
-            "• Apa restoran sup babi paling terkenal di Busan?",
-            "• Rekomendasikan restoran sashimi dekat Haeundae",
-            "• Apakah ada restoran mie murah di sekitar Stasiun Busan?",
-            "• Restoran BBQ bersih di Seomyeon?",
-            "• Rekomendasikan kafe dekat pantai Gwangalli",
-            "• Apa yang harus dimakan di pasar malam Busan?",
-            "• Hidangan populer di gang makanan Nampo-dong?",
-            "• Tempat untuk 4 orang di bawah 50.000 won?"
+            "• Rekomendasikan restoran sup babi terkenal di Busan",
+            "• Beritahu saya tentang restoran di Haeundae-gu",
+            "• Restoran dekat gang sup babi Stasiun Busan",
+            "• Restoran lama di Nampo-dong",
+            "• Rekomendasikan kafe di Busan",
+            "• Restoran di Gangseo-gu",
+            "• Restoran mie di Geumjeong-gu",
+            "• Rekomendasikan restoran seafood di Busan"
         ],
         "input_hint": "Tanyakan apa saja tentang restoran Busan! 🍽️"
     }
