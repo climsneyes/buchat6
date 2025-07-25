@@ -128,9 +128,9 @@ def HomePage(page, lang="ko", on_create=None, on_find=None, on_quick=None, on_ch
                 content=ft.Column([
                     ft.Container(
                         content=ft.Column([
-                            ft.Text(t["desc"], size=desc_size, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
+                            ft.Text(t["desc"], size=desc_size, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87, text_align=ft.TextAlign.CENTER),
                             ft.Container(
-                                content=ft.Text(t["desc2"], size=desc2_size, color=ft.Colors.BLACK87, weight=ft.FontWeight.W_500),
+                                content=ft.Text(t["desc2"], size=desc2_size, color=ft.Colors.BLACK87, weight=ft.FontWeight.W_500, text_align=ft.TextAlign.CENTER),
                                 margin=ft.margin.only(top=4)
                             ),
                         ], spacing=2, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
@@ -197,7 +197,11 @@ def HomePage(page, lang="ko", on_create=None, on_find=None, on_quick=None, on_ch
                     width=container_width
                 ),
             ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER, expand=False),
+            
+            # 하단 여백 추가 (모바일에서 텍스트가 잘리지 않도록)
+            ft.Container(height=20 if is_mobile else 32),
         ],
         bgcolor=ft.LinearGradient(["#F1F5FF", "#E0E7FF"], begin=ft.alignment.top_left, end=ft.alignment.bottom_right),
-        horizontal_alignment=ft.CrossAxisAlignment.CENTER
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        padding=ft.padding.only(bottom=20 if is_mobile else 32)  # 하단 패딩 추가
     )

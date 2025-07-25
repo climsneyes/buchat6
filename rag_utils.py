@@ -1314,6 +1314,16 @@ def answer_with_rag_foreign_worker(query, vector_db, gemini_api_key, model=None,
                         if 'gu_name' in metadata and metadata['gu_name'] == district:
                             waste_docs.append(doc)
             
+            # 메타데이터로 찾지 못한 경우, 내용 기반으로 검색
+            if not waste_docs:
+                print(f"  - 메타데이터로 {district} 관련 쓰레기 처리 문서를 찾지 못함, 내용 기반 검색 시도")
+                for doc in vector_db.documents:
+                    if isinstance(doc, dict) and 'page_content' in doc:
+                        content = doc['page_content'].lower()
+                        # 구군명과 쓰레기 관련 키워드가 모두 포함된 문서 찾기
+                        if district.lower() in content and any(keyword in content for keyword in ['쓰레기', '폐기물', '배출', '종량제', '봉투', '수거']):
+                            waste_docs.append(doc)
+            
             if waste_docs:
                 print(f"  - {district} 관련 쓰레기 처리 문서 {len(waste_docs)}개 찾음")
                 
@@ -1378,6 +1388,16 @@ def answer_with_rag_foreign_worker(query, vector_db, gemini_api_key, model=None,
                     metadata = doc['metadata']
                     if 'category' in metadata and metadata['category'] == '쓰레기처리':
                         if 'gu_name' in metadata and metadata['gu_name'] == district:
+                            waste_docs.append(doc)
+            
+            # 메타데이터로 찾지 못한 경우, 내용 기반으로 검색
+            if not waste_docs:
+                print(f"  - 메타데이터로 {district} 관련 쓰레기 처리 문서를 찾지 못함, 내용 기반 검색 시도")
+                for doc in vector_db.documents:
+                    if isinstance(doc, dict) and 'page_content' in doc:
+                        content = doc['page_content'].lower()
+                        # 구군명과 쓰레기 관련 키워드가 모두 포함된 문서 찾기
+                        if district.lower() in content and any(keyword in content for keyword in ['쓰레기', '폐기물', '배출', '종량제', '봉투', '수거']):
                             waste_docs.append(doc)
             
             if waste_docs:
