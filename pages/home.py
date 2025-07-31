@@ -1,6 +1,6 @@
 import flet as ft
 
-def HomePage(page, lang="ko", on_create=None, on_find=None, on_quick=None, on_change_lang=None, on_back=None):
+def HomePage(page, lang="ko", on_create=None, on_find=None, on_quick=None, on_change_lang=None, on_back=None, on_mbti_tourism=None):
     # 화면 크기에 따른 반응형 설정
     is_mobile = page.width < 600
     is_tablet = 600 <= page.width < 1024
@@ -21,7 +21,8 @@ def HomePage(page, lang="ko", on_create=None, on_find=None, on_quick=None, on_ch
             "desc2": "새로운 친구들과 만나보세요 ✨",
             "create": "채팅방 만들기",
             "find": "채팅방 찾기",
-            "quick": "빠른 채팅방 시작"
+            "quick": "빠른 채팅방 시작",
+            "mbti_tourism": "MBTI 관광지 추천"
         },
         "en": {
             "title": "Busan Multilingual Chat",
@@ -29,7 +30,8 @@ def HomePage(page, lang="ko", on_create=None, on_find=None, on_quick=None, on_ch
             "desc2": "Meet new friends ✨",
             "create": "Create Chat Room",
             "find": "Find Chat Room",
-            "quick": "Quick Chat Start"
+            "quick": "Quick Chat Start",
+            "mbti_tourism": "MBTI Tourism Recommendations"
         },
         "ja": {
             "title": "釜山多言語チャットアプリ",
@@ -37,7 +39,8 @@ def HomePage(page, lang="ko", on_create=None, on_find=None, on_quick=None, on_ch
             "desc2": "新しい友達と出会いましょう ✨",
             "create": "チャットルーム作成",
             "find": "チャットルーム検索",
-            "quick": "クイックチャット開始"
+            "quick": "クイックチャット開始",
+            "mbti_tourism": "MBTI観光地おすすめ"
         },
         "zh": {
             "title": "釜山多语言聊天应用",
@@ -45,7 +48,8 @@ def HomePage(page, lang="ko", on_create=None, on_find=None, on_quick=None, on_ch
             "desc2": "结识新朋友 ✨",
             "create": "创建聊天室",
             "find": "查找聊天室",
-            "quick": "快速聊天开始"
+            "quick": "快速聊天开始",
+            "mbti_tourism": "MBTI旅游推荐"
         },
         "fr": {
             "title": "Chat multilingue de Busan",
@@ -53,7 +57,8 @@ def HomePage(page, lang="ko", on_create=None, on_find=None, on_quick=None, on_ch
             "desc2": "Rencontrez de nouveaux amis ✨",
             "create": "Créer une salle de chat",
             "find": "Trouver une salle de chat",
-            "quick": "Démarrer un chat rapide"
+            "quick": "Démarrer un chat rapide",
+            "mbti_tourism": "Recommandations touristiques MBTI"
         },
         "de": {
             "title": "Busan Mehrsprachiger Chat",
@@ -61,7 +66,8 @@ def HomePage(page, lang="ko", on_create=None, on_find=None, on_quick=None, on_ch
             "desc2": "Treffen Sie neue Freunde ✨",
             "create": "Chatraum erstellen",
             "find": "Chatraum finden",
-            "quick": "Schnellchat starten"
+            "quick": "Schnellchat starten",
+            "mbti_tourism": "MBTI Tourismus-Empfehlungen"
         },
         "th": {
             "title": "แชทหลายภาษาปูซาน",
@@ -69,7 +75,8 @@ def HomePage(page, lang="ko", on_create=None, on_find=None, on_quick=None, on_ch
             "desc2": "พบเพื่อนใหม่ ๆ ✨",
             "create": "สร้างห้องแชท",
             "find": "ค้นหาห้องแชท",
-            "quick": "เริ่มแชทด่วน"
+            "quick": "เริ่มแชทด่วน",
+            "mbti_tourism": "แนะนำสถานที่ท่องเที่ยวตาม MBTI"
         },
         "vi": {
             "title": "Trò chuyện đa ngôn ngữ Busan",
@@ -77,7 +84,8 @@ def HomePage(page, lang="ko", on_create=None, on_find=None, on_quick=None, on_ch
             "desc2": "Gặp gỡ bạn mới ✨",
             "create": "Tạo phòng trò chuyện",
             "find": "Tìm phòng trò chuyện",
-            "quick": "Bắt đầu trò chuyện nhanh"
+            "quick": "Bắt đầu trò chuyện nhanh",
+            "mbti_tourism": "Đề xuất du lịch theo MBTI"
         },
         "zh-TW": {
             "title": "釜山多語聊天室",
@@ -85,7 +93,8 @@ def HomePage(page, lang="ko", on_create=None, on_find=None, on_quick=None, on_ch
             "desc2": "認識新朋友 ✨",
             "create": "建立聊天室",
             "find": "查找聊天室",
-            "quick": "快速聊天開始"
+            "quick": "快速聊天開始",
+            "mbti_tourism": "MBTI旅遊推薦"
         },
         "id": {
             "title": "Obrolan Multibahasa Busan",
@@ -93,7 +102,8 @@ def HomePage(page, lang="ko", on_create=None, on_find=None, on_quick=None, on_ch
             "desc2": "Temui teman baru ✨",
             "create": "Buat Ruang Obrolan",
             "find": "Cari Ruang Obrolan",
-            "quick": "Mulai Obrolan Cepat"
+            "quick": "Mulai Obrolan Cepat",
+            "mbti_tourism": "Rekomendasi Wisata MBTI"
         }
     }
     t = texts.get(lang, texts["en"])
@@ -194,6 +204,23 @@ def HomePage(page, lang="ko", on_create=None, on_find=None, on_quick=None, on_ch
                     padding=14 if is_mobile else 16,
                     margin=ft.margin.only(bottom=10 if is_mobile else 12),
                     on_click=on_quick,
+                    width=container_width
+                ),
+                # MBTI 관광지 추천 버튼 추가
+                ft.Container(
+                    content=ft.Row([
+                        ft.Container(
+                            content=ft.Icon(name=ft.Icons.PSYCHOLOGY, color="#8B5CF6", size=icon_size),
+                            bgcolor="#F3E8FF", border_radius=10 if is_mobile else 12, padding=8 if is_mobile else 10, margin=ft.margin.only(right=10 if is_mobile else 12)
+                        ),
+                        ft.Text(t["mbti_tourism"], size=button_text_size, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
+                    ], vertical_alignment=ft.CrossAxisAlignment.CENTER),
+                    bgcolor=ft.Colors.WHITE,
+                    border_radius=10 if is_mobile else 12,
+                    shadow=ft.BoxShadow(blur_radius=8, color="#B0BEC544"),
+                    padding=14 if is_mobile else 16,
+                    margin=ft.margin.only(bottom=10 if is_mobile else 12),
+                    on_click=on_mbti_tourism,
                     width=container_width
                 ),
             ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER, expand=False),

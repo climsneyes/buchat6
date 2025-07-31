@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(python test_tour_api.py)"
+    ],
+    "deny": []
+  }
+}

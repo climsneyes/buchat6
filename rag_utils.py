@@ -8,9 +8,25 @@ import google.generativeai as genai
 import shutil
 from pypdf import PdfReader
 
+# LangGraph 관련 import 추가
+try:
+    from langgraph.graph import StateGraph, END
+    from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+    from langchain_core.prompts import ChatPromptTemplate
+    from langchain.text_splitter import RecursiveCharacterTextSplitter
+    from langchain_community.vectorstores import FAISS
+    from langchain_core.runnables import RunnablePassthrough
+    from langchain_core.output_parsers import StrOutputParser
+    LANGGRAPH_AVAILABLE = True
+except ImportError:
+    LANGGRAPH_AVAILABLE = False
+    print("⚠️ LangGraph 관련 라이브러리가 설치되지 않았습니다. 기본 RAG 기능만 사용됩니다.")
+
 PDF_PATH = "pdf/ban.pdf"
 VECTOR_DB_PATH = "vector_db.pkl"
 CACHE_INFO_PATH = "cache_info.json"
+
+WASTE_INFO_JSON_PATH = "부산광역시_쓰레기처리정보.json"
 
 # 언어 감지 함수
 def detect_language(text):
@@ -60,6 +76,11 @@ def is_waste_related_query(query):
     query_lower = query.lower()
     return any(keyword in query_lower for keyword in WASTE_KEYWORDS)
 
+def is_alien_registration_related_query(query):
+    """질문이 외국인 등록 관련인지 확인합니다."""
+    query_lower = query.lower()
+    return any(keyword in query_lower for keyword in ALIEN_REGISTRATION_KEYWORDS)
+
 def extract_district_from_query(query):
     """질문에서 구군명을 추출합니다."""
     query_lower = query.lower()
@@ -71,6 +92,17 @@ def extract_district_from_query(query):
         ("금정구", "금정구"), ("강서구", "강서구"), ("연제구", "연제구"), ("수영구", "수영구"),
         ("사상구", "사상구"), ("기장군", "기장군"), ("중구", "중구"), ("서구", "서구"), 
         ("동구", "동구"), ("남구", "남구"), ("북구", "북구"), ("사하구", "사하구"),
+        
+        # "~입니다", "~에요", "~예요" 형태 매칭
+        ("해운대구입니다", "해운대구"), ("부산진구입니다", "부산진구"), ("동래구입니다", "동래구"), ("영도구입니다", "영도구"),
+        ("금정구입니다", "금정구"), ("강서구입니다", "강서구"), ("연제구입니다", "연제구"), ("수영구입니다", "수영구"),
+        ("사상구입니다", "사상구"), ("기장군입니다", "기장군"), ("중구입니다", "중구"), ("서구입니다", "서구"),
+        ("동구입니다", "동구"), ("남구입니다", "남구"), ("북구입니다", "북구"), ("사하구입니다", "사하구"),
+        
+        ("해운대구에요", "해운대구"), ("부산진구에요", "부산진구"), ("동래구에요", "동래구"), ("영도구에요", "영도구"),
+        ("금정구에요", "금정구"), ("강서구에요", "강서구"), ("연제구에요", "연제구"), ("수영구에요", "수영구"),
+        ("사상구에요", "사상구"), ("기장군에요", "기장군"), ("중구에요", "중구"), ("서구에요", "서구"),
+        ("동구에요", "동구"), ("남구에요", "남구"), ("북구에요", "북구"), ("사하구에요", "사하구"),
         
         # 영어 매칭
         ("haeundae-gu", "해운대구"), ("busanjin-gu", "부산진구"), ("dongrae-gu", "동래구"), ("yeongdo-gu", "영도구"),
@@ -198,52 +230,23 @@ BUSAN_DISTRICTS = [
     "해운대구", "사하구", "금정구", "강서구", "연제구", "수영구", "사상구", "기장군"
 ]
 
-# 쓰레기 처리 관련 키워드
+# 쓰레기 처리 관련 키워드 (핵심 키워드만 포함)
 WASTE_KEYWORDS = [
-    "쓰레기", "폐기물", "배출", "종량제", "봉투", "가격", "요일", "시간",
-    "음식물쓰레기", "재활용", "대형폐기물", "소형폐가전", "특수폐기물", "형광등", "건전지",
-    "의약품", "수거", "업체", "신고", "수수료", "전용용기", "분리배출",
-    "침대", "소파", "장롱", "가구", "가전", "버리", "폐기", "수거",
-    "정화조", "청소", "대형폐기물", "소형폐가전", "폐가전", "폐가구",
-    
-    # 대형폐기물 관련 구체적 물품들
-    "침대", "소파", "장롱", "장식장", "진열장", "찬장", "책장", "서랍장", "화장대", "신발장", 
-    "옷걸이", "책상", "식탁", "의자", "씽크대", "씽크찬장", "항아리", "냉장고", "tv", "세탁기", 
-    "에어컨", "블라인드", "카페트", "돗자리", "피아노", "시계", "병풍", "수족관", "거울", 
-    "운동기구", "보일러", "난로", "물탱크", "자전거", "유모차", "보행기", "카시트", "화분", 
-    "개집", "고양이타워", "천막", "매트리스", "안마의자", "싱크대", "화장대", "신발장", 
-    "옷장", "서랍", "상", "테이블", "의자", "스툴", "벤치", "소파베드", "침대프레임", 
-    "베드프레임", "침대틀", "매트리스", "이불", "베개", "담요", "커튼", "블라인드", 
-    "카펫", "러그", "돗자리", "매트", "방석", "쿠션", "등받이", "팔걸이", "다리", 
-    "바퀴", "캐스터", "문", "창문", "문틀", "창틀", "문손잡이", "문고리", "자물쇠", 
-    "열쇠", "경첩", "도어스토퍼", "도어클로저", "도어가드", "도어매트", "신발장", "우산꽂이", 
-    "우산받침대", "우산꽂이", "우산받침대", "우산꽂이", "우산받침대", "우산꽂이", "우산받침대",
-    
-    # 가전제품 관련
-    "가전", "가전제품", "전자제품", "전기제품", "전자기기", "전기기기", "가전기기", "가전기구",
-    "컴퓨터", "노트북", "프린터", "스캐너", "복사기", "팩스", "전화기", "휴대폰", "스마트폰",
-    "태블릿", "아이패드", "게임기", "플레이스테이션", "엑스박스", "닌텐도", "게임보이", "게임큐브",
-    "오디오", "스피커", "앰프", "리시버", "튜너", "이퀄라이저", "믹서", "마이크", "헤드폰",
-    "이어폰", "이어버드", "블루투스", "와이파이", "라우터", "모뎀", "공유기", "스위치", "허브",
-    "케이블", "전선", "콘센트", "멀티탭", "배터리", "충전기", "어댑터", "변압기", "인버터",
-    "발전기", "정전기", "정전기", "정전기", "정전기", "정전기", "정전기", "정전기", "정전기",
-    
-    # 가구 관련
-    "가구", "가구류", "가구제품", "가구상품", "가구세트", "가구조합", "가구배치", "가구배치",
-    "거실가구", "침실가구", "주방가구", "욕실가구", "서재가구", "아동가구", "유아가구", "유아용가구",
-    "아기가구", "아기용가구", "유아용가구", "아동용가구", "청소년가구", "청소년용가구", "성인가구", "성인용가구",
-    "노인가구", "노인용가구", "장애인가구", "장애인용가구", "다용도가구", "다기능가구", "수납가구", "수납용가구",
-    "옷장", "옷장가구", "옷장세트", "옷장조합", "옷장배치", "옷장배치", "옷장배치", "옷장배치",
-    
-    # 기타 대형물품
-    "자전거", "오토바이", "스쿠터", "전동자전거", "전동스쿠터", "전동휠", "전동보드", "전동스케이트",
-    "유모차", "유아차", "아기차", "아기용차", "유아용차", "유아용유모차", "아기용유모차", "아기용유모차",
-    "보행기", "보행보조기", "보행보조차", "보행보조기구", "보행보조용품", "보행보조도구", "보행보조장치",
-    "카시트", "아기카시트", "유아카시트", "아동카시트", "아동용카시트", "유아용카시트", "아기용카시트",
-    "화분", "화분용기", "화분받침대", "화분받침", "화분받침대", "화분받침", "화분받침대", "화분받침",
-    "개집", "강아지집", "강아지용집", "강아지용개집", "강아지용개집", "강아지용개집", "강아지용개집",
-    "고양이타워", "고양이집", "고양이용집", "고양이용타워", "고양이용타워", "고양이용타워", "고양이용타워",
-    "천막", "천막용", "천막용품", "천막용구", "천막용도구", "천막용장치", "천막용기구", "천막용품"
+    "쓰레기", "폐기물", "배출", "종량제", "봉투", "버리는", "버리기", "버려", "버리다",
+    "음식물쓰레기", "재활용", "대형폐기물", "소형폐가전", "특수폐기물", 
+    "수거", "분리배출", "폐기", "쓰레기처리", "폐기물처리", "배출방법", "버리는방법",
+    "쓰레기봉투", "종량제봉투", "음식물쓰레기봉투", "배출시간", "배출장소", "배출요일"
+]
+
+# 외국인 등록 관련 키워드
+ALIEN_REGISTRATION_KEYWORDS = [
+    "외국인등록", "외국인등록증", "외국인 등록", "외국인 등록증", "체류", "체류카드", 
+    "등록증", "신청", "발급", "갱신", "연장", "비자", "거류", "거류증", "체류증",
+    "외국인신고", "외국인 신고", "외국인신분증", "외국인 신분증", "체류자격", "체류허가",
+    "입국관리", "출입국", "출입국관리", "출입국관리소", "이민", "이민청", "체류기간",
+    "등록 방법", "등록하는 방법", "등록하려면", "어떻게 등록", "등록 절차", "등록 과정",
+    "alien registration", "arc", "residence card", "immigration", "visa", "stay", "permit",
+    "registration card", "foreign registration", "immigration office", "residence permit"
 ]
 
 # 언어별 오류 메시지
@@ -532,18 +535,100 @@ def insert_linebreaks(text, max_length=60):
     return result
 
 def get_multicultural_prompt_template(target_lang):
+    """다문화가족 한국생활안내 프롬프트 템플릿 (개선된 버전)"""
+    
     templates = {
-        "ko": """다음은 다문화 가족 한국생활 안내 관련 정보입니다. 질문에 대해 정확하고 도움이 되는 답변을 한국어로 제공해주세요.\n\n[참고 정보]\n{context}\n\n질문: {query}\n\n답변: 다문화 가족 한국생활 안내 관점에서 한국어로 답변해주세요.""",
-        "en": """Below is information about Korean life for multicultural families. Please provide an accurate and helpful answer in English.\n\n[Reference Information]\n{context}\n\nQuestion: {query}\n\nAnswer: Please answer from the perspective of Korean life guide for multicultural families in English.""",
-        "vi": """Dưới đây là thông tin hướng dẫn cuộc sống Hàn Quốc cho gia đình đa văn hóa. Vui lòng trả lời chính xác và hữu ích bằng tiếng Việt.\n\n[Thông tin tham khảo]\n{context}\n\nCâu hỏi: {query}\n\nTrả lời: Vui lòng trả lời bằng tiếng Việt từ góc nhìn hướng dẫn cuộc sống Hàn Quốc cho gia đình đa văn hóa.""",
-        "ja": """以下は多文化家族のための韓国生活案内に関する情報です。質問に対して正確で役立つ回答を日本語で提供してください。\n\n[参考情報]\n{context}\n\n質問: {query}\n\n回答: 多文化家族の韓国生活案内の観点から日本語で答えてください。""",
-        "zh": """以下是多文化家庭韩国生活指南相关信息。请用中文准确、详细地回答问题。\n\n[参考信息]\n{context}\n\n问题: {query}\n\n回答: 请从多文化家庭韩国生活指南的角度用中文回答。""",
-        "zh-TW": """以下是多元文化家庭韓國生活指南相關資訊。請用繁體中文詳細回答問題。\n\n[參考資訊]\n{context}\n\n問題: {query}\n\n回答: 請以多元文化家庭韓國生活指南的角度用繁體中文回答。""",
-        "id": """Berikut adalah informasi panduan hidup di Korea untuk keluarga multikultural. Silakan jawab dengan akurat dan membantu dalam bahasa Indonesia.\n\n[Informasi Referensi]\n{context}\n\nPertanyaan: {query}\n\nJawaban: Silakan jawab dari sudut pandang panduan hidup di Korea untuk keluarga multikultural dalam bahasa Indonesia.""",
-        "th": """ต่อไปนี้เป็นข้อมูลคู่มือการใช้ชีวิตในเกาหลีสำหรับครอบครัวพหุวัฒนธรรม กรุณาตอบเป็นภาษาไทยอย่างถูกต้องและเป็นประโยชน์\n\n[ข้อมูลอ้างอิง]\n{context}\n\nคำถาม: {query}\n\nคำตอบ: กรุณาตอบจากมุมมองของคู่มือการใช้ชีวิตในเกาหลีสำหรับครอบครัวพหุวัฒนธรรมเป็นภาษาไทย""",
-        "fr": """Voici des informations sur la vie en Corée pour les familles multiculturelles. Veuillez répondre en français de manière précise et utile.\n\n[Informations de référence]\n{context}\n\nQuestion : {query}\n\nRéponse : Veuillez répondre du point de vue du guide de la vie en Corée pour les familles multiculturelles en français.""",
-        "de": """Nachfolgend finden Sie Informationen zum Leben in Korea für multikulturelle Familien. Bitte antworten Sie auf Deutsch genau und hilfreich.\n\n[Referenzinformationen]\n{context}\n\nFrage: {query}\n\nAntwort: Bitte antworten Sie aus der Sicht des koreanischen Lebensratgebers für multikulturelle Familien auf Deutsch.""",
+        "ko": """당신은 다문화가족을 위한 한국생활안내 챗봇입니다. 
+다음은 참고 정보입니다. 정확하고 도움이 되는 답변을 한국어로 해주세요.
+
+[참고 정보]
+{context}
+
+질문: {query}
+
+답변 지침:
+1. 사용자가 구군명만 입력한 경우, 이전 대화 맥락을 고려하여 적절한 정보를 제공하세요.
+2. 쓰레기 처리 관련 질문이었다면 해당 구의 쓰레기 배출 방법을 안내하세요.
+3. 다른 생활 정보 질문이었다면 해당 구의 관련 정보를 제공하세요.
+4. 구체적이고 실용적인 정보를 제공하세요.
+5. 답변이 불충분하거나 관련성이 낮다면 "해당 정보를 찾을 수 없습니다"라고 답변하세요.
+6. 다문화가족의 관점에서 이해하기 쉽게 설명하세요.
+
+답변:""",
+        
+        "en": """You are a Korean life guidance chatbot for multicultural families.
+Here is reference information. Please provide accurate and helpful answers in English.
+
+[Reference Information]
+{context}
+
+Question: {query}
+
+Answer Guidelines:
+1. If the user only enters a district name, provide appropriate information considering the previous conversation context.
+2. If it was a waste disposal question, guide the waste disposal method for that district.
+3. If it was another life information question, provide relevant information for that district.
+4. Provide specific and practical information.
+5. If the answer is insufficient or not relevant, say "I cannot find the relevant information."
+6. Explain in a way that multicultural families can easily understand.
+
+Answer:""",
+        
+        "ja": """あなたは多文化家族のための韓国生活案内チャットボットです。
+以下は参考情報です。正確で役立つ回答を日本語でお願いします。
+
+[参考情報]
+{context}
+
+質問: {query}
+
+回答ガイドライン:
+1. ユーザーが区郡名のみを入力した場合、前の会話の文脈を考慮して適切な情報を提供してください。
+2. ごみ処理に関する質問だった場合は、その区のごみ排出方法を案内してください。
+3. 他の生活情報の質問だった場合は、その区の関連情報を提供してください。
+4. 具体的で実用的な情報を提供してください。
+5. 回答が不十分または関連性が低い場合は「該当する情報が見つかりません」と答えてください。
+6. 多文化家族の観点から理解しやすく説明してください。
+
+回答:""",
+        
+        "zh": """您是面向多文化家庭的韩国生活指导聊天机器人。
+以下是参考信息。请用中文提供准确有用的答案。
+
+[参考信息]
+{context}
+
+问题: {query}
+
+答案指南:
+1. 如果用户只输入区郡名，请考虑之前对话的上下文提供适当的信息。
+2. 如果是垃圾处理相关问题，请指导该区的垃圾排放方法。
+3. 如果是其他生活信息问题，请提供该区的相关信息。
+4. 提供具体实用的信息。
+5. 如果答案不充分或相关性低，请说"找不到相关信息"。
+6. 从多文化家庭的角度进行易于理解的说明。
+
+答案:""",
+        
+        "vi": """Bạn là chatbot hướng dẫn cuộc sống Hàn Quốc cho các gia đình đa văn hóa.
+Đây là thông tin tham khảo. Vui lòng cung cấp câu trả lời chính xác và hữu ích bằng tiếng Việt.
+
+[Thông tin tham khảo]
+{context}
+
+Câu hỏi: {query}
+
+Hướng dẫn trả lời:
+1. Nếu người dùng chỉ nhập tên quận/huyện, hãy cung cấp thông tin phù hợp xem xét ngữ cảnh cuộc trò chuyện trước đó.
+2. Nếu là câu hỏi về xử lý rác thải, hãy hướng dẫn phương pháp thải rác cho quận/huyện đó.
+3. Nếu là câu hỏi thông tin cuộc sống khác, hãy cung cấp thông tin liên quan cho quận/huyện đó.
+4. Cung cấp thông tin cụ thể và thực tế.
+5. Nếu câu trả lời không đủ hoặc không liên quan, hãy nói "Tôi không thể tìm thấy thông tin liên quan."
+6. Giải thích theo cách mà các gia đình đa văn hóa có thể dễ dàng hiểu.
+
+Trả lời:"""
     }
+    
     return templates.get(target_lang, templates["ko"])
 
 def get_foreign_worker_prompt_template(target_lang):
@@ -551,11 +636,32 @@ def get_foreign_worker_prompt_template(target_lang):
         "ko": """다음은 외국인 근로자 권리구제 관련 정보입니다. 질문에 대해 정확하고 도움이 되는 답변을 한국어로 제공해주세요.\n\n[참고 정보]\n{context}\n\n질문: {query}\n\n답변: 외국인 근로자 권리구제 관점에서 한국어로 답변해주세요.""",
         "en": """Below is information about foreign worker rights protection. Please provide an accurate and helpful answer in English.\n\n[Reference Information]\n{context}\n\nQuestion: {query}\n\nAnswer: Please answer from the perspective of foreign worker rights protection in English.""",
         "vi": """Dưới đây là thông tin về bảo vệ quyền lợi người lao động nước ngoài. Vui lòng trả lời chính xác và hữu ích bằng tiếng Việt.\n\n[Thông tin tham khảo]\n{context}\n\nCâu hỏi: {query}\n\nTrả lời: Vui lòng trả lời bằng tiếng Việt từ góc nhìn bảo vệ quyền lợi người lao động nước ngoài.""",
-        "ja": """以下は外国人労働者権利保護に関する情報です。質問に対して正確で役立つ回答を日本語で提供してください。\n\n[参考情報]\n{context}\n\n質問: {query}\n\n回答: 外国人労働者権利保護の観点から日本語で答えてください。""",
-        "zh": """以下是外籍劳工权益保护相关信息。请用中文准确、详细地回答问题。\n\n[参考信息]\n{context}\n\n问题: {query}\n\n回答: 请从外籍劳工权益保护的角度用中文回答。""",
-        "zh-TW": """以下是外籍勞工權益保護相關資訊。請用繁體中文詳細回答問題。\n\n[參考資訊]\n{context}\n\n問題: {query}\n\n回答: 請以外籍勞工權益保護的角度用繁體中文回答。""",
+        "ja": """以下は外国人労働者権利保護に関する情報です。質問に対して正確で役立つ回答を日本語で提供してください。
+
+[参考情報]
+{context}
+
+質問: {query}
+
+回答: 外国人労働者権利保護の観点から日本語で答えてください。""",
+        "zh": """以下是外籍劳工权益保护相关信息。请用中文准确、详细地回答问题。
+
+[参考信息]
+{context}
+
+问题: {query}
+
+回答: 请从外籍劳工权益保护的角度用中文回答。""",
+        "zh-TW": """以下是外籍勞工權益保護相關資訊。請用繁體中文詳細回答問題。
+
+[參考資訊]
+{context}
+
+問題: {query}
+
+回答: 請以外籍勞工權益保護的角度用繁體中文回答。""",
         "id": """Berikut adalah informasi perlindungan hak pekerja asing. Silakan jawab dengan akurat dan membantu dalam bahasa Indonesia.\n\n[Informasi Referensi]\n{context}\n\nPertanyaan: {query}\n\nJawaban: Silakan jawab dari sudut pandang perlindungan hak pekerja asing dalam bahasa Indonesia.""",
-        "th": """ต่อไปนี้เป็นข้อมูลเกี่ยวกับการคุ้มครองสิทธิแรงงานต่างชาติ กรุณาตอบเป็นภาษาไทยอย่างถูกต้องและเป็นประโยชน์\n\n[ข้อมูลอ้างอิง]\n{context}\n\nคำถาม: {query}\n\nคำตอบ: กรุณาตอบจากมุมมองของการคุ้มครองสิทธิแรงงานต่างชาติเป็นภาษาไทย""",
+        "th": """ต่อไปนี้เป็นข้อมูลเกี่ยวกับการคุ้มครองสิทธิแรงงานต่างชาติ กรุณาตอบเป็นภาษาไทยอย่างถูกต้องและเป็นประโยชน์\n\n[ข้อมูลอ้างอิง]\n{context}\n\nคำถาม: {query}\n\nคำตอบ: กรุณาตอบจากมุมมองของคู่มือการใช้ชีวิตในเกาหลีสำหรับครอบครัวพหุวัฒนธรรมเป็นภาษาไทย""",
         "fr": """Voici des informations sur la protection des droits des travailleurs étrangers. Veuillez répondre en français de manière précise et utile.\n\n[Informations de référence]\n{context}\n\nQuestion : {query}\n\nRéponse : Veuillez répondre du point de vue de la protection des droits des travailleurs étrangers en français.""",
         "de": """Nachfolgend finden Sie Informationen zum Schutz der Rechte ausländischer Arbeitnehmer. Bitte antworten Sie auf Deutsch genau und hilfreich.\n\n[Referenzinformationen]\n{context}\n\nFrage: {query}\n\nAntwort: Bitte antworten Sie aus der Sicht des Schutzes der Rechte ausländischer Arbeitnehmer auf Deutsch.""",
     }
@@ -677,165 +783,136 @@ Jawaban harus memenuhi kondisi berikut:
     }
     return templates.get(target_lang, templates["ko"])
 
+def load_busan_waste_info():
+    """부산광역시_쓰레기처리정보.json 파일을 로드합니다."""
+    try:
+        with open(WASTE_INFO_JSON_PATH, encoding="utf-8") as f:
+            data = json.load(f)
+        return data
+    except Exception as e:
+        print(f"❌ 부산광역시_쓰레기처리정보.json 로드 실패: {e}")
+        return None
+
+def get_waste_info_from_json(district):
+    """구군명에 해당하는 쓰레기 처리 정보를 JSON에서 추출합니다."""
+    data = load_busan_waste_info()
+    if not data:
+        return None
+    info = data.get("부산광역시_쓰레기처리정보", {}).get("구군별_정보", {}).get(district)
+    if not info:
+        return None
+    # 주요 정보만 보기 좋게 정리
+    lines = [f"[{district} 쓰레기 배출 안내]"]
+    lines.append(f"- 담당부서: {info.get('담당부서', '')} ({info.get('연락처', '')})")
+    lines.append(f"- 배출시간: {info.get('배출시간', '')}")
+    lines.append(f"- 배출장소: {info.get('배출장소', '')}")
+    # 배출요일
+    if '배출요일' in info:
+        lines.append("- 배출요일:")
+        for day, items in info['배출요일'].items():
+            lines.append(f"  · {day}: {', '.join(items)}")
+    # 종량제봉투 가격
+    if '종량제봉투_가격' in info:
+        lines.append("- 종량제봉투 가격:")
+        for k, v in info['종량제봉투_가격'].items():
+            lines.append(f"  · {k}: {v}원")
+    # 특이사항
+    if '특이사항' in info:
+        lines.append("- 특이사항:")
+        for t in info['특이사항']:
+            lines.append(f"  · {t}")
+    # 대형폐기물
+    if '대형폐기물_신고방법' in info:
+        lines.append("- 대형폐기물 신고방법:")
+        for t in info['대형폐기물_신고방법']:
+            lines.append(f"  · {t}")
+    if '대형폐기물_수수료_예시' in info:
+        lines.append("- 대형폐기물 수수료 예시:")
+        for k, v in info['대형폐기물_수수료_예시'].items():
+            lines.append(f"  · {k}: {v}")
+    return "\n".join(lines)
+
 # 4. Gemini 기반 RAG 답변 생성 함수
 def answer_with_rag(query, vector_db, gemini_api_key, model=None, target_lang=None, conversation_context=None):
-    model = "models/gemini-2.0-flash-lite"
-    print(f"  - Gemini RAG 답변 생성 시작")
-    lang = detect_language(query)
-    prompt_lang = target_lang if target_lang else lang
+    """다문화가족 한국생활안내 RAG 답변 생성 (개선된 버전)"""
     
-    # 대화 컨텍스트에서 이전에 언급된 구군명과 질문 확인
-    previous_district = None
-    previous_waste_query = None
-    if conversation_context:
-        previous_district = conversation_context.get('waste_district')
-        previous_waste_query = conversation_context.get('waste_query')
-        if previous_district:
-            print(f"  - 대화 컨텍스트에서 구군명 발견: {previous_district}")
-        if previous_waste_query:
-            print(f"  - 대화 컨텍스트에서 쓰레기 질문 발견: {previous_waste_query}")
+    print("  - Gemini RAG 답변 생성 시작")
     
-    # 현재 질문이 구군명만 제공하는 경우 (이전 쓰레기 질문이 있는 경우)
-    if previous_waste_query and not is_waste_related_query(query):
-        district = extract_district_from_query(query)
-        if district:
-            print(f"  - 구군명만 제공됨: {district}, 이전 질문과 연결")
-            # 대화 컨텍스트에 구군명 저장
-            if conversation_context is not None:
-                conversation_context['waste_district'] = district
-            
-            # 이전 쓰레기 질문과 현재 구군명을 조합하여 처리
-            combined_query = f"{district}에서 {previous_waste_query}"
-            print(f"  - 조합된 질문: {combined_query}")
-            
-            # 쓰레기 처리 관련 문서들을 직접 찾기
-            waste_docs = []
-            for doc in vector_db.documents:
-                if isinstance(doc, dict) and 'metadata' in doc:
-                    metadata = doc['metadata']
-                    if 'category' in metadata and metadata['category'] == '쓰레기처리':
-                        if 'gu_name' in metadata and metadata['gu_name'] == district:
-                            waste_docs.append(doc)
-            
-            if waste_docs:
-                print(f"  - {district} 관련 쓰레기 처리 문서 {len(waste_docs)}개 찾음")
-                
-                # 특정 품목 정보 확인
-                specific_item_found = False
-                for doc in waste_docs:
-                    if doc['metadata'].get('type') == 'large_waste_info':
-                        content = doc['page_content']
-                        # 이전 질문에서 특정 품목 추출
-                        specific_items = ["책상", "소파", "침대", "장롱", "냉장고", "TV", "세탁기", "에어컨", "자전거", "유모차", "화분", "고양이타워", "피아노", "운동기구", "보일러", "천막"]
-                        for item in specific_items:
-                            if item in previous_waste_query and item in content:
-                                specific_item_found = True
-                                break
-                        if specific_item_found:
-                            break
-                
-                context = "\n\n".join([doc['page_content'] for doc in waste_docs])
-                
-                # 특정 품목 정보가 부족한 경우 추가 안내 포함
-                if not specific_item_found:
-                    # 구별 연락처 정보 추가
-                    district_contact_info = get_district_contact_info(district)
-                    context += f"\n\n{district_contact_info}"
-                
-                multicultural_prompt_template = get_multicultural_prompt_template(prompt_lang)
-                prompt = multicultural_prompt_template.format(context=context, query=combined_query)
-                
-                genai.configure(api_key=gemini_api_key)
-                model = genai.GenerativeModel("gemini-2.0-flash-lite")
-                response = model.generate_content(prompt, generation_config={"max_output_tokens": 1000, "temperature": 0.1})
-                answer = response.text.strip()
-                return answer
+    # 언어 감지
+    if target_lang is None:
+        target_lang = detect_language(query)
+    
+    # 구군명만 입력된 경우 처리
+    district_patterns = [
+        "중구", "서구", "동구", "영도구", "부산진구", "동래구", "남구", "북구", 
+        "해운대구", "사하구", "금정구", "강서구", "연제구", "수영구", "사상구", "기장군"
+    ]
+    
+    is_district_only = False
+    district_name = None
+    
+    for pattern in district_patterns:
+        if pattern in query:
+            district_name = pattern
+            is_district_only = True
+            break
+    
+    # 구군명만 입력된 경우 검색 쿼리 개선
+    if is_district_only and district_name:
+        # 이전 대화 맥락을 고려한 검색 쿼리 생성
+        enhanced_query = f"부산 {district_name} 생활 정보"
+        print(f"  - 구군명 감지됨: {district_name}")
+        print(f"  - 개선된 검색 쿼리: {enhanced_query}")
+    else:
+        enhanced_query = query
     
     # 쓰레기 처리 관련 질문인지 확인
     if is_waste_related_query(query):
-        print(f"  - 쓰레기 처리 관련 질문 감지됨")
-        
-        # 대화 컨텍스트에 쓰레기 질문 저장
-        if conversation_context is not None:
-            conversation_context['waste_query'] = query
-        
-        # 질문에서 구군명 추출
+        print("  - 쓰레기 처리 관련 질문 감지됨 (JSON 기반)")
         district = extract_district_from_query(query)
-        
-        # 질문에 구군명이 없으면 대화 컨텍스트에서 확인
-        if not district and previous_district:
-            district = previous_district
-            print(f"  - 대화 컨텍스트에서 구군명 사용: {district}")
-        
         if district:
-            print(f"  - 구군명 감지됨: {district}")
-            # 대화 컨텍스트에 구군명 저장
-            if conversation_context is not None:
-                conversation_context['waste_district'] = district
-            
-            # 쓰레기 처리 관련 문서들을 직접 찾기
-            waste_docs = []
-            for doc in vector_db.documents:
-                if isinstance(doc, dict) and 'metadata' in doc:
-                    metadata = doc['metadata']
-                    if 'category' in metadata and metadata['category'] == '쓰레기처리':
-                        if 'gu_name' in metadata and metadata['gu_name'] == district:
-                            waste_docs.append(doc)
-            
-            if waste_docs:
-                print(f"  - {district} 관련 쓰레기 처리 문서 {len(waste_docs)}개 찾음")
-                
-                # 특정 품목 정보 확인
-                specific_item_found = False
-                for doc in waste_docs:
-                    if doc['metadata'].get('type') == 'large_waste_info':
-                        content = doc['page_content']
-                        # 질문에서 특정 품목 추출
-                        specific_items = ["책상", "소파", "침대", "장롱", "냉장고", "TV", "세탁기", "에어컨", "자전거", "유모차", "화분", "고양이타워", "피아노", "운동기구", "보일러", "천막"]
-                        for item in specific_items:
-                            if item in query and item in content:
-                                specific_item_found = True
-                                break
-                        if specific_item_found:
-                            break
-                
-                context = "\n\n".join([doc['page_content'] for doc in waste_docs])
-                
-                # 특정 품목 정보가 부족한 경우 추가 안내 포함
-                if not specific_item_found:
-                    # 구별 연락처 정보 추가
-                    district_contact_info = get_district_contact_info(district)
-                    context += f"\n\n{district_contact_info}"
-                
-                multicultural_prompt_template = get_multicultural_prompt_template(prompt_lang)
-                prompt = multicultural_prompt_template.format(context=context, query=query)
+            info = get_waste_info_from_json(district)
+            if info:
+                return info
             else:
-                print(f"  - {district} 관련 쓰레기 처리 문서를 찾을 수 없음, 전체 문서 사용")
-                relevant_chunks = retrieve_relevant_chunks(query, vector_db)
-                context = "\n\n".join([doc['page_content'] if isinstance(doc, dict) and 'page_content' in doc else str(doc) for doc in relevant_chunks])
-                multicultural_prompt_template = get_multicultural_prompt_template(prompt_lang)
-                prompt = multicultural_prompt_template.format(context=context, query=query)
+                return f"{district}의 쓰레기 처리 정보가 데이터에 없습니다. 구청에 문의해 주세요."
         else:
-            print(f"  - 구군명이 감지되지 않음, 구군 선택 요청")
-            return get_district_selection_prompt(prompt_lang)
-    else:
-        # 일반 질문 처리 (쓰레기 처리 관련이 아닌 경우)
-        print(f"  - 일반 질문 처리 (쓰레기 처리 관련 아님)")
-    relevant_chunks = retrieve_relevant_chunks(query, vector_db)
-    if not relevant_chunks:
-        return "참고 정보에서 관련 내용을 찾을 수 없습니다."
-    context = "\n\n".join([doc['page_content'] if isinstance(doc, dict) and 'page_content' in doc else str(doc) for doc in relevant_chunks])
-    multicultural_prompt_template = get_multicultural_prompt_template(prompt_lang)
-    prompt = multicultural_prompt_template.format(context=context, query=query)
+            return get_district_selection_prompt(target_lang)
     
-    genai.configure(api_key=gemini_api_key)
-    model = genai.GenerativeModel("gemini-2.0-flash-lite")
-    response = model.generate_content(prompt, generation_config={"max_output_tokens": 1000, "temperature": 0.1})
-    answer = response.text.strip()
-    
-    # 마크다운 문법 정리
-    clean_answer = clean_markdown_text(answer)
-    return clean_answer
+    # 관련 문서 검색
+    try:
+        docs = retrieve_relevant_chunks(enhanced_query, vector_db, k=5)
+        if not docs:
+            return "관련 정보를 찾을 수 없습니다."
+        
+        # 컨텍스트 구성
+        context = "\n\n".join([doc['page_content'] for doc in docs])
+        
+        # 프롬프트 템플릿 선택
+        prompt_template = get_multicultural_prompt_template(target_lang)
+        
+        # LLM 설정
+        genai.configure(api_key=gemini_api_key)
+        model = genai.GenerativeModel('gemini-2.0-flash-lite')
+        
+        # 프롬프트 구성
+        prompt = prompt_template.format(context=context, query=enhanced_query)
+        
+        # 답변 생성
+        response = model.generate_content(prompt)
+        answer = response.text
+        
+        # 구군명만 입력된 경우 추가 처리
+        if is_district_only and district_name:
+            # 답변이 너무 일반적이거나 관련성이 낮으면 구체적인 안내 추가
+            if len(answer) < 50 or "찾을 수 없습니다" in answer:
+                answer = f"부산광역시 {district_name}의 생활 정보를 안내해드리겠습니다.\n\n{answer}\n\n더 구체적인 정보가 필요하시면 '쓰레기 배출', '의료 정보', '교육 정보' 등 구체적인 항목을 말씀해 주세요."
+        
+        return answer
+        
+    except Exception as e:
+        print(f"  - RAG 답변 생성 오류: {e}")
+        return "죄송합니다. 답변을 생성하는 중에 오류가 발생했습니다."
 
 def get_district_contact_info(district):
     """구별 연락처 정보를 반환합니다."""
@@ -1501,6 +1578,670 @@ def merge_vector_dbs(db_paths, gemini_api_key, save_path="다문화.pkl"):
     print(f"병합 벡터DB 저장 완료: {save_path}")
     return vector_db
 
+# LangGraph 기반 개선된 RAG 함수들
+def create_langgraph_rag_system(gemini_api_key: str, vector_db_path: str, target_lang: str = "ko"):
+    """LangGraph 기반 RAG 시스템 생성"""
+    print(f"🔍 LangGraph RAG 시스템 생성 시작...")
+    print(f"   - API Key: {'있음' if gemini_api_key else '없음'}")
+    print(f"   - Vector DB Path: {vector_db_path}")
+    print(f"   - Target Lang: {target_lang}")
+    
+    if not LANGGRAPH_AVAILABLE:
+        print("❌ LangGraph를 사용할 수 없습니다. 기본 RAG 시스템을 사용합니다.")
+        return None
+    
+    try:
+        print("✅ LangGraph 사용 가능 확인됨")
+        
+        # LLM 설정 - API 키를 환경변수로 설정
+        print("🤖 LLM 설정 중...")
+        import os
+        os.environ["GOOGLE_API_KEY"] = gemini_api_key
+        
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-2.0-flash-lite",
+            temperature=0.1,
+            max_output_tokens=2000,
+            google_api_key=gemini_api_key  # 명시적으로 API 키 전달
+        )
+        print("✅ LLM 설정 완료")
+        
+        # 임베딩 모델 설정
+        print("🔤 임베딩 모델 설정 중...")
+        embeddings = GoogleGenerativeAIEmbeddings(
+            model="models/embedding-001",
+            google_api_key=gemini_api_key  # 명시적으로 API 키 전달
+        )
+        print("✅ 임베딩 모델 설정 완료")
+        
+        # 벡터스토어 로드
+        print("📚 벡터스토어 로드 중...")
+        vector_store = load_vector_store_for_langgraph(vector_db_path, embeddings)
+        if not vector_store:
+            print("❌ 벡터스토어 로드 실패")
+            return None
+        print("✅ 벡터스토어 로드 완료")
+        
+        # RAG 그래프 생성
+        print("🔄 RAG 그래프 생성 중...")
+        rag_graph = create_rag_workflow(llm, vector_store, target_lang)
+        print("✅ RAG 그래프 생성 완료")
+        
+        result = {
+            "graph": rag_graph,
+            "vector_store": vector_store,
+            "llm": llm,
+            "embeddings": embeddings
+        }
+        
+        print("🎉 LangGraph RAG 시스템 생성 완료!")
+        return result
+        
+    except Exception as e:
+        print(f"❌ LangGraph RAG 시스템 생성 실패: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+def load_vector_store_for_langgraph(vector_db_path: str, embeddings):
+    """기존 벡터DB를 LangChain 벡터스토어로 변환"""
+    print(f"📖 벡터DB 파일 로드 중: {vector_db_path}")
+    
+    try:
+        # 파일 존재 확인
+        if not os.path.exists(vector_db_path):
+            print(f"❌ 벡터DB 파일이 존재하지 않습니다: {vector_db_path}")
+            return None
+        
+        print("📄 벡터DB 파일 읽는 중...")
+        with open(vector_db_path, 'rb') as f:
+            vector_db = pickle.load(f)
+        
+        print(f"📊 벡터DB 로드 완료: {len(vector_db.documents)}개 문서")
+        
+        # 문서와 임베딩 추출
+        documents = []
+        embeddings_list = []
+        
+        print("🔍 문서 및 임베딩 추출 중...")
+        for i, doc in enumerate(vector_db.documents):
+            if isinstance(doc, dict) and 'page_content' in doc:
+                documents.append(doc['page_content'])
+                if hasattr(vector_db, 'doc_embeddings') and vector_db.doc_embeddings:
+                    if i < len(vector_db.doc_embeddings):
+                        embeddings_list.append(vector_db.doc_embeddings[i])
+        
+        print(f"📝 추출된 문서: {len(documents)}개")
+        print(f"🔢 추출된 임베딩: {len(embeddings_list)}개")
+        
+        # FAISS 벡터스토어 생성 - from_texts 사용
+        print("🏗️ FAISS 벡터스토어 생성 중...")
+        print("🔄 새로운 임베딩 생성하여 벡터스토어 생성")
+        vector_store = FAISS.from_texts(
+            documents, 
+            embeddings
+        )
+        
+        print(f"✅ LangGraph 벡터스토어 로드 완료: {len(documents)}개 문서")
+        return vector_store
+        
+    except Exception as e:
+        print(f"❌ 벡터스토어 로드 실패: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+def create_rag_workflow(llm, vector_store, target_lang: str = "ko"):
+    """LangGraph 기반 RAG 워크플로우 생성 (개선된 버전)"""
+    
+    # 1. 질문 분석 노드
+    def analyze_query(state):
+        """질문 유형 분석 및 검색 전략 결정"""
+        query = state["query"]
+        target_lang = state.get("target_lang", "ko")
+        
+        # 이전 대화 맥락 확인 (구군명만 입력된 경우)
+        is_district_only = False
+        district_name = None
+        
+        # 구군명 패턴 확인
+        district_patterns = [
+            "중구", "서구", "동구", "영도구", "부산진구", "동래구", "남구", "북구", 
+            "해운대구", "사하구", "금정구", "강서구", "연제구", "수영구", "사상구", "기장군"
+        ]
+        
+        for pattern in district_patterns:
+            if pattern in query:
+                district_name = pattern
+                is_district_only = True
+                break
+        
+        # 질문 유형 분석
+        query_type = "general"
+        search_strategies = []
+        enhanced_query = query
+        
+        if is_district_only:
+            # 구군명만 입력된 경우, 이전 맥락을 고려한 검색 쿼리 생성
+            query_type = "district_info"
+            search_strategies = ["context_aware", "semantic_search"]
+            # 기본적으로 생활 정보 검색
+            enhanced_query = f"부산 {district_name} 생활 정보"
+        elif any(keyword in query.lower() for keyword in ["쓰레기", "폐기물", "배출"]):
+            query_type = "waste_management"
+            search_strategies = ["exact_match", "semantic_search"]
+            enhanced_query = f"부산 {query}"
+        elif any(keyword in query.lower() for keyword in ["맛집", "음식", "식당"]):
+            query_type = "restaurant"
+            search_strategies = ["location_based", "semantic_search"]
+            enhanced_query = f"부산 {query}"
+        elif any(keyword in query.lower() for keyword in ["권리", "법률", "근로자"]):
+            query_type = "worker_rights"
+            search_strategies = ["semantic_search", "keyword_search"]
+        else:
+            search_strategies = ["semantic_search"]
+        
+        # 검색 파라미터 조정
+        k = 3 if query_type == "waste_management" else 5
+        
+        return {
+            "query": query,
+            "target_lang": target_lang,
+            "enhanced_query": enhanced_query,
+            "query_type": query_type,
+            "district_name": district_name,
+            "is_district_only": is_district_only,
+            "k": k,
+            "search_strategies": search_strategies,
+            "retry_count": 0,
+            "max_retries": 2
+        }
+    
+    # 2. 다중 검색 노드
+    def multi_search_documents(state):
+        """여러 검색 전략을 사용한 문서 검색"""
+        query = state["query"]
+        enhanced_query = state.get("enhanced_query", query)
+        search_strategies = state.get("search_strategies", ["semantic_search"])
+        k = state.get("k", 5)
+        query_type = state.get("query_type", "general")
+        district_name = state.get("district_name")
+        
+        all_docs = []
+        
+        for strategy in search_strategies:
+            if strategy == "semantic_search":
+                docs = vector_store.similarity_search(enhanced_query, k=k)
+                all_docs.extend(docs)
+            elif strategy == "exact_match":
+                # 정확한 키워드 매칭 검색
+                exact_docs = vector_store.similarity_search(enhanced_query, k=k//2)
+                all_docs.extend(exact_docs)
+            elif strategy == "location_based":
+                # 위치 기반 검색 (부산 관련)
+                location_query = f"부산 {query}"
+                location_docs = vector_store.similarity_search(location_query, k=k//2)
+                all_docs.extend(location_docs)
+            elif strategy == "keyword_search":
+                # 키워드 기반 검색
+                keywords = query.split()
+                for keyword in keywords[:3]:  # 상위 3개 키워드만 사용
+                    keyword_docs = vector_store.similarity_search(keyword, k=k//3)
+                    all_docs.extend(keyword_docs)
+            elif strategy == "context_aware":
+                # 문맥 인식 검색 (구군명 + 생활 정보)
+                if district_name:
+                    context_queries = [
+                        f"부산 {district_name} 생활 정보",
+                        f"부산 {district_name} 쓰레기 배출",
+                        f"부산 {district_name} 의료",
+                        f"부산 {district_name} 교육",
+                        f"부산 {district_name} 교통"
+                    ]
+                    for context_query in context_queries:
+                        context_docs = vector_store.similarity_search(context_query, k=k//5)
+                        all_docs.extend(context_docs)
+        
+        # 중복 제거 및 정렬
+        unique_docs = []
+        seen_contents = set()
+        for doc in all_docs:
+            if doc.page_content not in seen_contents:
+                unique_docs.append(doc)
+                seen_contents.add(doc.page_content)
+        
+        context = "\n\n".join([doc.page_content for doc in unique_docs[:k*2]])
+        
+        return {
+            "query": query,
+            "target_lang": state.get("target_lang", "ko"),
+            "enhanced_query": enhanced_query,
+            "query_type": query_type,
+            "district_name": district_name,
+            "is_district_only": state.get("is_district_only", False),
+            "k": k,
+            "search_strategies": search_strategies,
+            "retry_count": state.get("retry_count", 0),
+            "max_retries": state.get("max_retries", 2),
+            "context": context, 
+            "documents": unique_docs,
+            "search_strategies_used": search_strategies
+        }
+    
+    # 3. 컨텍스트 강화 노드
+    def enhance_context(state):
+        """컨텍스트를 강화하고 관련성 높은 정보만 필터링"""
+        context = state.get("context", "")
+        query = state["query"]
+        query_type = state.get("query_type", "general")
+        
+        # 컨텍스트가 너무 길면 요약
+        if len(context) > 3000:
+            sentences = context.split('.')
+            relevant_sentences = []
+            
+            # 질문 키워드 기반 관련성 점수 계산
+            query_keywords = query.lower().split()
+            
+            for sentence in sentences:
+                relevance_score = 0
+                for keyword in query_keywords:
+                    if keyword in sentence.lower():
+                        relevance_score += 1
+                
+                if relevance_score > 0:
+                    relevant_sentences.append((sentence, relevance_score))
+            
+            # 관련성 점수로 정렬
+            relevant_sentences.sort(key=lambda x: x[1], reverse=True)
+            
+            if relevant_sentences:
+                context = '. '.join([s[0] for s in relevant_sentences[:10]])
+            else:
+                context = '. '.join(sentences[:5])
+        
+        # 컨텍스트 품질 평가
+        context_quality = len(context) / 100  # 간단한 품질 지표
+        needs_retry = context_quality < 2.0  # 품질이 낮으면 재검색
+        
+        return {
+            "query": query,
+            "target_lang": target_lang,
+            "query_type": query_type,
+            "k": state.get("k", 5),
+            "search_strategies": state.get("search_strategies", ["semantic_search"]),
+            "retry_count": state.get("retry_count", 0),
+            "max_retries": state.get("max_retries", 2),
+            "enhanced_context": context,
+            "context_quality": context_quality,
+            "needs_retry": needs_retry
+        }
+    
+    # 4. 답변 생성 노드
+    def generate_answer(state):
+        """최종 답변 생성"""
+        query = state["query"]
+        context = state.get("enhanced_context", "")
+        query_type = state.get("query_type", "general")
+        district_name = state.get("district_name")
+        is_district_only = state.get("is_district_only", False)
+        retry_count = state.get("retry_count", 0)
+        target_lang = state.get("target_lang", "ko")
+        
+        # 구군명만 입력된 경우 특별 처리
+        if is_district_only and district_name:
+            # 구체적인 정보가 있는지 확인
+            if any(keyword in context.lower() for keyword in ["쓰레기", "배출", "폐기물"]):
+                # 쓰레기 관련 정보가 있으면 쓰레기 배출 안내
+                enhanced_query = f"부산 {district_name} 쓰레기 배출 방법"
+            elif any(keyword in context.lower() for keyword in ["의료", "병원", "진료"]):
+                # 의료 관련 정보가 있으면 의료 안내
+                enhanced_query = f"부산 {district_name} 의료 정보"
+            elif any(keyword in context.lower() for keyword in ["교육", "학교", "학원"]):
+                # 교육 관련 정보가 있으면 교육 안내
+                enhanced_query = f"부산 {district_name} 교육 정보"
+            else:
+                # 기본적으로 생활 정보 안내
+                enhanced_query = f"부산 {district_name} 생활 정보"
+        else:
+            enhanced_query = query
+        
+        # 언어별 프롬프트 템플릿
+        templates = {
+            "ko": """당신은 다문화가족을 위한 한국생활안내 챗봇입니다. 
+다음은 참고 정보입니다. 정확하고 도움이 되는 답변을 한국어로 해주세요.
+
+[참고 정보]
+{context}
+
+질문: {query}
+
+답변 지침:
+1. 사용자가 구군명만 입력한 경우, 이전 대화 맥락을 고려하여 적절한 정보를 제공하세요.
+2. 쓰레기 처리 관련 질문이었다면 해당 구의 쓰레기 배출 방법을 안내하세요.
+3. 다른 생활 정보 질문이었다면 해당 구의 관련 정보를 제공하세요.
+4. 구체적이고 실용적인 정보를 제공하세요.
+5. 답변이 불충분하거나 관련성이 낮다면 "해당 정보를 찾을 수 없습니다"라고 답변하세요.
+6. 다문화가족의 관점에서 이해하기 쉽게 설명하세요.
+
+답변:""",
+            
+            "en": """You are a Korean life guidance chatbot for multicultural families.
+Here is reference information. Please provide accurate and helpful answers in English.
+
+[Reference Information]
+{context}
+
+Question: {query}
+
+Answer Guidelines:
+1. If the user only enters a district name, provide appropriate information considering the previous conversation context.
+2. If it was a waste disposal question, guide the waste disposal method for that district.
+3. If it was another life information question, provide relevant information for that district.
+4. Provide specific and practical information.
+5. If the answer is insufficient or not relevant, say "I cannot find the relevant information."
+6. Explain in a way that multicultural families can easily understand.
+
+Answer:""",
+            
+            "ja": """あなたは多文化家族のための韓国生活案内チャットボットです。
+以下は参考情報です。正確で役立つ回答を日本語でお願いします。
+
+[参考情報]
+{context}
+
+質問: {query}
+
+回答ガイドライン:
+1. ユーザーが区郡名のみを入力した場合、前の会話の文脈を考慮して適切な情報を提供してください。
+2. ごみ処理に関する質問だった場合は、その区のごみ排出方法を案内してください。
+3. 他の生活情報の質問だった場合は、その区の関連情報を提供してください。
+4. 具体的で実用的な情報を提供してください。
+5. 回答が不十分または関連性が低い場合は「該当する情報が見つかりません」と答えてください。
+6. 多文化家族の観点から理解しやすく説明してください。
+
+回答:""",
+            
+            "zh": """您是面向多文化家庭的韩国生活指导聊天机器人。
+以下是参考信息。请用中文提供准确有用的答案。
+
+[参考信息]
+{context}
+
+问题: {query}
+
+答案指南:
+1. 如果用户只输入区郡名，请考虑之前对话的上下文提供适当的信息。
+2. 如果是垃圾处理相关问题，请指导该区的垃圾排放方法。
+3. 如果是其他生活信息问题，请提供该区的相关信息。
+4. 提供具体实用的信息。
+5. 如果答案不充分或相关性低，请说"找不到相关信息"。
+6. 从多文化家庭的角度进行易于理解的说明。
+
+答案:""",
+            
+            "vi": """Bạn là chatbot hướng dẫn cuộc sống Hàn Quốc cho các gia đình đa văn hóa.
+Đây là thông tin tham khảo. Vui lòng cung cấp câu trả lời chính xác và hữu ích bằng tiếng Việt.
+
+[Thông tin tham khảo]
+{context}
+
+Câu hỏi: {query}
+
+Hướng dẫn trả lời:
+1. Nếu người dùng chỉ nhập tên quận/huyện, hãy cung cấp thông tin phù hợp xem xét ngữ cảnh cuộc trò chuyện trước đó.
+2. Nếu là câu hỏi về xử lý rác thải, hãy hướng dẫn phương pháp thải rác cho quận/huyện đó.
+3. Nếu là câu hỏi thông tin cuộc sống khác, hãy cung cấp thông tin liên quan cho quận/huyện đó.
+4. Cung cấp thông tin cụ thể và thực tế.
+5. Nếu câu trả lời không đủ hoặc không liên quan, hãy nói "Tôi không thể tìm thấy thông tin liên quan."
+6. Giải thích theo cách mà các gia đình đa văn hóa có thể dễ dàng hiểu.
+
+Trả lời:"""
+        }
+        
+        template = templates.get(target_lang, templates["ko"])
+        prompt = ChatPromptTemplate.from_template(template)
+        
+        # 체인 구성
+        chain = prompt | llm | StrOutputParser()
+        
+        # 답변 생성
+        try:
+            answer = chain.invoke({
+                "context": context,
+                "query": enhanced_query
+            })
+            
+            # 답변 후처리
+            answer = post_process_answer(answer, query_type)
+            
+            # 구군명만 입력된 경우 추가 처리
+            if is_district_only and district_name:
+                # 답변이 너무 일반적이거나 관련성이 낮으면 구체적인 안내 추가
+                if len(answer) < 50 or "찾을 수 없습니다" in answer:
+                    answer = f"부산광역시 {district_name}의 생활 정보를 안내해드리겠습니다.\n\n{answer}\n\n더 구체적인 정보가 필요하시면 '쓰레기 배출', '의료 정보', '교육 정보' 등 구체적인 항목을 말씀해 주세요."
+            
+            # 답변 품질 평가
+            answer_quality = evaluate_answer_quality(answer, enhanced_query, context)
+            
+            return {
+                "query": query,
+                "target_lang": target_lang,
+                "enhanced_query": enhanced_query,
+                "query_type": query_type,
+                "district_name": district_name,
+                "is_district_only": is_district_only,
+                "k": state.get("k", 5),
+                "search_strategies": state.get("search_strategies", ["semantic_search"]),
+                "retry_count": retry_count,
+                "max_retries": state.get("max_retries", 2),
+                "answer": answer,
+                "answer_quality": answer_quality,
+                "needs_retry": state.get("needs_retry", False)
+            }
+        except Exception as e:
+            print(f"답변 생성 오류: {e}")
+            return {
+                "query": query,
+                "target_lang": target_lang,
+                "enhanced_query": enhanced_query,
+                "query_type": query_type,
+                "district_name": district_name,
+                "is_district_only": is_district_only,
+                "k": state.get("k", 5),
+                "search_strategies": state.get("search_strategies", ["semantic_search"]),
+                "retry_count": retry_count,
+                "max_retries": state.get("max_retries", 2),
+                "answer": "죄송합니다. 답변을 생성하는 중에 오류가 발생했습니다.",
+                "answer_quality": 0,
+                "needs_retry": state.get("needs_retry", False)
+            }
+    
+    # 5. 답변 검증 노드
+    def validate_answer(state):
+        """생성된 답변의 품질 검증"""
+        answer = state.get("answer", "")
+        query = state["query"]
+        answer_quality = state.get("answer_quality", 0)
+        retry_count = state.get("retry_count", 0)
+        max_retries = state.get("max_retries", 2)
+        needs_retry = state.get("needs_retry", False)
+        
+        # 답변 품질이 낮거나 재검색이 필요한 경우
+        should_retry = (
+            answer_quality < 0.5 or 
+            needs_retry or 
+            "찾을 수 없습니다" in answer or
+            "cannot find" in answer.lower() or
+            "관련" in answer and "없습니다" in answer
+        )
+        
+        if should_retry and retry_count < max_retries:
+            # 재검색을 위해 검색 파라미터 조정
+            new_k = state.get("k", 5) + 2  # 더 많은 문서 검색
+            new_strategies = state.get("search_strategies", ["semantic_search"]) + ["keyword_search"]
+            
+            return {
+                "query": query,
+                "target_lang": target_lang,
+                "query_type": state.get("query_type", "general"),
+                "k": new_k,
+                "search_strategies": new_strategies,
+                "retry_count": retry_count + 1,
+                "max_retries": max_retries,
+                "should_retry": True
+            }
+        else:
+            return {
+                "query": query,
+                "target_lang": target_lang,
+                "query_type": state.get("query_type", "general"),
+                "k": state.get("k", 5),
+                "search_strategies": state.get("search_strategies", ["semantic_search"]),
+                "retry_count": retry_count,
+                "max_retries": max_retries,
+                "should_retry": False,
+                "final_answer": answer
+            }
+    
+    # 6. 답변 후처리
+    def post_process_answer(answer: str, query_type: str) -> str:
+        """답변 품질 개선 및 후처리"""
+        # 마크다운 정리
+        answer = answer.replace("**", "").replace("*", "")
+        
+        # 불필요한 문구 제거
+        answer = answer.replace("참고 정보를 바탕으로", "").replace("Based on the reference information", "")
+        
+        # 답변이 너무 짧으면 보완
+        if len(answer) < 50:
+            answer += "\n\n더 자세한 정보가 필요하시면 추가 질문해 주세요."
+        
+        return answer.strip()
+    
+    # 7. 답변 품질 평가
+    def evaluate_answer_quality(answer: str, query: str, context: str) -> float:
+        """답변 품질을 평가하는 함수"""
+        if not answer or len(answer) < 20:
+            return 0.0
+        
+        # 간단한 품질 지표들
+        quality_score = 0.0
+        
+        # 길이 점수
+        length_score = min(len(answer) / 200, 1.0)
+        quality_score += length_score * 0.3
+        
+        # 키워드 매칭 점수
+        query_keywords = set(query.lower().split())
+        answer_keywords = set(answer.lower().split())
+        keyword_overlap = len(query_keywords.intersection(answer_keywords)) / max(len(query_keywords), 1)
+        quality_score += keyword_overlap * 0.4
+        
+        # 컨텍스트 활용 점수
+        context_keywords = set(context.lower().split()[:50])  # 상위 50개 키워드
+        context_usage = len(answer_keywords.intersection(context_keywords)) / max(len(answer_keywords), 1)
+        quality_score += context_usage * 0.3
+        
+        return min(quality_score, 1.0)
+    
+    # 그래프 구성
+    workflow = StateGraph(dict)
+    
+    # 노드 추가
+    workflow.add_node("analyze_query", analyze_query)
+    workflow.add_node("multi_search_documents", multi_search_documents)
+    workflow.add_node("enhance_context", enhance_context)
+    workflow.add_node("generate_answer", generate_answer)
+    workflow.add_node("validate_answer", validate_answer)
+    
+    # 엣지 연결 (조건부 분기 포함)
+    workflow.set_entry_point("analyze_query")
+    workflow.add_edge("analyze_query", "multi_search_documents")
+    workflow.add_edge("multi_search_documents", "enhance_context")
+    workflow.add_edge("enhance_context", "generate_answer")
+    workflow.add_edge("generate_answer", "validate_answer")
+    
+    # 조건부 분기: 재검색이 필요한 경우
+    def should_retry(state):
+        return state.get("should_retry", False)
+    
+    workflow.add_conditional_edges(
+        "validate_answer",
+        should_retry,
+        {
+            True: "multi_search_documents",  # 재검색
+            False: END  # 완료
+        }
+    )
+    
+    # 그래프 컴파일
+    return workflow.compile()
+
+def answer_with_langgraph_rag(query: str, vector_db, gemini_api_key: str, target_lang: str = "ko"):
+    """LangGraph 기반 RAG 답변 생성"""
+    print(f"🚀 LangGraph RAG 답변 생성 시작...")
+    print(f"   - 질문: {query}")
+    print(f"   - 언어: {target_lang}")
+    print(f"   - API Key: {'있음' if gemini_api_key else '없음'}")
+    
+    if not LANGGRAPH_AVAILABLE:
+        print("❌ LangGraph를 사용할 수 없습니다. 기본 RAG를 사용합니다.")
+        return answer_with_rag(query, vector_db, gemini_api_key, target_lang=target_lang)
+    
+    try:
+        print("✅ LangGraph 사용 가능 확인됨")
+        
+        # 벡터DB 경로 추출
+        vector_db_path = None
+        if hasattr(vector_db, 'documents'):
+            print(f"📊 벡터DB 문서 수: {len(vector_db.documents)}")
+            # 임시로 벡터DB를 파일로 저장
+            vector_db_path = "temp_vector_db.pkl"
+            print(f"💾 임시 벡터DB 파일 생성: {vector_db_path}")
+            with open(vector_db_path, 'wb') as f:
+                pickle.dump(vector_db, f)
+            print("✅ 임시 벡터DB 파일 저장 완료")
+        else:
+            print("❌ 벡터DB에 documents 속성이 없습니다")
+            return answer_with_rag(query, vector_db, gemini_api_key, target_lang=target_lang)
+        
+        # LangGraph RAG 시스템 생성
+        print("🔧 LangGraph RAG 시스템 생성 중...")
+        rag_system = create_langgraph_rag_system(gemini_api_key, vector_db_path, target_lang)
+        if not rag_system:
+            print("❌ LangGraph RAG 시스템 생성 실패, 기본 RAG 사용")
+            return answer_with_rag(query, vector_db, gemini_api_key, target_lang=target_lang)
+        
+        print("✅ LangGraph RAG 시스템 생성 완료")
+        
+        # 그래프 실행
+        print("🔄 LangGraph 워크플로우 실행 중...")
+        initial_state = {
+            "query": query,
+            "target_lang": target_lang
+        }
+        
+        result = rag_system["graph"].invoke(initial_state)
+        print("✅ LangGraph 워크플로우 실행 완료")
+        
+        # 임시 파일 정리
+        if vector_db_path and os.path.exists(vector_db_path):
+            os.remove(vector_db_path)
+            print("🗑️ 임시 벡터DB 파일 삭제 완료")
+        
+        answer = result.get("answer", "답변을 생성할 수 없습니다.")
+        print(f"📝 최종 답변 길이: {len(answer)}자")
+        return answer
+        
+    except Exception as e:
+        print(f"❌ LangGraph RAG 오류: {e}")
+        import traceback
+        traceback.print_exc()
+        # 오류 발생 시 기본 RAG 사용
+        print("🔄 기본 RAG로 폴백...")
+        return answer_with_rag(query, vector_db, gemini_api_key, target_lang=target_lang)
+
 if __name__ == "__main__":
     api_key = os.getenv("GEMINI_API_KEY")
     
@@ -1556,4 +2297,136 @@ if __name__ == "__main__":
     shutil.copy("vector_db_multi.pkl", "vector_db_64multi.pkl")
     # 기존 단일 PDF DB와 병합
     db_paths = ["vector_db.pkl", "vector_db_64multi.pkl"]
-    merge_vector_dbs(db_paths, api_key, save_path="다문화.pkl") 
+    merge_vector_dbs(db_paths, api_key, save_path="다문화.pkl")
+
+def get_detailed_alien_registration_guide(target_lang="ko"):
+    """외국인 등록에 대한 상세한 안내를 제공합니다."""
+    guides = {
+        "ko": """📋 **외국인 등록 완전 가이드**
+
+🏢 **신청 장소**
+• 거주지 관할 출입국관리사무소 또는 출장소
+• 시군구청 (일부 업무만 가능)
+
+📅 **신청 기한**
+• 입국일로부터 90일 이내 (필수!)
+• 지연 시 과태료 부과 (10만원~100만원)
+
+📋 **필요 서류**
+✅ 외국인등록 신청서 (현장 작성)
+✅ 여권 원본
+✅ 여권용 사진 1매 (3.5cm × 4.5cm, 6개월 이내 촬영)
+✅ 수수료 3만원
+✅ 체류자격별 추가 서류:
+   - 결혼이민: 혼인관계증명서, 가족관계증명서
+   - 취업: 근로계약서, 사업자등록증 사본
+   - 유학: 재학증명서, 학비납입증명서
+
+⏰ **처리 기간**
+• 신청 후 7~10일 (영업일 기준)
+• 등록증 발급 완료 시 문자 통지
+
+🏢 **부산 출입국관리사무소**
+• 주소: 부산시 동구 범일로 179
+• 전화: 051-461-3000
+• 운영시간: 평일 09:00~18:00
+
+💡 **주의사항**
+• 체류기간 만료 전 연장 신청 필수
+• 주소 변경 시 14일 이내 신고
+• 분실 시 즉시 재발급 신청
+
+🌐 **온라인 서비스**
+• 하이코리아(www.hikorea.go.kr)에서 일부 업무 가능
+• 체류기간 연장, 체류자격 변경 등
+
+📞 **다국어 상담**
+• 1345 콜센터 (한국어, 영어, 중국어, 베트남어 등)
+• 평일 09:00~22:00, 주말 09:00~18:00""",
+        
+        "en": """📋 **Complete Alien Registration Guide**
+
+🏢 **Application Location**
+• Immigration office in your residential area
+• District/city office (limited services)
+
+📅 **Application Deadline**
+• Within 90 days from entry date (MANDATORY!)
+• Late application penalty: 100,000~1,000,000 KRW
+
+📋 **Required Documents**
+✅ Alien Registration Application Form (fill on-site)
+✅ Original passport
+✅ Passport photo (3.5cm × 4.5cm, taken within 6 months)
+✅ Fee: 30,000 KRW
+✅ Additional documents by visa type:
+   - Marriage: Marriage certificate, family relation certificate
+   - Work: Employment contract, business registration
+   - Study: Enrollment certificate, tuition payment proof
+
+⏰ **Processing Time**
+• 7-10 business days after application
+• SMS notification when ready
+
+🏢 **Busan Immigration Office**
+• Address: 179 Beomil-ro, Dong-gu, Busan
+• Phone: 051-461-3000
+• Hours: Weekdays 09:00~18:00
+
+💡 **Important Notes**
+• Must extend before visa expiration
+• Report address change within 14 days
+• Apply for reissuance immediately if lost
+
+🌐 **Online Services**
+• Some services available at www.hikorea.go.kr
+• Visa extension, status change, etc.
+
+📞 **Multilingual Support**
+• 1345 Call Center (Korean, English, Chinese, Vietnamese, etc.)
+• Weekdays 09:00~22:00, Weekends 09:00~18:00""",
+        
+        "vi": """📋 **Hướng Dẫn Đăng Ký Người Nước Ngoài Hoàn Chỉnh**
+
+🏢 **Nơi Nộp Đơn**
+• Văn phòng xuất nhập cảnh khu vực cư trú
+• Văn phòng quận/thành phố (dịch vụ hạn chế)
+
+📅 **Thời Hạn Nộp Đơn**
+• Trong vòng 90 ngày kể từ ngày nhập cảnh (BẮT BUỘC!)
+• Phạt nộp muộn: 100,000~1,000,000 KRW
+
+📋 **Giấy Tờ Cần Thiết**
+✅ Đơn đăng ký người nước ngoài (điền tại chỗ)
+✅ Hộ chiếu gốc
+✅ Ảnh hộ chiếu (3.5cm × 4.5cm, chụp trong 6 tháng)
+✅ Phí: 30,000 KRW
+✅ Giấy tờ bổ sung theo loại visa:
+   - Kết hôn: Giấy chứng nhận hôn nhân, quan hệ gia đình
+   - Làm việc: Hợp đồng lao động, đăng ký kinh doanh
+   - Du học: Giấy chứng nhận học tập, chứng minh đóng học phí
+
+⏰ **Thời Gian Xử Lý**
+• 7-10 ngày làm việc sau khi nộp đơn
+• Thông báo SMS khi hoàn thành
+
+🏢 **Văn Phòng Xuất Nhập Cảnh Busan**
+• Địa chỉ: 179 Beomil-ro, Dong-gu, Busan
+• Điện thoại: 051-461-3000
+• Giờ làm việc: Thứ 2-6 09:00~18:00
+
+💡 **Lưu Ý Quan Trọng**
+• Phải gia hạn trước khi visa hết hạn
+• Báo thay đổi địa chỉ trong 14 ngày
+• Cấp lại ngay nếu bị mất
+
+🌐 **Dịch Vụ Trực Tuyến**
+• Một số dịch vụ tại www.hikorea.go.kr
+• Gia hạn visa, thay đổi tình trạng, v.v.
+
+📞 **Hỗ Trợ Đa Ngôn Ngữ**
+• Tổng đài 1345 (Hàn, Anh, Trung, Việt, v.v.)
+• Thứ 2-6 09:00~22:00, Cuối tuần 09:00~18:00"""
+    }
+    
+    return guides.get(target_lang, guides["ko"]) 

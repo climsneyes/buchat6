@@ -27,6 +27,7 @@ from pages.create_room import CreateRoomPage
 from pages.room_list import RoomListPage
 from pages.chat_room import ChatRoomPage
 from pages.foreign_country_select import ForeignCountrySelectPage
+from pages.mbti_tourism import MBTITourismPage
 import openai
 from config import GEMINI_API_KEY, MODEL_NAME, FIREBASE_DB_URL, FIREBASE_KEY_PATH
 import uuid
@@ -38,7 +39,9 @@ import time
 import firebase_admin
 from firebase_admin import credentials, db
 from rag_utils import get_or_create_vector_db, answer_with_rag, answer_with_rag_foreign_worker, answer_with_rag_busan_food, answer_with_busan_food_json
-from rag_utils import SimpleVectorDB, GeminiEmbeddings
+from rag_utils import SimpleVectorDB, GeminiEmbeddings, answer_with_langgraph_rag
+from rag_utils import is_waste_related_query, extract_district_from_query, get_waste_info_from_json, get_district_selection_prompt
+from rag_utils import is_alien_registration_related_query, get_detailed_alien_registration_guide
 
 
 IS_SERVER = os.environ.get("CLOUDTYPE") == "1"  # Cloudtype 환경변수 등으로 구분
@@ -603,7 +606,8 @@ def main(page: ft.Page):
         page.views.append(HomePage(page, lang,
             on_create=lambda e: go_create(lang),
             on_find=lambda e: go_room_list(lang, e),
-            on_quick=lambda e: handle_create_room("빠른 채팅방", lang),
+            on_quick=lambda e: handle_create_room("빠른 채팅방", "en", False),
+            on_mbti_tourism=lambda e: go_mbti_tourism(lang),
             on_change_lang=go_nationality, on_back=go_nationality))
         page.go("/home")
 
@@ -773,6 +777,14 @@ def main(page: ft.Page):
         page.go("/find_by_id")
 
     def go_chat_from_list(room_id):
+        # 로딩 상태 표시
+        page.snack_bar = ft.SnackBar(
+            content=ft.Text("채팅방에 접속 중입니다..."),
+            duration=2000
+        )
+        page.snack_bar.open = True
+        page.update()
+        
         # RAG 채팅방인지 확인 (공용 RAG_ROOM_ID로 들어오면, 사용자별로 리다이렉트)
         if room_id == RAG_ROOM_ID or room_id.startswith(RAG_ROOM_ID):
             user_id = page.session.get("user_id")
@@ -784,6 +796,16 @@ def main(page: ft.Page):
             return
         
         try:
+            # Firebase 연결 확인
+            if not FIREBASE_AVAILABLE:
+                page.snack_bar = ft.SnackBar(
+                    content=ft.Text("Firebase 연결이 불가능합니다. 네트워크를 확인해주세요."),
+                    duration=3000
+                )
+                page.snack_bar.open = True
+                page.update()
+                return
+            
             room_ref = db.reference(f'/rooms/{room_id}')
             room_data = room_ref.get()
             if room_data:
@@ -796,8 +818,24 @@ def main(page: ft.Page):
                 )
             else:
                 print(f"오류: ID가 {room_id}인 방을 찾을 수 없습니다.")
+                page.snack_bar = ft.SnackBar(
+                    content=ft.Text(f"채팅방을 찾을 수 없습니다 (ID: {room_id})"),
+                    duration=3000
+                )
+                page.snack_bar.open = True
+                page.update()
+                # 홈으로 리다이렉트
+                go_home(lang)
         except Exception as e:
             print(f"Firebase에서 방 정보 가져오기 실패: {e}")
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text("채팅방 접속에 실패했습니다. 네트워크를 확인해주세요."),
+                duration=3000
+            )
+            page.snack_bar.open = True
+            page.update()
+            # 홈으로 리다이렉트
+            go_home(lang)
 
     def go_chat(user_lang, target_lang, room_id, room_title="채팅방", is_rag=False, is_foreign_worker_rag=False, is_busan_food_rag=False):
         def after_nickname(nickname):
@@ -848,6 +886,12 @@ def main(page: ft.Page):
                         print(f"외국인 권리구제 RAG 질문: {query}")
                         print(f"타겟 언어: {target_lang}")
                         
+                        # 외국인 등록 관련 질문 확인 (최우선 처리)
+                        if is_alien_registration_related_query(query):
+                            print("외국인 등록 관련 질문 감지됨 (외국인 근로자 RAG)")
+                            detailed_guide = get_detailed_alien_registration_guide(target_lang)
+                            return detailed_guide
+                        
                         # 쓰레기 처리 관련 질문인지 확인
                         from rag_utils import is_waste_related_query
                         if is_waste_related_query(query):
@@ -856,14 +900,14 @@ def main(page: ft.Page):
                                 print("다문화가족 벡터DB가 None입니다.")
                                 return "죄송합니다. RAG 기능이 현재 사용할 수 없습니다. (다문화가족 벡터DB가 로드되지 않았습니다.)"
                             print(f"쓰레기 처리 질문 - 다문화가족 벡터DB 사용")
-                            result = answer_with_rag_foreign_worker(query, vector_db_multicultural, GEMINI_API_KEY, target_lang=target_lang, conversation_context=conversation_context)
+                            result = answer_with_langgraph_rag(query, vector_db_multicultural, GEMINI_API_KEY, target_lang=target_lang)
                         else:
                             # 일반 외국인 근로자 관련 질문이면 외국인 근로자 벡터DB 사용
                             if vector_db_foreign_worker is None:
                                 print("외국인 권리구제 벡터DB가 None입니다.")
                                 return "죄송합니다. RAG 기능이 현재 사용할 수 없습니다. (외국인 권리구제 벡터DB가 로드되지 않았습니다.)"
                             print(f"외국인 근로자 질문 - 외국인 근로자 벡터DB 사용")
-                            result = answer_with_rag_foreign_worker(query, vector_db_foreign_worker, GEMINI_API_KEY, target_lang=target_lang, conversation_context=conversation_context)
+                            result = answer_with_langgraph_rag(query, vector_db_foreign_worker, GEMINI_API_KEY, target_lang=target_lang)
                         
                         print(f"RAG 답변 생성 완료: {len(result)} 문자")
                         return result
@@ -887,8 +931,10 @@ def main(page: ft.Page):
                 ))
             # 기존 다문화 가족 RAG 채팅방인지 확인
             elif is_rag:
-                # 대화 컨텍스트를 저장할 변수
-                conversation_context = {}
+                # 대화 컨텍스트를 저장할 변수 (쓰레기 처리 관련 정보 유지) - 세션에 저장하여 지속
+                if not page.session.contains_key('conversation_context'):
+                    page.session.set('conversation_context', {'waste_query': None, 'waste_district': None})
+                conversation_context = page.session.get('conversation_context')
                 
                 def multicultural_rag_answer(query, target_lang):
                     try:
@@ -898,8 +944,111 @@ def main(page: ft.Page):
                             print("다문화가족 벡터DB가 None입니다.")
                             return "죄송합니다. RAG 기능이 현재 사용할 수 없습니다. (다문화가족 벡터DB가 로드되지 않았습니다.)"
                         print(f"다문화가족 벡터DB 문서 수: {len(vector_db_multicultural.documents) if hasattr(vector_db_multicultural, 'documents') else '알 수 없음'}")
-                        result = answer_with_rag(query, vector_db_multicultural, GEMINI_API_KEY, target_lang=target_lang, conversation_context=conversation_context)
-                        print(f"RAG 답변 생성 완료: {len(result)} 문자")
+                        
+                        # 쓰레기 처리 관련 질문 확인
+                        
+                        # 대화 컨텍스트 디버깅
+                        print(f"현재 대화 컨텍스트: {conversation_context}")
+                        print(f"이전 쓰레기 질문: {conversation_context.get('waste_query')}")
+                        print(f"현재 질문이 쓰레기 관련인가: {is_waste_related_query(query)}")
+                        print(f"현재 질문이 외국인 등록 관련인가: {is_alien_registration_related_query(query)}")
+                        
+                        # 외국인 등록 관련 질문 확인 (우선 처리)
+                        if is_alien_registration_related_query(query):
+                            print("외국인 등록 관련 질문 감지됨")
+                            detailed_guide = get_detailed_alien_registration_guide(target_lang)
+                            return detailed_guide
+                        
+                        # 이전에 쓰레기 처리 질문이 있었고, 현재 질문이 구군명만 제공하는 경우 확인
+                        if conversation_context.get('waste_query') and not is_waste_related_query(query):
+                            district = extract_district_from_query(query)
+                            if district:
+                                print(f"✅ 구군명 후속 답변 감지: {district}")
+                                print(f"이전 쓰레기 질문: {conversation_context.get('waste_query')}")
+                                conversation_context['waste_district'] = district
+                                page.session.set('conversation_context', conversation_context)  # 세션에 저장
+                                # 구군명을 제공받았으므로 쓰레기 처리 정보 제공
+                                query = f"{district} 쓰레기 버리는 방법"  # 임시로 쓰레기 관련 질문으로 변환
+                                print(f"변환된 질문: {query}")
+                        
+                        if is_waste_related_query(query):
+                            print("쓰레기 처리 관련 질문 감지됨")
+                            # 쓰레기 관련 질문을 대화 컨텍스트에 저장
+                            conversation_context['waste_query'] = query
+                            page.session.set('conversation_context', conversation_context)  # 세션에 저장
+                            district = extract_district_from_query(query)
+                            
+                            if district:
+                                print(f"구군명 감지됨: {district}")
+                                # 부산광역시_쓰레기처리정보.json에서 정보 조회
+                                try:
+                                    import json
+                                    busan_waste_json_path = "부산광역시_쓰레기처리정보.json"
+                                    if os.path.exists(busan_waste_json_path):
+                                        with open(busan_waste_json_path, "r", encoding="utf-8") as f:
+                                            waste_data = json.load(f)
+                                        
+                                        district_info = waste_data.get("부산광역시_쓰레기처리정보", {}).get("구군별_정보", {}).get(district)
+                                        if district_info:
+                                            # 쓰레기 배출 정보를 구성
+                                            response_lines = [f"📍 {district} 쓰레기 배출 안내"]
+                                            response_lines.append("")
+                                            response_lines.append(f"🏢 담당부서: {district_info.get('담당부서', '')} ({district_info.get('연락처', '')})")
+                                            response_lines.append(f"⏰ 배출시간: {district_info.get('배출시간', '')}")
+                                            response_lines.append(f"📍 배출장소: {district_info.get('배출장소', '')}")
+                                            response_lines.append("")
+                                            
+                                            # 배출요일 정보
+                                            if '배출요일' in district_info:
+                                                response_lines.append("📅 배출요일별 안내:")
+                                                for day, items in district_info['배출요일'].items():
+                                                    if items and items != ["배출금지"]:
+                                                        response_lines.append(f"• {day}: {', '.join(items)}")
+                                                    elif items == ["배출금지"]:
+                                                        response_lines.append(f"• {day}: 배출금지")
+                                                response_lines.append("")
+                                            
+                                            # 종량제봉투 가격 정보
+                                            if '종량제봉투_가격' in district_info:
+                                                response_lines.append("💰 종량제봉투 가격:")
+                                                for size, price in district_info['종량제봉투_가격'].items():
+                                                    response_lines.append(f"• {size}: {price:,}원")
+                                                response_lines.append("")
+                                            
+                                            # 특이사항
+                                            if '특이사항' in district_info and district_info['특이사항']:
+                                                response_lines.append("⚠️ 특이사항:")
+                                                for item in district_info['특이사항']:
+                                                    response_lines.append(f"• {item}")
+                                                response_lines.append("")
+                                            
+                                            # 대형폐기물 정보
+                                            if '대형폐기물_수거업체' in district_info and district_info['대형폐기물_수거업체']:
+                                                response_lines.append("🚛 대형폐기물 수거업체:")
+                                                for company in district_info['대형폐기물_수거업체']:
+                                                    response_lines.append(f"• {company.get('업체명', '')}: {company.get('연락처', '')}")
+                                                    if company.get('신고방법'):
+                                                        response_lines.append(f"  신고방법: {company.get('신고방법', '')}")
+                                            
+                                            result = "\n".join(response_lines)
+                                            print(f"구별 쓰레기 처리 정보 제공 완료: {len(result)} 문자")
+                                            return result
+                                        else:
+                                            return f"{district}의 쓰레기 처리 정보가 데이터에 없습니다. 해당 구청에 직접 문의해 주세요."
+                                    else:
+                                        print("부산광역시_쓰레기처리정보.json 파일이 없습니다.")
+                                        return "쓰레기 처리 정보 파일을 찾을 수 없습니다."
+                                except Exception as json_error:
+                                    print(f"JSON 파일 읽기 오류: {json_error}")
+                                    return "쓰레기 처리 정보를 읽는 중 오류가 발생했습니다."
+                            else:
+                                # 구군명이 없으면 구군 선택 요청
+                                return get_district_selection_prompt(target_lang)
+                        
+                        # 쓰레기 처리 관련이 아니면 기존 RAG 처리
+                        # LangGraph RAG 사용 (개선된 답변 품질)
+                        result = answer_with_langgraph_rag(query, vector_db_multicultural, GEMINI_API_KEY, target_lang=target_lang)
+                        print(f"LangGraph RAG 답변 생성 완료: {len(result)} 문자")
                         return result
                     except Exception as e:
                         print(f"다문화 가족 RAG 오류: {e}")
@@ -1017,23 +1166,43 @@ def main(page: ft.Page):
         # 채팅방 진입 (is_busan_food_rag=True로 설정)
         go_chat(lang, lang, room_id, room_title, is_rag=False, is_foreign_worker_rag=False, is_busan_food_rag=True)
 
+    # --- MBTI 관광지 추천 페이지 진입 함수 ---
+    def go_mbti_tourism(lang):
+        page.views.clear()
+        page.views.append(MBTITourismPage(page, lang, on_back=lambda e: go_home(lang), selected_mbti_value=None, result_view_value=None))
+        page.go("/mbti_tourism")
+
     # --- 라우팅 처리 ---
     def route_change(route):
         print(f"Route: {page.route}")
         parts = page.route.split('/')
         
-        if page.route == "/":
-            go_nationality()
-        elif page.route == "/home":
+        try:
+            if page.route == "/":
+                go_nationality()
+            elif page.route == "/home":
+                go_home(lang)
+            elif page.route == "/create_room":
+                go_create(lang)
+            elif page.route == "/mbti_tourism":
+                go_mbti_tourism(lang)
+            elif page.route.startswith("/join_room/"):
+                room_id = parts[2]
+                print(f"QR코드로 방 참여 시도: {room_id}")
+                # QR코드로 참여 시, Firebase에서 방 정보를 가져옵니다.
+                go_chat_from_list(room_id)
+            # 다른 라우트 핸들링...
+            page.update()
+        except Exception as e:
+            print(f"라우팅 처리 중 오류: {e}")
+            # 오류 발생 시 홈으로 리다이렉트
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text("페이지 로딩 중 오류가 발생했습니다."),
+                duration=2000
+            )
+            page.snack_bar.open = True
+            page.update()
             go_home(lang)
-        elif page.route == "/create_room":
-            go_create(lang)
-        elif page.route.startswith("/join_room/"):
-            room_id = parts[2]
-            # QR코드로 참여 시, Firebase에서 방 정보를 가져옵니다.
-            go_chat_from_list(room_id)
-        # 다른 라우트 핸들링...
-        page.update()
 
     page.on_route_change = route_change
     page.go(page.route)
