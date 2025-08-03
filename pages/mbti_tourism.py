@@ -2425,27 +2425,18 @@ def MBTITourismPage(page, lang="ko", on_back=None, selected_mbti_value=None, res
                     *[
                         ft.Container(
                             content=ft.Column([
-                                                                ft.Row([
+                                # 첫 번째 줄: 관광지 이름 + 지도 버튼
+                                ft.Row([
                                     ft.Text(
                                         # 관광지 이름 다국어 변환 개선
                                         attraction_name_mapping.get(lang, {}).get(attraction["name"]) or 
                                         attraction_name_mapping.get("en", {}).get(attraction["name"]) or 
                                         attraction["name"],
-                                        size=text_size, weight=ft.FontWeight.BOLD,
+                                        size=18 if is_mobile else 20, 
+                                        weight=ft.FontWeight.BOLD,
+                                        color=ft.Colors.BLUE_800,
                                         expand=True
                                     ),
-                                    ft.Container(
-                                        content=ft.Text(
-                                            # 카테고리 다국어 매핑 간소화
-                                            attraction["category"],
-                                            size=button_size
-                                        ),
-                                        bgcolor=ft.Colors.BLUE_100,
-                                        padding=ft.padding.symmetric(horizontal=8, vertical=4),
-                                        border_radius=12,
-                                        margin=ft.margin.only(right=8)
-                                    ),
-                                    # 지도 버튼을 관광지 이름 옆으로 이동
                                     ft.ElevatedButton(
                                         {
                                             "ko": "📍 지도",
@@ -2457,18 +2448,40 @@ def MBTITourismPage(page, lang="ko", on_back=None, selected_mbti_value=None, res
                                         style=ft.ButtonStyle(
                                             bgcolor=ft.Colors.ORANGE_100,
                                             color=ft.Colors.ORANGE_800,
-                                            padding=ft.padding.symmetric(horizontal=8, vertical=4)
+                                            padding=ft.padding.symmetric(horizontal=12, vertical=6)
                                         ),
-                                        height=28
+                                        height=32
                                     )
-                                ], alignment=ft.MainAxisAlignment.START),
-                                ft.Text(attraction["reason"], size=text_size, color=ft.Colors.GREY_600)
-                            ], spacing=2),
-                            padding=12,
+                                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                                # 두 번째 줄: 카테고리 + 추천 이유
+                                ft.Row([
+                                    ft.Container(
+                                        content=ft.Text(
+                                            # 카테고리 다국어 매핑 간소화
+                                            attraction["category"],
+                                            size=12 if is_mobile else 13,
+                                            color=ft.Colors.WHITE,
+                                            weight=ft.FontWeight.W_500
+                                        ),
+                                        bgcolor=ft.Colors.BLUE_400,
+                                        padding=ft.padding.symmetric(horizontal=10, vertical=4),
+                                        border_radius=15,
+                                        margin=ft.margin.only(right=8)
+                                    ),
+                                    ft.Text(
+                                        attraction["reason"][:50] + "..." if len(attraction["reason"]) > 50 else attraction["reason"], 
+                                        size=13 if is_mobile else 14, 
+                                        color=ft.Colors.GREY_700,
+                                        expand=True
+                                    )
+                                ], alignment=ft.MainAxisAlignment.START)
+                            ], spacing=8),
+                            padding=16,
                             bgcolor=ft.Colors.WHITE,
-                            border_radius=8,
-                            border=ft.border.all(1, ft.Colors.GREY_300),
-                            margin=ft.margin.only(bottom=8)
+                            border_radius=12,
+                            border=ft.border.all(1, ft.Colors.GREY_200),
+                            margin=ft.margin.only(bottom=12),
+                            shadow=ft.BoxShadow(blur_radius=4, color=ft.Colors.GREY_300, offset=ft.Offset(0, 2))
                         ) for attraction in rec_data["attractions"]
                     ]
                 ],

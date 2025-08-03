@@ -40,9 +40,9 @@ def ForeignCountrySelectPage(page, on_select, on_back=None):
                 bgcolor=ft.LinearGradient(["#7B61FF", "#6C47FF"], begin=ft.alignment.top_left, end=ft.alignment.bottom_right),
                 border_radius=12,
                 padding=12 if is_mobile else 16,
-                margin=ft.margin.only(bottom=8, right=8),
+                margin=ft.margin.only(bottom=8, right=8 if is_mobile else 8),
                 on_click=lambda e, c=code, l=lang: on_select(c, l),
-                width=page.width * 0.4 if is_mobile else 160,
+                width=(page.width * 0.42) if is_mobile else 160,
                 height=50 if is_mobile else 60,
                 shadow=ft.BoxShadow(blur_radius=8, color="#B0BEC544")
             )
@@ -50,9 +50,9 @@ def ForeignCountrySelectPage(page, on_select, on_back=None):
         
         # 2개 미만인 경우 빈 컨테이너로 채움
         while len(row_buttons) < 2:
-            row_buttons.append(ft.Container(width=page.width * 0.4 if is_mobile else 160, height=50 if is_mobile else 60))
+            row_buttons.append(ft.Container(width=(page.width * 0.42) if is_mobile else 160, height=50 if is_mobile else 60))
         
-        country_rows.append(ft.Row(row_buttons, alignment=ft.MainAxisAlignment.CENTER, spacing=8))
+        country_rows.append(ft.Row(row_buttons, alignment=ft.MainAxisAlignment.SPACE_EVENLY, spacing=8))
 
     return ft.View(
         "/foreign_country_select",
