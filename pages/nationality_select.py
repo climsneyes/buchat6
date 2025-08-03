@@ -86,7 +86,8 @@ def NationalitySelectPage(page, on_select, on_foreign_select, on_back=None):
                         width=300 if not is_mobile else None
                     ),
                 ], alignment=ft.MainAxisAlignment.CENTER, spacing=40 if not is_mobile else 10),
-                padding=ft.padding.only(top=30 if is_mobile else 40)
+                padding=ft.padding.only(top=30 if is_mobile else 40, bottom=30 if is_mobile else 40),
+                margin=ft.margin.symmetric(horizontal=10 if is_mobile else 20)
             ),
         ],
         bgcolor="#F5F7FF",

@@ -58,23 +58,26 @@ def ForeignCountrySelectPage(page, on_select, on_back=None):
         "/foreign_country_select",
         controls=[
             # 헤더
-            ft.Row([
-                ft.IconButton(ft.Icons.ARROW_BACK, on_click=on_back) if on_back else ft.Container(),
-                ft.Container(
-                    content=ft.Row([
-                        ft.Container(
-                            content=ft.Icon(ft.Icons.LANGUAGE, size=icon_size, color="#6D8BFF"),
-                            bgcolor="#EEF2FF",
-                            border_radius=12,
-                            padding=8 if is_mobile else 10,
-                            margin=ft.margin.only(right=12 if is_mobile else 16)
-                        ),
-                        ft.Column([
-                            ft.Text("select your language", size=title_size, weight=ft.FontWeight.BOLD),
-                        ], spacing=4)
-                    ], alignment=ft.MainAxisAlignment.START),
-                ),
-            ], alignment=ft.MainAxisAlignment.START, spacing=8),
+            ft.Container(
+                content=ft.Row([
+                    ft.IconButton(ft.Icons.ARROW_BACK, on_click=on_back) if on_back else ft.Container(),
+                    ft.Container(
+                        content=ft.Row([
+                            ft.Container(
+                                content=ft.Icon(ft.Icons.LANGUAGE, size=icon_size, color="#6D8BFF"),
+                                bgcolor="#EEF2FF",
+                                border_radius=12,
+                                padding=8 if is_mobile else 10,
+                                margin=ft.margin.only(right=12 if is_mobile else 16)
+                            ),
+                            ft.Column([
+                                ft.Text("select your language", size=title_size, weight=ft.FontWeight.BOLD),
+                            ], spacing=4)
+                        ], alignment=ft.MainAxisAlignment.START),
+                    ),
+                ], alignment=ft.MainAxisAlignment.START, spacing=8),
+                margin=ft.margin.only(top=20 if is_mobile else 30, left=15 if is_mobile else 20, right=15 if is_mobile else 20)
+            ),
             
             # 국가 선택 카드 (완전 흰색 배경, 연보라 그림자)
             ft.Container(
@@ -85,7 +88,7 @@ def ForeignCountrySelectPage(page, on_select, on_back=None):
                 padding=20 if is_mobile else 24,
                 bgcolor=ft.Colors.WHITE,
                 border_radius=16 if is_mobile else 18,
-                margin=ft.margin.only(top=20 if is_mobile else 30, left=10 if is_mobile else 20, right=10 if is_mobile else 20),
+                margin=ft.margin.only(top=20 if is_mobile else 30, left=15 if is_mobile else 20, right=15 if is_mobile else 20, bottom=30 if is_mobile else 40),
                 width=container_width,
                 shadow=ft.BoxShadow(blur_radius=24, color="#B0BEC544")
             )

@@ -2522,11 +2522,12 @@ def MBTITourismPage(page, lang="ko", on_back=None, selected_mbti_value=None, res
     for mbti in mbti_list:
         is_selected = selected_mbti[0] == mbti
         
+        button_size = min(75, (page.width - 80) // 4) if hasattr(page, 'width') and page.width else 75
         mbti_buttons.append(
             ft.Container(
-                content=ft.Text(mbti, size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE if is_selected else ft.Colors.BLACK87),
-                width=80,
-                height=80,
+                content=ft.Text(mbti, size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE if is_selected else ft.Colors.BLACK87),
+                width=button_size,
+                height=button_size,
                 bgcolor=ft.Colors.BLUE_600 if is_selected else ft.Colors.WHITE,
                 border_radius=12,
                 border=ft.border.all(2, ft.Colors.BLUE_600 if is_selected else ft.Colors.GREY_300),
@@ -2589,7 +2590,6 @@ def MBTITourismPage(page, lang="ko", on_back=None, selected_mbti_value=None, res
                         ft.Text(t["test_mbti"], size=14)
                     ], alignment=ft.MainAxisAlignment.CENTER, spacing=8),
                     on_click=lambda e: start_mbti_test(),
-                    width=250,
                     height=40,
                     style=ft.ButtonStyle(
                         bgcolor=ft.Colors.PURPLE_100,
@@ -2598,7 +2598,9 @@ def MBTITourismPage(page, lang="ko", on_back=None, selected_mbti_value=None, res
                     )
                 ),
                 alignment=ft.alignment.center,
-                margin=ft.margin.only(top=16, bottom=8)
+                margin=ft.margin.only(top=16, bottom=8),
+                width=min(280, page.width - 40) if hasattr(page, 'width') and page.width else 280,
+                padding=ft.padding.symmetric(horizontal=20)
             ),
             
             # 추천 버튼
@@ -2607,19 +2609,21 @@ def MBTITourismPage(page, lang="ko", on_back=None, selected_mbti_value=None, res
                     t["recommend"],
                     on_click=lambda e: show_recommendations(),
                     disabled=selected_mbti[0] is None,
-                    width=200,
                     style=ft.ButtonStyle(
                         bgcolor=ft.Colors.BLUE_600 if selected_mbti[0] else ft.Colors.GREY_400,
                         color=ft.Colors.WHITE
                     )
                 ),
                 alignment=ft.alignment.center,
-                margin=ft.margin.only(top=16)
+                margin=ft.margin.only(top=16),
+                width=min(300, page.width - 40) if hasattr(page, 'width') and page.width else 300,
+                padding=ft.padding.symmetric(horizontal=20)
             ),
             
             # 결과 표시
             result_view[0] if result_view[0] else ft.Container(),
         ],
+        scroll=ft.ScrollMode.AUTO,
         bgcolor=ft.LinearGradient(["#F1F5FF", "#E0E7FF"], begin=ft.alignment.top_left, end=ft.alignment.bottom_right),
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         padding=ft.padding.only(bottom=20 if is_mobile else 32)
