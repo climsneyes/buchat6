@@ -68,7 +68,7 @@ def translate_message(text, target_lang):
         model = genai.GenerativeModel("gemini-2.0-flash-lite")
         # 언어 코드 → 영어 언어명 매핑
         lang_map = {
-            "en": "English", "ko": "Korean", "ja": "Japanese", "zh": "Chinese", "zh-TW": "Traditional Chinese", "id": "Indonesian", "vi": "Vietnamese", "fr": "French", "de": "German", "th": "Thai", "uz": "Uzbek", "ne": "Nepali", "tet": "Tetum", "lo": "Lao", "mn": "Mongolian", "my": "Burmese", "bn": "Bengali", "si": "Sinhala", "km": "Khmer", "ky": "Kyrgyz", "ur": "Urdu"
+            "en": "English", "ko": "Korean", "ja": "Japanese", "zh": "Chinese", "zh-TW": "Traditional Chinese", "id": "Indonesian", "vi": "Vietnamese", "fr": "French", "de": "German", "th": "Thai", "tl": "Filipino", "uz": "Uzbek", "ne": "Nepali", "tet": "Tetum", "lo": "Lao", "mn": "Mongolian", "my": "Burmese", "bn": "Bengali", "si": "Sinhala", "km": "Khmer", "ky": "Kyrgyz", "ur": "Urdu"
         }
         target_lang_name = lang_map.get(target_lang, target_lang)
         prompt = f"Translate the following text to {target_lang_name} and return only the translation.\n{text}"
@@ -81,7 +81,7 @@ def translate_message(text, target_lang):
 LANG_NAME_MAP = {
     "ko": "한국어", "en": "영어", "ja": "일본어", "zh": "중국어",
     "fr": "프랑스어", "de": "독일어", "th": "태국어", "vi": "베트남어",
-    "zh-TW": "대만어", "zh-HK": "홍콩어", "id": "인도네시아어",
+    "zh-TW": "대만어", "zh-HK": "홍콩어", "id": "인도네시아어", "tl": "필리핀어",
     "zh-SG": "싱가포르 중국어", "en-SG": "싱가포르 영어", "ms-SG": "싱가포르 말레이어", "ta-SG": "싱가포르 타밀어",
     "uz": "우즈베키스탄어", "ne": "네팔어", "tet": "동티모르어", "lo": "라오스어",
     "mn": "몽골어", "my": "미얀마어", "bn": "방글라데시어", "si": "스리랑카어",
@@ -1475,6 +1475,7 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         "th": "สอบถามเกี่ยวกับการใช้ชีวิตในเกาหลีได้เลย",
         "zh-TW": "請詢問有關在韓國生活的問題",
         "id": "Tanyakan tentang kehidupan di Korea",
+        "tl": "Magtanong tungkol sa buhay sa Korea",
     }
     input_hint = RAG_INPUT_HINTS.get(user_lang, RAG_INPUT_HINTS["en"]) if is_rag_room else {
         "ko": "메시지 입력",
@@ -1487,6 +1488,7 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         "th": "พิมพ์ข้อความ",
         "zh-TW": "輸入訊息",
         "id": "Ketik pesan",
+        "tl": "Mag-type ng mensahe",
     }.get(user_lang, "Type a message")
     input_box = ft.TextField(hint_text=input_hint, expand=True, height=input_height)
     if is_rag_room:
@@ -1592,6 +1594,13 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                 selectable=True,
             ),
             ft.Text(
+                msg_data.get('text', '').replace('**', ''),  # ** 마크다운 기호 제거
+                size=base_size + (2 if is_guide else 0),
+                color=ft.Colors.WHITE if is_me else ft.Colors.BLACK87,
+                font_family=font_family,
+                selectable=True,
+                weight=ft.FontWeight.W_500,  # RAG 답변은 약간 굵게
+            ) if is_rag else ft.Text(
                 msg_data.get('text', ''),
                 size=base_size + (2 if is_guide else 0),
                 color=ft.Colors.WHITE if is_me else ft.Colors.BLACK87,
@@ -1602,6 +1611,14 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         if msg_data.get('translated', ''):
             controls.append(
                 ft.Text(
+                    msg_data.get('translated', '').replace('**', ''),  # ** 마크다운 기호 제거
+                    size=(base_size - 2) + (2 if is_guide else 0),
+                    color=ft.Colors.WHITE if is_me else ft.Colors.BLACK87,
+                    font_family=font_family,
+                    selectable=True,
+                    weight=ft.FontWeight.W_500,  # RAG 번역도 약간 굵게
+                    italic=True,
+                ) if is_rag else ft.Text(
                     msg_data.get('translated', ''),
                     size=(base_size - 2) + (2 if is_guide else 0),
                     color=ft.Colors.WHITE if is_me else ft.Colors.BLACK87,
@@ -2185,7 +2202,8 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         "vi": "Phòng chat nhanh",
         "fr": "Salon de discussion rapide",
         "de": "Schnell-Chatraum",
-        "th": "ห้องแชทด่วน"
+        "th": "ห้องแชทด่วน",
+        "tl": "Mabilis na Chat Room"
     }
     # 공식 안내 채팅방(RAG) 헤더 타이틀 다국어 처리
     is_rag_room = custom_translate_message is not None

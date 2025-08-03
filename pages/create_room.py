@@ -166,6 +166,21 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             "persistent_room_desc": "Chọn để tạo phòng có thể truy cập bất cứ lúc nào qua QR code (phù hợp cho nhà hàng, cửa hàng, v.v.)",
             "create_btn": "✅ Tạo phòng",
             "tip": "Nếu bạn đặt tên phòng cụ thể, sẽ có nhiều người tham gia hơn!"
+        },
+        "tl": {
+            "title": "📌 Gumawa ng Chat Room",
+            "subtitle": "I-setup ang bagong chat room",
+            "room_title_label": "Ilagay ang pamagat ng room",
+            "room_title_hint": "Halimbawa: Room para sa pag-guide sa mga dayuhan",
+            "your_lang": "🇵🇭 Filipino (automatic)",
+            "target_lang_label": "Piliin ang wika ng kausap",
+            "target_lang_hint": "Halimbawa: Ingles, Hapon, Tsino",
+            "purpose_label": "Layunin ng chat (opsyonal)",
+            "purpose_options": ["Pag-guide sa daan", "Rekomendasyon ng pagkain", "Impormasyon sa turismo", "Libreng usapan", "Emergency na tulong"],
+            "persistent_room_label": "Gumawa ng fixed chat room",
+            "persistent_room_desc": "I-check para gumawa ng room na maaaring ma-access anumang oras sa pamamagitan ng QR code (angkop para sa mga restaurant, tindahan, atbp.)",
+            "create_btn": "✅ Gumawa ng Room",
+            "tip": "Kung maglagay ka ng specific na pamagat ng room, mas maraming tao ang sasali!"
         }
     }
     t = texts.get(lang, texts["en"])

@@ -104,6 +104,15 @@ def HomePage(page, lang="ko", on_create=None, on_find=None, on_quick=None, on_ch
             "find": "Cari Ruang Obrolan",
             "quick": "Mulai Obrolan Cepat",
             "mbti_tourism": "Rekomendasi Wisata MBTI"
+        },
+        "tl": {
+            "title": "Busan Multilingual Chat App",
+            "desc": "Walang problema kahit iba ang wika!",
+            "desc2": "Makipagkaibigan sa mga bagong tao ✨",
+            "create": "Gumawa ng Chat Room",
+            "find": "Hanapin ang Chat Room",
+            "quick": "Mabilis na Chat",
+            "mbti_tourism": "MBTI Tourism Recommendations"
         }
     }
     t = texts.get(lang, texts["en"])
@@ -115,7 +124,10 @@ def HomePage(page, lang="ko", on_create=None, on_find=None, on_quick=None, on_ch
         "fr": "🇫🇷 Français",
         "de": "🇩🇪 Deutsch",
         "th": "🇹🇭 ไทย",
-        "vi": "🇻🇳 Tiếng Việt"
+        "vi": "🇻🇳 Tiếng Việt",
+        "zh-TW": "🇹🇼 繁體中文",
+        "id": "🇮🇩 Bahasa Indonesia",
+        "tl": "🇵🇭 Filipino"
     }
     return ft.View(
         "/home",

@@ -135,6 +135,18 @@ def RoomListPage(page, lang="ko", on_select=None, on_back=None):
             "created_at": "Tạo: {time}",
             "join": "Tham gia",
             "back": "Quay lại"
+        },
+        "tl": {
+            "title": "📋 Lista ng mga Chat Room",
+            "subtitle": "Mga aktibong chat room ngayon",
+            "no_rooms": "Walang natagpuang aktibong chat room.",
+            "create_new": "Gumawa ng Bagong Chat Room",
+            "persistent_rooms": "Mga Persistent Room",
+            "temporary_rooms": "Mga Pansamantalang Room",
+            "room_id": "Room ID: {id}",
+            "created_at": "Ginawa: {time}",
+            "join": "Sumali",
+            "back": "Bumalik"
         }
     }
     t = texts.get(lang, texts["en"])

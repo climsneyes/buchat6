@@ -18,7 +18,7 @@ def ForeignCountrySelectPage(page, on_select, on_back=None):
         ("🇨🇳", "China", "CN", "zh"),
         ("🇻🇳", "Vietnam", "VN", "vi"),
         ("🇹🇭", "Thailand", "TH", "th"),
-        ("🇵🇭", "Philippines", "PH", "en"),
+        ("🇵🇭", "Philippines", "PH", "tl"),
         ("🇫🇷", "France", "FR", "fr"),
         ("🇩🇪", "Germany", "DE", "de"),
         ("🇹🇼", "Taiwan", "TW", "zh-TW"),

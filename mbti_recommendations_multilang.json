@@ -1,0 +1,103 @@
+{
+  "INTJ": {
+    "ko": {
+      "title": "전략적 사고가 뛰어난 건축가형",
+      "description": "조용하고 깊이 있는 경험을 선호하는 당신에게 추천합니다.",
+      "attractions": [
+        {"name": "범어사", "category": "사찰", "reason": "조용하고 깊이 있는 불교 문화 체험"},
+        {"name": "부산박물관", "category": "박물관", "reason": "체계적이고 역사적인 정보 습득"},
+        {"name": "국립해양박물관", "category": "박물관", "reason": "해양 문화의 체계적 이해"}
+      ]
+    },
+    "en": {
+      "title": "Strategic Architect",
+      "description": "Recommended for those who prefer quiet and deep experiences.",
+      "attractions": [
+        {"name": "Beomeosa Temple", "category": "Temple", "reason": "Quiet and deep Buddhist cultural experience"},
+        {"name": "Busan Museum", "category": "Museum", "reason": "Systematic and historical information acquisition"},
+        {"name": "National Maritime Museum", "category": "Museum", "reason": "Systematic understanding of maritime culture"}
+      ]
+    },
+    "ja": {
+      "title": "戦略的思考の建築家型",
+      "description": "静かで深い体験を好むあなたにおすすめします。",
+      "attractions": [
+        {"name": "梵魚寺", "category": "寺院", "reason": "静かで深い仏教文化体験"},
+        {"name": "釜山博物館", "category": "博物館", "reason": "体系的で歴史的な情報習得"},
+        {"name": "国立海洋博物館", "category": "博物館", "reason": "海洋文化の体系的理解"}
+      ]
+    },
+    "zh": {
+      "title": "战略思维建筑师",
+      "description": "推荐给喜欢安静深度体验的您。",
+      "attractions": [
+        {"name": "梵鱼寺", "category": "寺庙", "reason": "安静深度的佛教文化体验"},
+        {"name": "釜山博物馆", "category": "博物馆", "reason": "系统性历史信息获取"},
+        {"name": "国立海洋博物馆", "category": "博物馆", "reason": "海洋文化的系统性理解"}
+      ]
+    },
+    "zh-TW": {
+      "title": "戰略思維建築師",
+      "description": "推薦給喜歡安靜深度體驗的您。",
+      "attractions": [
+        {"name": "梵魚寺", "category": "寺廟", "reason": "安靜深度的佛教文化體驗"},
+        {"name": "釜山博物館", "category": "博物館", "reason": "系統性歷史資訊獲取"},
+        {"name": "國立海洋博物館", "category": "博物館", "reason": "海洋文化的系統性理解"}
+      ]
+    },
+    "vi": {
+      "title": "Kiến trúc sư Chiến lược",
+      "description": "Được khuyến nghị cho những người thích trải nghiệm yên tĩnh và sâu sắc.",
+      "attractions": [
+        {"name": "Chùa Beomeosa", "category": "Chùa", "reason": "Trải nghiệm văn hóa Phật giáo yên tĩnh và sâu sắc"},
+        {"name": "Bảo tàng Busan", "category": "Bảo tàng", "reason": "Thu thập thông tin lịch sử có hệ thống"},
+        {"name": "Bảo tàng Hàng hải Quốc gia", "category": "Bảo tàng", "reason": "Hiểu biết có hệ thống về văn hóa hàng hải"}
+      ]
+    },
+    "th": {
+      "title": "สถาปนิกเชิงกลยุทธ์",
+      "description": "แนะนำสำหรับผู้ที่ชอบประสบการณ์ที่เงียบสงบและลึกซึ้ง",
+      "attractions": [
+        {"name": "วัดบอมออซา", "category": "วัด", "reason": "ประสบการณ์วัฒนธรรมพุทธที่เงียบสงบและลึกซึ้ง"},
+        {"name": "พิพิธภัณฑ์ปูซาน", "category": "พิพิธภัณฑ์", "reason": "การได้รับข้อมูลประวัติศาสตร์อย่างเป็นระบบ"},
+        {"name": "พิพิธภัณฑ์ทางทะเลแห่งชาติ", "category": "พิพิธภัณฑ์", "reason": "ความเข้าใจวัฒนธรรมทางทะเลอย่างเป็นระบบ"}
+      ]
+    },
+    "id": {
+      "title": "Arsitek Strategis",
+      "description": "Direkomendasikan untuk mereka yang menyukai pengalaman yang tenang dan mendalam.",
+      "attractions": [
+        {"name": "Kuil Beomeosa", "category": "Kuil", "reason": "Pengalaman budaya Buddha yang tenang dan mendalam"},
+        {"name": "Museum Busan", "category": "Museum", "reason": "Perolehan informasi sejarah yang sistematis"},
+        {"name": "Museum Maritim Nasional", "category": "Museum", "reason": "Pemahaman sistematis budaya maritim"}
+      ]
+    },
+    "fr": {
+      "title": "Architecte Stratégique",
+      "description": "Recommandé pour ceux qui préfèrent les expériences calmes et profondes.",
+      "attractions": [
+        {"name": "Temple Beomeosa", "category": "Temple", "reason": "Expérience culturelle bouddhiste calme et profonde"},
+        {"name": "Musée de Busan", "category": "Musée", "reason": "Acquisition d'informations historiques systématiques"},
+        {"name": "Musée Maritime National", "category": "Musée", "reason": "Compréhension systématique de la culture maritime"}
+      ]
+    },
+    "de": {
+      "title": "Strategischer Architekt",
+      "description": "Empfohlen für diejenigen, die ruhige und tiefe Erfahrungen bevorzugen.",
+      "attractions": [
+        {"name": "Beomeosa Tempel", "category": "Tempel", "reason": "Ruhige und tiefe buddhistische Kulturerfahrung"},
+        {"name": "Busan Museum", "category": "Museum", "reason": "Systematische historische Informationsbeschaffung"},
+        {"name": "Nationales Meeresmuseum", "category": "Museum", "reason": "Systematisches Verständnis der Meereskultur"}
+      ]
+    },
+    "tl": {
+      "title": "Strategic na Arkitekto",
+      "description": "Inirerekomenda para sa mga taong gusto ng tahimik at malalim na karanasan.",
+      "attractions": [
+        {"name": "Beomeosa Temple", "category": "Templo", "reason": "Tahimik at malalim na karanasan sa kultura ng Buddhism"},
+        {"name": "Busan Museum", "category": "Museo", "reason": "Sistematikong pagkuha ng makasaysayang impormasyon"},
+        {"name": "National Maritime Museum", "category": "Museo", "reason": "Sistematikong pag-unawa sa kultura ng dagat"}
+      ]
+    }
+  }
+}

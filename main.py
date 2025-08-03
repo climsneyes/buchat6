@@ -61,11 +61,11 @@ try:
     print(f"FIREBASE_KEY_PATH: {FIREBASE_KEY_PATH}")
     
     if not FIREBASE_DB_URL or FIREBASE_DB_URL == "None":
-        print("❌ FIREBASE_DB_URL이 설정되지 않았습니다.")
+        print("FIREBASE_DB_URL이 설정되지 않았습니다.")
         raise Exception("FIREBASE_DB_URL is not set")
     
     if not os.path.exists(FIREBASE_KEY_PATH):
-        print(f"❌ Firebase 키 파일이 존재하지 않습니다: {FIREBASE_KEY_PATH}")
+        print(f"Firebase 키 파일이 존재하지 않습니다: {FIREBASE_KEY_PATH}")
         raise Exception(f"Firebase key file not found: {FIREBASE_KEY_PATH}")
     
     cred = credentials.Certificate(FIREBASE_KEY_PATH)
@@ -73,10 +73,10 @@ try:
         'databaseURL': FIREBASE_DB_URL
     })
     FIREBASE_AVAILABLE = True
-    print("✅ Firebase 초기화 성공")
+    print("Firebase 초기화 성공")
 except Exception as e:
-    print(f"❌ Firebase 초기화 실패: {e}")
-    print("⚠️ Firebase 기능이 비활성화됩니다. 채팅방 생성 및 메시지 저장이 불가능합니다.")
+    print(f"Firebase 초기화 실패: {e}")
+    print("Firebase 기능이 비활성화됩니다. 채팅방 생성 및 메시지 저장이 불가능합니다.")
     FIREBASE_AVAILABLE = False
 
 # OpenAI 관련 client = openai.OpenAI(api_key=OPENAI_API_KEY) 제거
@@ -144,20 +144,20 @@ try:
     if os.path.exists(BUSAN_FOOD_JSON_PATH):
         with open(BUSAN_FOOD_JSON_PATH, "r", encoding="utf-8") as f:
             busan_food_json_data = json.load(f)
-        print(f"✅ 부산의맛(2025).json 로드 완료")
+        print(f"부산의맛(2025).json 로드 완료")
     else:
-        print(f"❌ {BUSAN_FOOD_JSON_PATH} 파일이 없습니다.")
+        print(f"{BUSAN_FOOD_JSON_PATH} 파일이 없습니다.")
     
     # 택슐랭(2025).json 로드
     if os.path.exists(TAEK_SULLING_JSON_PATH):
         with open(TAEK_SULLING_JSON_PATH, "r", encoding="utf-8") as f:
             taek_sulling_json_data = json.load(f)
-        print(f"✅ 택슐랭(2025).json 로드 완료")
+        print(f"택슐랭(2025).json 로드 완료")
     else:
-        print(f"❌ {TAEK_SULLING_JSON_PATH} 파일이 없습니다.")
+        print(f"{TAEK_SULLING_JSON_PATH} 파일이 없습니다.")
         
 except Exception as e:
-    print(f"❌ JSON 파일 로드 중 오류 발생: {e}")
+    print(f"JSON 파일 로드 중 오류 발생: {e}")
 
 # RAG 기능 사용 가능 여부 설정 (vector_db 정의 후)
 RAG_AVAILABLE = vector_db_multicultural is not None and vector_db_foreign_worker is not None
@@ -558,7 +558,7 @@ def main(page: ft.Page):
         
         # Firebase 사용 가능 여부 확인
         if not FIREBASE_AVAILABLE:
-            print("❌ Firebase가 초기화되지 않아 방을 생성할 수 없습니다.")
+            print("Firebase가 초기화되지 않아 방을 생성할 수 없습니다.")
             # 사용자에게 오류 메시지 표시 (간단한 팝업)
             page.snack_bar = ft.SnackBar(
                 content=ft.Text("Firebase 연결 오류로 방을 생성할 수 없습니다. 설정을 확인해주세요."),
@@ -582,9 +582,9 @@ def main(page: ft.Page):
                 'creator_id': page.session.get('user_id') or str(uuid.uuid4())  # 생성자 고유 ID 추가
             }
             rooms_ref.child(new_room_id).set(room_data)
-            print(f"✅ Firebase에 방 '{room_title}' 정보 저장 성공 (고정: {is_persistent}, 생성자: {room_data['created_by']})")
+            print(f"Firebase에 방 '{room_title}' 정보 저장 성공 (고정: {is_persistent}, 생성자: {room_data['created_by']})")
         except Exception as e:
-            print(f"❌ Firebase 방 정보 저장 실패: {e}")
+            print(f"Firebase 방 정보 저장 실패: {e}")
             # 사용자에게 오류 메시지 표시 (간단한 팝업)
             page.snack_bar = ft.SnackBar(
                 content=ft.Text("Firebase 연결 오류로 방을 생성할 수 없습니다. 설정을 확인해주세요."),
@@ -963,7 +963,7 @@ def main(page: ft.Page):
                         if conversation_context.get('waste_query') and not is_waste_related_query(query):
                             district = extract_district_from_query(query)
                             if district:
-                                print(f"✅ 구군명 후속 답변 감지: {district}")
+                                print(f"구군명 후속 답변 감지: {district}")
                                 print(f"이전 쓰레기 질문: {conversation_context.get('waste_query')}")
                                 conversation_context['waste_district'] = district
                                 page.session.set('conversation_context', conversation_context)  # 세션에 저장
@@ -1168,6 +1168,8 @@ def main(page: ft.Page):
 
     # --- MBTI 관광지 추천 페이지 진입 함수 ---
     def go_mbti_tourism(lang):
+        # 원래 Flet 방식으로 MBTI 관광지 추천 페이지 이동
+        print(f"MBTI 관광지 추천 페이지로 이동 (언어: {lang})")
         page.views.clear()
         page.views.append(MBTITourismPage(page, lang, on_back=lambda e: go_home(lang), selected_mbti_value=None, result_view_value=None))
         page.go("/mbti_tourism")
@@ -1208,4 +1210,4 @@ def main(page: ft.Page):
     page.go(page.route)
 
 if __name__ == "__main__":
-    ft.app(target=main, port=8001, view=ft.WEB_BROWSER)
+    ft.app(target=main, port=8015, view=ft.WEB_BROWSER)
