@@ -1453,6 +1453,35 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
     bubble_padding = 8 if is_mobile else 12
     header_padding = 12 if is_mobile else 16
     
+    # --- 추방 사용자 체크 ---
+    current_nickname = page.session.get('nickname', '')
+    if current_nickname and is_user_kicked(current_nickname, room_id):
+        # 추방된 사용자라면 접근 차단
+        return ft.View(
+            f"/kicked/{room_id}",
+            [
+                ft.Container(
+                    content=ft.Column([
+                        ft.Icon(ft.Icons.NO_ACCOUNTS, size=100, color=ft.Colors.RED_400),
+                        ft.Text("채팅방 접근 금지", size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.RED_600),
+                        ft.Text("방장에 의해 이 채팅방에서 추방되었습니다.", size=16, text_align=ft.TextAlign.CENTER),
+                        ft.Text("더 이상 이 채팅방에 참여할 수 없습니다.", size=14, color=ft.Colors.GREY_600),
+                        ft.Container(height=20),
+                        ft.ElevatedButton(
+                            "뒤로가기",
+                            on_click=lambda e: on_back(e) if on_back else None,
+                            style=ft.ButtonStyle(bgcolor=ft.Colors.BLUE_600, color=ft.Colors.WHITE)
+                        )
+                    ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+                    padding=30,
+                    alignment=ft.alignment.center,
+                    expand=True
+                )
+            ],
+            vertical_alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER
+        )
+    
     # --- 상태 및 컨트롤 초기화 ---
     chat_messages = ft.Column(
         auto_scroll=True,
@@ -1716,13 +1745,23 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             current_nickname = page.session.get('nickname') or ''
             current_user_id = page.session.get('user_id')
             if is_room_owner(room_id, current_nickname, current_user_id):
-                block_button = ft.IconButton(
-                    icon=ft.Icons.BLOCK,
-                    icon_color=ft.Colors.RED_400,
-                    icon_size=16,
-                    tooltip="사용자 차단 (방장 전용)",
-                    on_click=lambda e, nickname=nickname: block_user_from_message(nickname)
-                )
+                # 차단과 추방 버튼을 함께 표시
+                block_button = ft.Row([
+                    ft.IconButton(
+                        icon=ft.Icons.BLOCK,
+                        icon_color=ft.Colors.ORANGE_400,
+                        icon_size=14,
+                        tooltip="사용자 차단 (방장 전용)",
+                        on_click=lambda e, nickname=nickname: block_user_from_message(nickname)
+                    ),
+                    ft.IconButton(
+                        icon=ft.Icons.PERSON_REMOVE,
+                        icon_color=ft.Colors.RED_600,
+                        icon_size=14,
+                        tooltip="사용자 추방 (방장 전용)",
+                        on_click=lambda e, nickname=nickname: kick_user_from_message(nickname)
+                    )
+                ], spacing=0)
         
         controls = [
             ft.Row([
@@ -1987,6 +2026,64 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         
         page.dialog = confirm_dialog
         confirm_dialog.open = True
+        page.update()
+
+    # --- 사용자 추방 함수 ---
+    def kick_user_from_message(nickname):
+        """메시지에서 사용자 추방"""
+        def confirm_kick(e):
+            try:
+                # Firebase에 추방 정보 저장
+                if firebase_available:
+                    db.reference(f'rooms/{room_id}/kicked_users').child(nickname).set({
+                        'kicked_at': time.time(),
+                        'kicked_by': '방장'
+                    })
+                    print(f"사용자 {nickname} 추방됨 (방: {room_id})")
+                else:
+                    print(f"추방 정보 저장 오류: Firebase 사용 불가")
+
+                # 추방 메시지 표시
+                kick_msg_data = {
+                    'text': f"👋 {nickname}님이 방장에 의해 추방되었습니다.",
+                    'nickname': '시스템',
+                    'timestamp': time.time(),
+                    'translated': ''
+                }
+                kick_bubble = create_message_bubble(kick_msg_data, False)
+                if kick_bubble:
+                    setattr(kick_bubble, 'timestamp', kick_msg_data['timestamp'])
+                    chat_messages.controls.append(kick_bubble)
+
+                # Firebase에 추방 알림 메시지 전송
+                if firebase_available:
+                    db.reference(f'rooms/{room_id}/messages').push(kick_msg_data)
+
+                page.update()
+            except Exception as e:
+                print(f"추방 처리 오류: {e}")
+                
+            # 다이얼로그 닫기
+            page.dialog.open = False
+            page.update()
+
+        def cancel_kick(e):
+            page.dialog.open = False
+            page.update()
+
+        # 추방 확인 다이얼로그
+        kick_dialog = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("사용자 추방"),
+            content=ft.Text(f"{nickname}님을 채팅방에서 추방하시겠습니까?\n추방된 사용자는 더 이상 이 채팅방에 접근할 수 없습니다."),
+            actions=[
+                ft.TextButton("취소", on_click=cancel_kick),
+                ft.TextButton("추방", on_click=confirm_kick, style=ft.ButtonStyle(color=ft.Colors.RED))
+            ]
+        )
+        
+        page.dialog = kick_dialog
+        kick_dialog.open = True
         page.update()
 
     # --- 퇴장 감지용(페이지 언로드) ---
@@ -2488,6 +2585,7 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         
         # 차단된 사용자 목록 가져오기 (방장만)
         blocked_list = []
+        kicked_list = []
         if is_owner:
             try:
                 blocked_ref = db.reference(f'rooms/{room_id}/blocked_users')
@@ -2495,6 +2593,15 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                 if blocked_data:
                     for nickname, data in blocked_data.items():
                         blocked_list.append(nickname)
+            except:
+                pass
+                
+            try:
+                kicked_ref = db.reference(f'rooms/{room_id}/kicked_users')
+                kicked_data = kicked_ref.get()
+                if kicked_data:
+                    for nickname, data in kicked_data.items():
+                        kicked_list.append(nickname)
             except:
                 pass
         
@@ -2515,6 +2622,13 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                 on_click=lambda e: show_blocked_users(blocked_list),
                 style=ft.ButtonStyle(bgcolor=ft.Colors.RED_50, color=ft.Colors.RED_700)
             ) if is_owner and blocked_list else ft.Text("차단된 사용자가 없습니다.", size=12, color=ft.Colors.GREY_500) if is_owner else ft.Container(),
+            ft.Text("추방된 사용자", size=14, weight=ft.FontWeight.BOLD) if is_owner else ft.Container(),
+            ft.Text(f"총 {len(kicked_list)}명", size=12, color=ft.Colors.GREY_600) if is_owner else ft.Container(),
+            ft.ElevatedButton(
+                "추방 목록 보기",
+                on_click=lambda e: show_kicked_users(kicked_list),
+                style=ft.ButtonStyle(bgcolor=ft.Colors.PURPLE_50, color=ft.Colors.PURPLE_700)
+            ) if is_owner and kicked_list else ft.Text("추방된 사용자가 없습니다.", size=12, color=ft.Colors.GREY_500) if is_owner else ft.Container(),
             ft.Divider(),
             ft.ElevatedButton(
                 "채팅방 초기화",
@@ -2593,6 +2707,64 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         )
         
         page.overlay.append(blocked_dialog)
+        page.update()
+
+    def show_kicked_users(kicked_list):
+        """추방된 사용자 목록 표시"""
+        def unkick_user_from_list(nickname):
+            unkick_user(nickname, room_id)
+            # 다이얼로그 새로고침
+            page.overlay.clear()
+            page.update()
+            # 설정 다시 열기
+            show_room_settings(None)
+
+        # 방장 권한 재확인
+        current_nickname = page.session.get('nickname') or ''
+        current_user_id = page.session.get('user_id')
+        is_owner = is_room_owner(room_id, current_nickname, current_user_id)
+
+        if not is_owner:
+            # 방장이 아니면 접근 거부
+            access_denied = ft.AlertDialog(
+                content=ft.Text("방장만 추방 목록을 볼 수 있습니다."),
+                actions=[ft.TextButton("확인", on_click=lambda e: setattr(page.dialog, 'open', False) or page.update())]
+            )
+            page.dialog = access_denied
+            page.dialog.open = True
+            page.update()
+            return
+
+        kicked_content = ft.Column([
+            ft.Text("추방된 사용자 목록", size=16, weight=ft.FontWeight.BOLD),
+            ft.Text("방장 전용 기능", size=12, color=ft.Colors.PURPLE_600),
+            ft.Divider(),
+            *[ft.Row([
+                ft.Text(nickname, size=14),
+                ft.ElevatedButton(
+                    "추방 해제",
+                    on_click=lambda e, n=nickname: unkick_user_from_list(n),
+                    style=ft.ButtonStyle(bgcolor=ft.Colors.GREEN_50, color=ft.Colors.GREEN_700)
+                )
+            ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN) for nickname in kicked_list],
+            ft.Container(height=10),
+            ft.ElevatedButton("닫기", on_click=lambda e: page.overlay.clear() or page.update())
+        ], spacing=8)
+
+        kicked_dialog = ft.Container(
+            content=ft.Container(
+                content=kicked_content,
+                bgcolor=ft.Colors.WHITE,
+                padding=20,
+                border_radius=10,
+                width=300,
+                border=ft.border.all(1, ft.Colors.GREY_300)
+            ),
+            alignment=ft.alignment.center,
+            bgcolor=ft.Colors.BLACK54
+        )
+
+        page.overlay.append(kicked_dialog)
         page.update()
     
     def clear_chat_history():
@@ -2909,3 +3081,24 @@ def is_room_owner(room_id, nickname, user_id=None):
     except Exception as e:
         print(f"방장 권한 확인 오류: {e}")
         return False
+
+def is_user_kicked(nickname, room_id):
+    """사용자가 추방되었는지 확인"""
+    try:
+        if firebase_available:
+            kicked_ref = db.reference(f'rooms/{room_id}/kicked_users/{nickname}')
+            kicked_data = kicked_ref.get()
+            return kicked_data is not None
+        return False
+    except Exception as e:
+        print(f"추방 확인 오류: {e}")
+        return False
+
+def unkick_user(nickname, room_id):
+    """사용자 추방 해제"""
+    try:
+        if firebase_available:
+            db.reference(f'rooms/{room_id}/kicked_users').child(nickname).delete()
+            print(f"사용자 {nickname} 추방 해제됨")
+    except Exception as e:
+        print(f"추방 해제 오류: {e}")
