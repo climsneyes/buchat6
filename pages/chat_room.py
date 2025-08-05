@@ -1542,6 +1542,94 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         on_change=on_target_lang_change
     )
 
+    # 식당 이름 추출 함수
+    def extract_restaurant_names(text):
+        """RAG 답변에서 식당 이름들을 추출합니다."""
+        import re
+        
+        print(f"[DEBUG] 식당 이름 추출 시작. 텍스트 길이: {len(text)}")
+        print(f"[DEBUG] 텍스트 미리보기: {text[:200]}...")
+        
+        # 다양한 패턴으로 식당 이름 추출
+        patterns = [
+            r'(?:^\*\s*)([^:\n]+?)(?:\s*:|\s*-|\s*\(|$)',  # * 식당이름: 또는 * 식당이름 (주소)
+            r'(?:1\.|2\.|3\.|4\.|5\.|6\.|7\.|8\.|9\.|10\.)\s*([^(\n:]+?)(?:\s*\([^)]*\))?(?:\s*-|\s*:|$)',  # 번호. 식당명
+            r'(?:①|②|③|④|⑤|⑥|⑦|⑧|⑨|⑩)\s*([^(\n:]+?)(?:\s*\([^)]*\))?(?:\s*-|\s*:|$)',  # ① 식당명
+            r'(?:▶|►|•|·)\s*([^(\n:]+?)(?:\s*\([^)]*\))?(?:\s*-|\s*:|$)',  # ▶ 식당명
+            r'(?:위치|주소):\s*([^,\n]+?)(?:\s|,)',  # 단순히 이름만 나오는 경우
+            r'([가-힣]{2,15}(?:집|상|점|관|원|루|각|당|국|수|밥|면|치킨|카페|베이커리))\s*(?:[:-]|\([^)]*\))',  # 한국어 식당명 패턴
+        ]
+        
+        restaurant_names = []
+        for i, pattern in enumerate(patterns):
+            matches = re.findall(pattern, text, re.MULTILINE)
+            print(f"[DEBUG] 패턴 {i+1} 결과: {matches}")
+            for match in matches:
+                name = match.strip()
+                # 불필요한 단어 제거
+                name = re.sub(r'\s*\([^)]*\)\s*', '', name)  # 괄호 내용 제거
+                name = re.sub(r'\s*-.*$', '', name)  # - 이후 내용 제거
+                name = name.strip()
+                
+                if name and len(name) > 1 and len(name) < 30:  # 너무 짧거나 긴 이름 제외
+                    # 일반적이지 않은 단어들 제외
+                    exclude_words = ['가게', '위치', '주소', '전화번호', '영업시간', '메뉴', '가격', '추천', '맛집', '부산']
+                    if not any(word in name for word in exclude_words):
+                        restaurant_names.append(name)
+        
+        # 중복 제거하면서 순서 유지
+        unique_names = []
+        for name in restaurant_names[:10]:  # 최대 10개만
+            if name not in unique_names:
+                unique_names.append(name)
+        
+        print(f"[DEBUG] 최종 추출된 식당 이름들: {unique_names}")
+        return unique_names
+
+    # Google Maps로 식당 열기 함수
+    def open_restaurant_in_maps(restaurant_name):
+        """식당을 Google Maps에서 엽니다."""
+        try:
+            import urllib.parse
+            import webbrowser
+            
+            # 검색어에 부산 추가
+            search_query = f"{restaurant_name} 부산"
+            encoded_query = urllib.parse.quote(search_query)
+            
+            # 현재 선택된 언어에 따른 Google Maps 설정
+            current_lang = page.session.get('target_language', 'ko')
+            
+            # 언어별 구글 맵 설정
+            lang_mapping = {
+                "ko": {"lang": "ko", "region": "KR", "domain": "maps.google.com"},
+                "en": {"lang": "en", "region": "US", "domain": "maps.google.com"},
+                "ja": {"lang": "ja", "region": "JP", "domain": "maps.google.co.jp"},
+                "zh": {"lang": "ko", "region": "KR", "domain": "maps.google.com"},  # 중국은 한국어 버전
+                "zh-TW": {"lang": "zh-TW", "region": "TW", "domain": "maps.google.com.tw"},
+                "vi": {"lang": "ko", "region": "KR", "domain": "maps.google.com"},  # 베트남은 한국어 버전
+                "th": {"lang": "th", "region": "TH", "domain": "maps.google.co.th"},
+                "id": {"lang": "id", "region": "ID", "domain": "maps.google.co.id"},
+                "fr": {"lang": "fr", "region": "FR", "domain": "maps.google.fr"},
+                "de": {"lang": "de", "region": "DE", "domain": "maps.google.de"},
+                "tl": {"lang": "tl", "region": "PH", "domain": "maps.google.com.ph"}
+            }
+            
+            map_config = lang_mapping.get(current_lang, lang_mapping["ko"])
+            
+            # Google Maps URL 생성
+            maps_url = f"https://{map_config['domain']}/maps/search/{encoded_query}?hl={map_config['lang']}&gl={map_config['region']}&ie=UTF8"
+            
+            # 브라우저에서 열기
+            webbrowser.open(maps_url)
+            
+            # 알림 메시지
+            page.show_snack_bar(ft.SnackBar(content=ft.Text(f"🗺️ {restaurant_name} 위치를 Google Maps에서 열고 있습니다...")))
+            
+        except Exception as e:
+            print(f"Google Maps 열기 오류: {e}")
+            page.show_snack_bar(ft.SnackBar(content=ft.Text("지도 열기 중 오류가 발생했습니다.")))
+
     def create_message_bubble(msg_data, is_me):
         # 닉네임이 '익명'이고 본문/번역문이 모두 비어있으면 말풍선 생성하지 않음
         if msg_data.get('nickname', '') == '익명' and not msg_data.get('text', '').strip() and not msg_data.get('translated', '').strip():
@@ -1627,6 +1715,60 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                     selectable=True,
                 )
             )
+        
+        # 부산 맛집 RAG 답변인 경우 식당 지도 버튼 추가
+        if is_rag and (is_busan_food_rag or room_id == "busan_food_search_rag"):
+            text_content = msg_data.get('text', '') + ' ' + msg_data.get('translated', '')
+            restaurant_names = extract_restaurant_names(text_content)
+            
+            if restaurant_names:
+                # 지도 버튼들을 담을 컨테이너 추가
+                map_buttons = []
+                for restaurant_name in restaurant_names:
+                    map_button = ft.ElevatedButton(
+                        content=ft.Row([
+                            ft.Icon(ft.Icons.MAP, size=16),
+                            ft.Text(restaurant_name[:15] + "..." if len(restaurant_name) > 15 else restaurant_name, 
+                                   size=12, weight=ft.FontWeight.W_400)
+                        ], spacing=4, alignment=ft.MainAxisAlignment.CENTER),
+                        on_click=lambda e, name=restaurant_name: open_restaurant_in_maps(name),
+                        style=ft.ButtonStyle(
+                            bgcolor=ft.Colors.BLUE_600,
+                            color=ft.Colors.WHITE,
+                            shape=ft.RoundedRectangleBorder(radius=8),
+                            padding=ft.padding.symmetric(horizontal=8, vertical=4)
+                        ),
+                        height=32,
+                        width=140 if is_mobile else 160
+                    )
+                    map_buttons.append(map_button)
+                
+                # 지도 버튼들을 2열로 배치
+                if map_buttons:
+                    button_rows = []
+                    for i in range(0, len(map_buttons), 2):
+                        row_buttons = map_buttons[i:i+2]
+                        button_rows.append(
+                            ft.Row(
+                                row_buttons, 
+                                spacing=8, 
+                                alignment=ft.MainAxisAlignment.START
+                            )
+                        )
+                    
+                    # 지도 버튼 섹션 추가
+                    controls.append(ft.Container(height=8))  # 구분선
+                    controls.append(
+                        ft.Text("🗺️ 지도에서 보기", 
+                               size=13, 
+                               color=ft.Colors.WHITE if is_me else ft.Colors.BLACK87,
+                               weight=ft.FontWeight.BOLD,
+                               font_family=font_family)
+                    )
+                    controls.append(ft.Container(height=4))
+                    for button_row in button_rows:
+                        controls.append(button_row)
+        
         # Row로 감싸서 좌/우 정렬
         return ft.Row([
             ft.Container(
