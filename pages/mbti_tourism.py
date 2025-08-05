@@ -1286,9 +1286,9 @@ def open_google_maps_directly(page, attraction_name, lang="ko"):
         "ko": "ko",
         "en": "en", 
         "ja": "ja",
-        "zh": "zh-CN",
+        "zh": "ko",  # 중국 - 한국어 버전 사용
         "zh-TW": "zh-TW",
-        "vi": "vi",
+        "vi": "ko",  # 베트남 - 한국어 버전 사용
         "th": "th",
         "id": "id",
         "fr": "fr",
@@ -1301,9 +1301,9 @@ def open_google_maps_directly(page, attraction_name, lang="ko"):
         "ko": "KR",
         "en": "US", 
         "ja": "JP",
-        "zh": "CN",
+        "zh": "KR",  # 중국 - 한국어 버전 사용
         "zh-TW": "TW",
-        "vi": "VN",
+        "vi": "KR",  # 베트남 - 한국어 버전 사용
         "th": "TH",
         "id": "ID",
         "fr": "FR",
