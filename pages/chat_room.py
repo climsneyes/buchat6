@@ -2183,9 +2183,38 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             
             # RAG 답변 추가 (더 안전한 처리)
             try:
+                # 다국어 로딩 메시지
+                loading_messages = {
+                    "ko": "답변을 생성하고 있습니다...",
+                    "en": "Generating answer...",
+                    "ja": "回答を生成しています...",
+                    "zh": "正在生成答案...",
+                    "zh-TW": "正在生成答案...",
+                    "vi": "Đang tạo câu trả lời...",
+                    "th": "กำลังสร้างคำตอบ...",
+                    "id": "Sedang membuat jawaban...",
+                    "fr": "Génération de la réponse...",
+                    "de": "Antwort wird generiert...",
+                    "tl": "Ginagawa ang sagot...",
+                    "ms": "Sedang menjana jawapan...",
+                    "pt": "Gerando resposta...",
+                    "es": "Generando respuesta...",
+                    "it": "Creazione della risposta...",
+                    "ru": "Генерация ответа...",
+                    "ar": "جاري إنشاء الإجابة...",
+                    "hi": "उत्तर बनाया जा रहा है...",
+                    "nl": "Antwoord genereren...",
+                    "sv": "Genererar svar...",
+                    "tr": "Cevap oluşturuluyor..."
+                }
+                
+                # 현재 사용자 언어에 맞는 로딩 메시지 선택
+                current_lang = user_lang if user_lang else 'ko'
+                loading_text = loading_messages.get(current_lang, loading_messages["ko"])
+                
                 # 로딩 메시지 먼저 표시 (질문 바로 아래에 위치)
                 loading_msg_data = {
-                    'text': "답변을 생성하고 있습니다...",
+                    'text': loading_text,
                     'nickname': 'RAG',
                     'timestamp': time.time(),
                     'translated': ''
@@ -2233,8 +2262,36 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                 except:
                     pass
                 page.update()
+                # 다국어 에러 메시지
+                error_messages = {
+                    "ko": f"죄송합니다. 답변을 생성하는 중 오류가 발생했습니다: {str(e)}",
+                    "en": f"Sorry. An error occurred while generating the answer: {str(e)}",
+                    "ja": f"申し訳ございません。回答を生成中にエラーが発生しました: {str(e)}",
+                    "zh": f"抱歉，生成答案时发生错误: {str(e)}",
+                    "zh-TW": f"抱歉，生成答案時發生錯誤: {str(e)}",
+                    "vi": f"Xin lỗi. Đã xảy ra lỗi khi tạo câu trả lời: {str(e)}",
+                    "th": f"ขออภัย เกิดข้อผิดพลาดขณะสร้างคำตอบ: {str(e)}",
+                    "id": f"Maaf. Terjadi kesalahan saat membuat jawaban: {str(e)}",
+                    "fr": f"Désolé. Une erreur s'est produite lors de la génération de la réponse: {str(e)}",
+                    "de": f"Entschuldigung. Bei der Antwortgenerierung ist ein Fehler aufgetreten: {str(e)}",
+                    "tl": f"Pasensya na. May naganap na error habang ginagawa ang sagot: {str(e)}",
+                    "ms": f"Maaf. Ralat berlaku semasa menjana jawapan: {str(e)}",
+                    "pt": f"Desculpe. Ocorreu um erro ao gerar a resposta: {str(e)}",
+                    "es": f"Lo siento. Ocurrió un error al generar la respuesta: {str(e)}",
+                    "it": f"Scusa. Si è verificato un errore durante la generazione della risposta: {str(e)}",
+                    "ru": f"Извините. Произошла ошибка при генерации ответа: {str(e)}",
+                    "ar": f"آسف. حدث خطأ أثناء إنشاء الإجابة: {str(e)}",
+                    "hi": f"खुशी है। उत्तर बनाते समय त्रुटि हुई: {str(e)}",
+                    "nl": f"Sorry. Er is een fout opgetreden bij het genereren van het antwoord: {str(e)}",
+                    "sv": f"Ursäkta. Ett fel uppstod när svaret genererades: {str(e)}",
+                    "tr": f"Üzgünüm. Cevap oluşturulurken hata oluştu: {str(e)}"
+                }
+                
+                current_lang = user_lang if user_lang else 'ko'
+                error_text = error_messages.get(current_lang, error_messages["ko"])
+                
                 error_msg_data = {
-                    'text': f"죄송합니다. 답변을 생성하는 중 오류가 발생했습니다: {str(e)}",
+                    'text': error_text,
                     'nickname': '시스템',
                     'timestamp': time.time(),
                     'translated': ''
@@ -2246,9 +2303,38 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         # 일반 RAG 채팅방이면 RAG 답변만 직접 추가
         elif custom_translate_message is not None:
             try:
+                # 다국어 로딩 메시지 (일반 RAG용)
+                loading_messages = {
+                    "ko": "답변을 생성하고 있습니다...",
+                    "en": "Generating answer...",
+                    "ja": "回答を生成しています...",
+                    "zh": "正在生成答案...",
+                    "zh-TW": "正在生成答案...",
+                    "vi": "Đang tạo câu trả lời...",
+                    "th": "กำลังสร้างคำตอบ...",
+                    "id": "Sedang membuat jawaban...",
+                    "fr": "Génération de la réponse...",
+                    "de": "Antwort wird generiert...",
+                    "tl": "Ginagawa ang sagot...",
+                    "ms": "Sedang menjana jawapan...",
+                    "pt": "Gerando resposta...",
+                    "es": "Generando respuesta...",
+                    "it": "Creazione della risposta...",
+                    "ru": "Генерация ответа...",
+                    "ar": "جاري إنشاء الإجابة...",
+                    "hi": "उत्तर बनाया जा रहा है...",
+                    "nl": "Antwoord genereren...",
+                    "sv": "Genererar svar...",
+                    "tr": "Cevap oluşturuluyor..."
+                }
+                
+                # 현재 사용자 언어에 맞는 로딩 메시지 선택
+                current_lang = user_lang if user_lang else 'ko'
+                loading_text = loading_messages.get(current_lang, loading_messages["ko"])
+                
                 # 로딩 메시지 먼저 표시
                 loading_msg_data = {
-                    'text': "답변을 생성하고 있습니다...",
+                    'text': loading_text,
                     'nickname': 'RAG',
                     'timestamp': time.time(),
                     'translated': ''
@@ -2289,8 +2375,36 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                 # 오류 발생 시에도 화면 업데이트
                 page.update()
                 # 오류 메시지도 표시
+                # 다국어 에러 메시지
+                error_messages = {
+                    "ko": f"죄송합니다. 답변을 생성하는 중 오류가 발생했습니다: {str(e)}",
+                    "en": f"Sorry. An error occurred while generating the answer: {str(e)}",
+                    "ja": f"申し訳ございません。回答を生成中にエラーが発生しました: {str(e)}",
+                    "zh": f"抱歉，生成答案时发生错误: {str(e)}",
+                    "zh-TW": f"抱歉，生成答案時發生錯誤: {str(e)}",
+                    "vi": f"Xin lỗi. Đã xảy ra lỗi khi tạo câu trả lời: {str(e)}",
+                    "th": f"ขออภัย เกิดข้อผิดพลาดขณะสร้างคำตอบ: {str(e)}",
+                    "id": f"Maaf. Terjadi kesalahan saat membuat jawaban: {str(e)}",
+                    "fr": f"Désolé. Une erreur s'est produite lors de la génération de la réponse: {str(e)}",
+                    "de": f"Entschuldigung. Bei der Antwortgenerierung ist ein Fehler aufgetreten: {str(e)}",
+                    "tl": f"Pasensya na. May naganap na error habang ginagawa ang sagot: {str(e)}",
+                    "ms": f"Maaf. Ralat berlaku semasa menjana jawapan: {str(e)}",
+                    "pt": f"Desculpe. Ocorreu um erro ao gerar a resposta: {str(e)}",
+                    "es": f"Lo siento. Ocurrió un error al generar la respuesta: {str(e)}",
+                    "it": f"Scusa. Si è verificato un errore durante la generazione della risposta: {str(e)}",
+                    "ru": f"Извините. Произошла ошибка при генерации ответа: {str(e)}",
+                    "ar": f"آسف. حدث خطأ أثناء إنشاء الإجابة: {str(e)}",
+                    "hi": f"खुशी है। उत्तर बनाते समय त्रुटि हुई: {str(e)}",
+                    "nl": f"Sorry. Er is een fout opgetreden bij het genereren van het antwoord: {str(e)}",
+                    "sv": f"Ursäkta. Ett fel uppstod när svaret genererades: {str(e)}",
+                    "tr": f"Üzgünüm. Cevap oluşturulurken hata oluştu: {str(e)}"
+                }
+                
+                current_lang = user_lang if user_lang else 'ko'
+                error_text = error_messages.get(current_lang, error_messages["ko"])
+                
                 error_msg_data = {
-                    'text': f"죄송합니다. 답변을 생성하는 중 오류가 발생했습니다: {str(e)}",
+                    'text': error_text,
                     'nickname': '시스템',
                     'timestamp': time.time(),
                     'translated': ''
