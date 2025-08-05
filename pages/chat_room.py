@@ -1683,13 +1683,18 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             search_query = f"{restaurant_name} 부산"
             encoded_query = urllib.parse.quote(search_query)
             
-            # 현재 선택된 언어에 따른 Google Maps 설정
+            # 부산 맛집 RAG 방에서는 사용자 언어 사용, 일반 채팅방에서는 대상 언어 사용
             try:
-                current_lang = page.session.get('target_language') or 'ko'
+                if is_busan_food_rag or room_id == "busan_food_search_rag":
+                    # 부산 맛집: 사용자의 모국어로 지도 표시
+                    current_lang = user_lang or 'ko'
+                else:
+                    # 일반 채팅방: 번역 대상 언어로 지도 표시
+                    current_lang = page.session.get('target_language') or target_lang or 'ko'
             except:
-                current_lang = target_lang or 'ko'
+                current_lang = user_lang or 'ko'
             
-            # 언어별 구글 맵 설정
+            # 언어별 구글 맵 설정 (부산 맛집용)
             lang_mapping = {
                 "ko": {"lang": "ko", "region": "KR", "domain": "maps.google.com"},
                 "en": {"lang": "en", "region": "US", "domain": "maps.google.com"},
@@ -1701,7 +1706,17 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                 "id": {"lang": "id", "region": "ID", "domain": "maps.google.co.id"},
                 "fr": {"lang": "fr", "region": "FR", "domain": "maps.google.fr"},
                 "de": {"lang": "de", "region": "DE", "domain": "maps.google.de"},
-                "tl": {"lang": "tl", "region": "PH", "domain": "maps.google.com.ph"}
+                "tl": {"lang": "tl", "region": "PH", "domain": "maps.google.com.ph"},
+                "ms": {"lang": "ms", "region": "MY", "domain": "maps.google.com.my"},  # 말레이시아
+                "pt": {"lang": "pt", "region": "BR", "domain": "maps.google.com.br"},  # 포르투갈어(브라질)
+                "es": {"lang": "es", "region": "ES", "domain": "maps.google.es"},  # 스페인어
+                "it": {"lang": "it", "region": "IT", "domain": "maps.google.it"},  # 이탈리아어
+                "ru": {"lang": "ru", "region": "RU", "domain": "maps.google.ru"},  # 러시아어
+                "ar": {"lang": "ar", "region": "SA", "domain": "maps.google.com.sa"},  # 아랍어
+                "hi": {"lang": "hi", "region": "IN", "domain": "maps.google.co.in"},  # 힌디어(인도)
+                "nl": {"lang": "nl", "region": "NL", "domain": "maps.google.nl"},  # 네덜란드어
+                "sv": {"lang": "sv", "region": "SE", "domain": "maps.google.se"},  # 스웨덴어
+                "tr": {"lang": "tr", "region": "TR", "domain": "maps.google.com.tr"}  # 터키어
             }
             
             map_config = lang_mapping.get(current_lang, lang_mapping["ko"])
@@ -1709,13 +1724,14 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             # Google Maps URL 생성
             maps_url = f"https://{map_config['domain']}/maps/search/{encoded_query}?hl={map_config['lang']}&gl={map_config['region']}&ie=UTF8"
             
-            print(f"🗺️ {restaurant_name} Google Maps 열기: {maps_url}")
+            print(f"🗺️ [{current_lang}] {restaurant_name} Google Maps: {maps_url}")
+            print(f"   도메인: {map_config['domain']}, 언어: {map_config['lang']}, 지역: {map_config['region']}")
             
             # 브라우저에서 열기
             webbrowser.open(maps_url)
             
             # 알림 메시지 (snack_bar 사용하지 않고 콘솔 출력)
-            print(f"🗺️ {restaurant_name} 위치를 Google Maps에서 열고 있습니다...")
+            print(f"🗺️ {restaurant_name} 위치를 {map_config['domain']}에서 열고 있습니다...")
             
         except Exception as e:
             print(f"Google Maps 열기 오류: {e}")
