@@ -1572,16 +1572,39 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                 name = name.strip()
                 
                 if name and len(name) > 1 and len(name) < 30:  # 너무 짧거나 긴 이름 제외
-                    # 일반적이지 않은 단어들 제외
-                    exclude_words = ['가게', '위치', '주소', '전화번호', '영업시간', '메뉴', '가격', '추천', '맛집', '부산']
+                    # 일반적이지 않은 단어들 제외 (더 포괄적으로)
+                    exclude_words = [
+                        '가게', '위치', '주소', '전화번호', '영업시간', '메뉴', '가격', '추천', '맛집', '부산',
+                        '특징', '전화', '영업시간', '메뉴', '가격', '추천', '설명', '안내', '정보',
+                        '금정구', '기장군', '강서구', '해운대구', '부산진구', '동래구', '남구', '북구',
+                        '사상구', '사하구', '서구', '수영구', '연제구', '영도구', '중구', '동구'
+                    ]
                     if not any(word in name for word in exclude_words):
                         restaurant_names.append(name)
         
-        # 중복 제거하면서 순서 유지
-        unique_names = []
-        for name in restaurant_names[:10]:  # 최대 10개만
-            if name not in unique_names:
-                unique_names.append(name)
+        # 패턴 2 결과를 우선적으로 사용 (번호. 식당명 패턴이 가장 정확함)
+        pattern_2_results = []
+        if len(patterns) > 1:
+            matches = re.findall(patterns[1], text, re.MULTILINE)  # 패턴 2 = 번호. 식당명
+            for match in matches:
+                name = match.strip()
+                name = re.sub(r'\s*\([^)]*\)\s*', '', name)
+                name = re.sub(r'\s*-.*$', '', name)
+                name = name.strip()
+                if name and len(name) > 2 and len(name) < 30:
+                    pattern_2_results.append(name)
+        
+        print(f"[DEBUG] 패턴 2 (번호 형식) 결과 정제: {pattern_2_results}")
+        
+        # 패턴 2 결과가 있으면 우선 사용, 없으면 다른 패턴 결과 사용
+        if pattern_2_results:
+            unique_names = pattern_2_results[:8]  # 최대 8개
+        else:
+            # 중복 제거하면서 순서 유지
+            unique_names = []
+            for name in restaurant_names[:10]:  # 최대 10개만
+                if name not in unique_names and len(name) > 2:
+                    unique_names.append(name)
         
         print(f"[DEBUG] 최종 추출된 식당 이름들: {unique_names}")
         return unique_names
