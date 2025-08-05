@@ -1598,7 +1598,10 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             encoded_query = urllib.parse.quote(search_query)
             
             # 현재 선택된 언어에 따른 Google Maps 설정
-            current_lang = page.session.get('target_language', 'ko')
+            try:
+                current_lang = page.session.get('target_language') or 'ko'
+            except:
+                current_lang = target_lang or 'ko'
             
             # 언어별 구글 맵 설정
             lang_mapping = {
@@ -1620,15 +1623,17 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             # Google Maps URL 생성
             maps_url = f"https://{map_config['domain']}/maps/search/{encoded_query}?hl={map_config['lang']}&gl={map_config['region']}&ie=UTF8"
             
+            print(f"🗺️ {restaurant_name} Google Maps 열기: {maps_url}")
+            
             # 브라우저에서 열기
             webbrowser.open(maps_url)
             
-            # 알림 메시지
-            page.show_snack_bar(ft.SnackBar(content=ft.Text(f"🗺️ {restaurant_name} 위치를 Google Maps에서 열고 있습니다...")))
+            # 알림 메시지 (snack_bar 사용하지 않고 콘솔 출력)
+            print(f"🗺️ {restaurant_name} 위치를 Google Maps에서 열고 있습니다...")
             
         except Exception as e:
             print(f"Google Maps 열기 오류: {e}")
-            page.show_snack_bar(ft.SnackBar(content=ft.Text("지도 열기 중 오류가 발생했습니다.")))
+            print("지도 열기 중 오류가 발생했습니다.")
 
     def create_message_bubble(msg_data, is_me):
         # 닉네임이 '익명'이고 본문/번역문이 모두 비어있으면 말풍선 생성하지 않음

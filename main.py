@@ -1210,4 +1210,4 @@ def main(page: ft.Page):
     page.go(page.route)
 
 if __name__ == "__main__":
-    ft.app(target=main, port=8015, view=ft.WEB_BROWSER)
+    ft.app(target=main, port=8016, view=ft.WEB_BROWSER)
