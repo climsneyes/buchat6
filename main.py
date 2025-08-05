@@ -637,7 +637,7 @@ def main(page: ft.Page):
         texts = FIND_ROOM_TEXTS.get(lang, FIND_ROOM_TEXTS["ko"])
         page.views.clear()
         # 사용자별 고유 RAG 방 ID 생성 (UUID 사용)
-        user_id = page.session.get("user_id")
+        user_id = page.session.get("user_id") or None
         if not user_id:
             user_id = str(uuid.uuid4())
             page.session.set("user_id", user_id)
@@ -787,7 +787,7 @@ def main(page: ft.Page):
         
         # RAG 채팅방인지 확인 (공용 RAG_ROOM_ID로 들어오면, 사용자별로 리다이렉트)
         if room_id == RAG_ROOM_ID or room_id.startswith(RAG_ROOM_ID):
-            user_id = page.session.get("user_id")
+            user_id = page.session.get("user_id") or None
             if not user_id:
                 user_id = str(uuid.uuid4())
                 page.session.set("user_id", user_id)
@@ -934,7 +934,7 @@ def main(page: ft.Page):
                 # 대화 컨텍스트를 저장할 변수 (쓰레기 처리 관련 정보 유지) - 세션에 저장하여 지속
                 if not page.session.contains_key('conversation_context'):
                     page.session.set('conversation_context', {'waste_query': None, 'waste_district': None})
-                conversation_context = page.session.get('conversation_context')
+                conversation_context = page.session.get('conversation_context') or []
                 
                 def multicultural_rag_answer(query, target_lang):
                     try:
@@ -1082,7 +1082,7 @@ def main(page: ft.Page):
         def on_share_clicked(e):
             print(f"--- DEBUG: 공유 버튼 클릭됨 ---")
             show_qr_dialog(room_id, room_title)
-        if not page.session.get("nickname"):
+        if not (page.session.get("nickname") or ""):
             # 닉네임 입력 화면 다국어 지원
             texts = NICKNAME_TEXTS.get(lang, NICKNAME_TEXTS["ko"])
             nickname_value = ""

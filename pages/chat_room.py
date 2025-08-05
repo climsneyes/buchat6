@@ -1454,7 +1454,7 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
     header_padding = 12 if is_mobile else 16
     
     # --- 추방 사용자 체크 ---
-    current_nickname = page.session.get('nickname', '')
+    current_nickname = page.session.get('nickname') or ''
     if current_nickname and is_user_kicked(current_nickname, room_id):
         # 추방된 사용자라면 접근 차단
         return ft.View(
@@ -1743,7 +1743,7 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         if not is_me and nickname not in ['시스템', 'RAG', '익명']:
             # 방장 권한 확인
             current_nickname = page.session.get('nickname') or ''
-            current_user_id = page.session.get('user_id')
+            current_user_id = page.session.get('user_id') or None or None
             if is_room_owner(room_id, current_nickname, current_user_id):
                 # 차단과 추방 버튼을 함께 표시
                 block_button = ft.Row([
@@ -2088,7 +2088,7 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
 
     # --- 퇴장 감지용(페이지 언로드) ---
     def on_exit():
-        nickname = page.session.get('nickname')
+        nickname = page.session.get('nickname') or ''
         if nickname and nickname in current_users:
             leave_text = f"{nickname}님이 채팅방을 나가셨습니다."
             chat_messages.controls.append(create_system_message_bubble(leave_text))
@@ -2101,7 +2101,7 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         if not input_box.value or not input_box.value.strip():
             return
         message_text = input_box.value.strip()
-        nickname = page.session.get('nickname') or '익명'
+        nickname = page.session.get('nickname') or '' or '익명'
         
         # 부적절한 메시지 체크
         is_inappropriate, reason = is_inappropriate_message(message_text)
@@ -2580,7 +2580,7 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         
         # 방장 권한 확인
         current_nickname = page.session.get('nickname') or ''
-        current_user_id = page.session.get('user_id')
+        current_user_id = page.session.get('user_id') or None
         is_owner = is_room_owner(room_id, current_nickname, current_user_id)
         
         # 차단된 사용자 목록 가져오기 (방장만)
@@ -2666,7 +2666,7 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         
         # 방장 권한 재확인
         current_nickname = page.session.get('nickname') or ''
-        current_user_id = page.session.get('user_id')
+        current_user_id = page.session.get('user_id') or None
         is_owner = is_room_owner(room_id, current_nickname, current_user_id)
         
         if not is_owner:
@@ -2721,7 +2721,7 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
 
         # 방장 권한 재확인
         current_nickname = page.session.get('nickname') or ''
-        current_user_id = page.session.get('user_id')
+        current_user_id = page.session.get('user_id') or None
         is_owner = is_room_owner(room_id, current_nickname, current_user_id)
 
         if not is_owner:
@@ -2771,7 +2771,7 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         """채팅 기록 초기화"""
         # 방장 권한 확인
         current_nickname = page.session.get('nickname') or ''
-        current_user_id = page.session.get('user_id')
+        current_user_id = page.session.get('user_id') or None
         is_owner = is_room_owner(room_id, current_nickname, current_user_id)
         
         if not is_owner:
@@ -2979,7 +2979,7 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
 
     # --- 채팅방 입장 시 시스템 메시지 push 함수 ---
     def push_join_system_message():
-        nickname = page.session.get('nickname')
+        nickname = page.session.get('nickname') or ''
         if not (firebase_available and nickname and nickname not in ['익명', 'RAG', '시스템']):
             return
         try:
