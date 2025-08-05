@@ -853,7 +853,21 @@ def main(page: ft.Page):
                         print(f"타겟 언어: {target_lang}")
                         if busan_food_json_data is None or taek_sulling_json_data is None:
                             print("부산 맛집 JSON 데이터가 None입니다.")
-                            return "죄송합니다. 부산 맛집 검색 기능이 현재 사용할 수 없습니다. (JSON 데이터가 로드되지 않았습니다.)"
+                            # 다국어 오류 메시지
+                            error_messages = {
+                                "ko": "죄송합니다. 부산 맛집 검색 기능이 현재 사용할 수 없습니다. (JSON 데이터가 로드되지 않았습니다.)",
+                                "en": "Sorry, the Busan restaurant search function is currently unavailable. (JSON data not loaded.)",
+                                "vi": "Xin lỗi, chức năng tìm kiếm nhà hàng Busan hiện không khả dụng. (Dữ liệu JSON chưa được tải.)",
+                                "zh": "抱歉，釜山美食搜索功能目前不可用。（JSON数据未加载。）",
+                                "ja": "申し訳ございません。釜山レストラン検索機能は現在利用できません。（JSONデータが読み込まれていません。）",
+                                "th": "ขออภัย ฟีเจอร์ค้นหาร้านอาหารปูซานไม่สามารถใช้งานได้ในขณะนี้ (ข้อมูล JSON ยังไม่ได้โหลด)",
+                                "id": "Maaf, fitur pencarian restoran Busan saat ini tidak tersedia. (Data JSON belum dimuat.)",
+                                "tl": "Paumanhin, ang Busan restaurant search feature ay hindi available ngayon. (Hindi pa na-load ang JSON data.)",
+                                "fr": "Désolé, la fonction de recherche de restaurants de Busan n'est pas disponible actuellement. (Données JSON non chargées.)",
+                                "de": "Entschuldigung, die Busan-Restaurant-Suchfunktion ist derzeit nicht verfügbar. (JSON-Daten nicht geladen.)",
+                                "tw": "抱歉，釜山美食搜尋功能目前無法使用。（JSON資料未載入。）"
+                            }
+                            return error_messages.get(target_lang, error_messages["ko"])
                         
                         result = answer_with_busan_food_json(query, busan_food_json_data, taek_sulling_json_data, GEMINI_API_KEY, target_lang=target_lang)
                         print(f"JSON 기반 답변 생성 완료: {len(result)} 문자")
@@ -862,7 +876,21 @@ def main(page: ft.Page):
                         print(f"부산 맛집 JSON 기반 답변 오류: {e}")
                         import traceback
                         traceback.print_exc()
-                        return "죄송합니다. 부산 맛집 정보를 처리하는 중에 오류가 발생했습니다."
+                        # 다국어 오류 메시지
+                        error_messages = {
+                            "ko": "죄송합니다. 부산 맛집 정보를 처리하는 중에 오류가 발생했습니다.",
+                            "en": "Sorry, an error occurred while processing Busan restaurant information.",
+                            "vi": "Xin lỗi, đã xảy ra lỗi khi xử lý thông tin nhà hàng Busan.",
+                            "zh": "抱歉，处理釜山餐厅信息时发生错误。",
+                            "ja": "申し訳ございません。釜山レストラン情報の処理中にエラーが発生しました。",
+                            "th": "ขออภัย เกิดข้อผิดพลาดขณะประมวลผลข้อมูลร้านอาหารปูซาน",
+                            "id": "Maaf, terjadi kesalahan saat memproses informasi restoran Busan.",
+                            "tl": "Paumanhin, nagkaroon ng error habang pinoproseso ang impormasyon ng restaurant sa Busan.",
+                            "fr": "Désolé, une erreur s'est produite lors du traitement des informations sur les restaurants de Busan.",
+                            "de": "Entschuldigung, beim Verarbeiten der Busan-Restaurant-Informationen ist ein Fehler aufgetreten.",
+                            "tw": "抱歉，處理釜山餐廳資訊時發生錯誤。"
+                        }
+                        return error_messages.get(target_lang, error_messages["ko"])
                 
                 page.views.append(ChatRoomPage(
                     page,
@@ -898,14 +926,42 @@ def main(page: ft.Page):
                             # 쓰레기 처리 관련 질문이면 다문화가족 벡터DB 사용
                             if vector_db_multicultural is None:
                                 print("다문화가족 벡터DB가 None입니다.")
-                                return "죄송합니다. RAG 기능이 현재 사용할 수 없습니다. (다문화가족 벡터DB가 로드되지 않았습니다.)"
+                                # 다국어 오류 메시지
+                                error_messages = {
+                                    "ko": "죄송합니다. RAG 기능이 현재 사용할 수 없습니다. (다문화가족 벡터DB가 로드되지 않았습니다.)",
+                                    "en": "Sorry, the RAG function is currently unavailable. (Multicultural family vector database not loaded.)",
+                                    "vi": "Xin lỗi, chức năng RAG hiện không khả dụng. (Cơ sở dữ liệu vector gia đình đa văn hóa chưa được tải.)",
+                                    "zh": "抱歉，RAG功能目前不可用。（多文化家庭向量数据库未加载。）",
+                                    "ja": "申し訳ございません。RAG機能は現在利用できません。（多文化家族ベクターデータベースが読み込まれていません。）",
+                                    "th": "ขออภัย ฟังก์ชัน RAG ไม่สามารถใช้งานได้ในขณะนี้ (ฐานข้อมูลเวกเตอร์ครอบครัวพหุวัฒนธรรมยังไม่ได้โหลด)",
+                                    "id": "Maaf, fungsi RAG saat ini tidak tersedia. (Database vektor keluarga multikultural belum dimuat.)",
+                                    "tl": "Paumanhin, ang RAG function ay hindi available ngayon. (Hindi pa na-load ang multicultural family vector database.)",
+                                    "fr": "Désolé, la fonction RAG n'est pas disponible actuellement. (Base de données vectorielle des familles multiculturelles non chargée.)",
+                                    "de": "Entschuldigung, die RAG-Funktion ist derzeit nicht verfügbar. (Multikulturelle Familien-Vektordatenbank nicht geladen.)",
+                                    "tw": "抱歉，RAG功能目前無法使用。（多文化家庭向量資料庫未載入。）"
+                                }
+                                return error_messages.get(target_lang, error_messages["ko"])
                             print(f"쓰레기 처리 질문 - 다문화가족 벡터DB 사용")
                             result = answer_with_langgraph_rag(query, vector_db_multicultural, GEMINI_API_KEY, target_lang=target_lang)
                         else:
                             # 일반 외국인 근로자 관련 질문이면 외국인 근로자 벡터DB 사용
                             if vector_db_foreign_worker is None:
                                 print("외국인 권리구제 벡터DB가 None입니다.")
-                                return "죄송합니다. RAG 기능이 현재 사용할 수 없습니다. (외국인 권리구제 벡터DB가 로드되지 않았습니다.)"
+                                # 다국어 오류 메시지
+                                error_messages = {
+                                    "ko": "죄송합니다. RAG 기능이 현재 사용할 수 없습니다. (외국인 권리구제 벡터DB가 로드되지 않았습니다.)",
+                                    "en": "Sorry, the RAG function is currently unavailable. (Foreign worker rights vector database not loaded.)",
+                                    "vi": "Xin lỗi, chức năng RAG hiện không khả dụng. (Cơ sở dữ liệu vector quyền lợi người lao động nước ngoài chưa được tải.)",
+                                    "zh": "抱歉，RAG功能目前不可用。（外国工人权益向量数据库未加载。）",
+                                    "ja": "申し訳ございません。RAG機能は現在利用できません。（外国人労働者権利ベクターデータベースが読み込まれていません。）",
+                                    "th": "ขออภัย ฟังก์ชัน RAG ไม่สามารถใช้งานได้ในขณะนี้ (ฐานข้อมูลเวกเตอร์สิทธิแรงงานต่างชาติยังไม่ได้โหลด)",
+                                    "id": "Maaf, fungsi RAG saat ini tidak tersedia. (Database vektor hak pekerja asing belum dimuat.)",
+                                    "tl": "Paumanhin, ang RAG function ay hindi available ngayon. (Hindi pa na-load ang foreign worker rights vector database.)",
+                                    "fr": "Désolé, la fonction RAG n'est pas disponible actuellement. (Base de données vectorielle des droits des travailleurs étrangers non chargée.)",
+                                    "de": "Entschuldigung, die RAG-Funktion ist derzeit nicht verfügbar. (Ausländische Arbeitnehmerrechte-Vektordatenbank nicht geladen.)",
+                                    "tw": "抱歉，RAG功能目前無法使用。（外國工人權益向量資料庫未載入。）"
+                                }
+                                return error_messages.get(target_lang, error_messages["ko"])
                             print(f"외국인 근로자 질문 - 외국인 근로자 벡터DB 사용")
                             result = answer_with_langgraph_rag(query, vector_db_foreign_worker, GEMINI_API_KEY, target_lang=target_lang)
                         
@@ -915,7 +971,21 @@ def main(page: ft.Page):
                         print(f"외국인 근로자 RAG 오류: {e}")
                         import traceback
                         traceback.print_exc()
-                        return "죄송합니다. 외국인 근로자 권리구제 정보를 찾을 수 없습니다."
+                        # 다국어 오류 메시지
+                        error_messages = {
+                            "ko": "죄송합니다. 외국인 근로자 권리구제 정보를 찾을 수 없습니다.",
+                            "en": "Sorry, foreign worker rights information could not be found.",
+                            "vi": "Xin lỗi, không thể tìm thấy thông tin quyền lợi người lao động nước ngoài.",
+                            "zh": "抱歉，找不到外国工人权益信息。",
+                            "ja": "申し訳ございません。外国人労働者の権利救済情報が見つかりませんでした。",
+                            "th": "ขออภัย ไม่พบข้อมูลสิทธิแรงงานต่างชาติ",
+                            "id": "Maaf, informasi hak pekerja asing tidak dapat ditemukan.",
+                            "tl": "Paumanhin, hindi nahanap ang impormasyon ng mga karapatan ng foreign worker.",
+                            "fr": "Désolé, les informations sur les droits des travailleurs étrangers n'ont pas pu être trouvées.",
+                            "de": "Entschuldigung, Informationen zu Ausländerrechten konnten nicht gefunden werden.",
+                            "tw": "抱歉，找不到外國工人權益資訊。"
+                        }
+                        return error_messages.get(target_lang, error_messages["ko"])
                 
                 page.views.append(ChatRoomPage(
                     page,
@@ -942,7 +1012,21 @@ def main(page: ft.Page):
                         print(f"타겟 언어: {target_lang}")
                         if vector_db_multicultural is None:
                             print("다문화가족 벡터DB가 None입니다.")
-                            return "죄송합니다. RAG 기능이 현재 사용할 수 없습니다. (다문화가족 벡터DB가 로드되지 않았습니다.)"
+                            # 다국어 오류 메시지
+                            error_messages = {
+                                "ko": "죄송합니다. RAG 기능이 현재 사용할 수 없습니다. (다문화가족 벡터DB가 로드되지 않았습니다.)",
+                                "en": "Sorry, the RAG function is currently unavailable. (Multicultural family vector database not loaded.)",
+                                "vi": "Xin lỗi, chức năng RAG hiện không khả dụng. (Cơ sở dữ liệu vector gia đình đa văn hóa chưa được tải.)",
+                                "zh": "抱歉，RAG功能目前不可用。（多文化家庭向量数据库未加载。）",
+                                "ja": "申し訳ございません。RAG機能は現在利用できません。（多文化家族ベクターデータベースが読み込まれていません。）",
+                                "th": "ขออภัย ฟังก์ชัน RAG ไม่สามารถใช้งานได้ในขณะนี้ (ฐานข้อมูลเวกเตอร์ครอบครัวพหุวัฒนธรรมยังไม่ได้โหลด)",
+                                "id": "Maaf, fungsi RAG saat ini tidak tersedia. (Database vektor keluarga multikultural belum dimuat.)",
+                                "tl": "Paumanhin, ang RAG function ay hindi available ngayon. (Hindi pa na-load ang multicultural family vector database.)",
+                                "fr": "Désolé, la fonction RAG n'est pas disponible actuellement. (Base de données vectorielle des familles multiculturelles non chargée.)",
+                                "de": "Entschuldigung, die RAG-Funktion ist derzeit nicht verfügbar. (Multikulturelle Familien-Vektordatenbank nicht geladen.)",
+                                "tw": "抱歉，RAG功能目前無法使用。（多文化家庭向量資料庫未載入。）"
+                            }
+                            return error_messages.get(target_lang, error_messages["ko"])
                         print(f"다문화가족 벡터DB 문서 수: {len(vector_db_multicultural.documents) if hasattr(vector_db_multicultural, 'documents') else '알 수 없음'}")
                         
                         # 쓰레기 처리 관련 질문 확인
@@ -1034,13 +1118,55 @@ def main(page: ft.Page):
                                             print(f"구별 쓰레기 처리 정보 제공 완료: {len(result)} 문자")
                                             return result
                                         else:
-                                            return f"{district}의 쓰레기 처리 정보가 데이터에 없습니다. 해당 구청에 직접 문의해 주세요."
+                                            # 다국어 오류 메시지
+                                            error_messages = {
+                                                "ko": f"{district}의 쓰레기 처리 정보가 데이터에 없습니다. 해당 구청에 직접 문의해 주세요.",
+                                                "en": f"Waste disposal information for {district} is not available in the data. Please contact the district office directly.",
+                                                "vi": f"Thông tin xử lý rác thải của {district} không có trong dữ liệu. Vui lòng liên hệ trực tiếp với văn phòng quận.",
+                                                "zh": f"{district}的垃圾处理信息在数据中不可用。请直接联系区政府。",
+                                                "ja": f"{district}のゴミ処理情報はデータにありません。該当区役所に直接お問い合わせください。",
+                                                "th": f"ข้อมูลการจัดการขยะของ{district}ไม่มีในฐานข้อมูล กรุณาติดต่อสำนักงานเขตโดยตรง",
+                                                "id": f"Informasi pembuangan limbah untuk {district} tidak tersedia dalam data. Silakan hubungi kantor distrik secara langsung.",
+                                                "tl": f"Ang impormasyon ng pagtatapon ng basura para sa {district} ay hindi available sa data. Mangyaring makipag-ugnayan sa district office nang direkta.",
+                                                "fr": f"Les informations sur l'élimination des déchets pour {district} ne sont pas disponibles dans les données. Veuillez contacter directement le bureau du district.",
+                                                "de": f"Informationen zur Abfallentsorgung für {district} sind in den Daten nicht verfügbar. Bitte wenden Sie sich direkt an das Bezirksamt.",
+                                                "tw": f"{district}的垃圾處理資訊在資料中不可用。請直接聯繫區政府。"
+                                            }
+                                            return error_messages.get(target_lang, error_messages["ko"])
                                     else:
                                         print("부산광역시_쓰레기처리정보.json 파일이 없습니다.")
-                                        return "쓰레기 처리 정보 파일을 찾을 수 없습니다."
+                                        # 다국어 오류 메시지
+                                        error_messages = {
+                                            "ko": "쓰레기 처리 정보 파일을 찾을 수 없습니다.",
+                                            "en": "Waste disposal information file could not be found.",
+                                            "vi": "Không thể tìm thấy tệp thông tin xử lý rác thải.",
+                                            "zh": "找不到垃圾处理信息文件。",
+                                            "ja": "ゴミ処理情報ファイルが見つかりませんでした。",
+                                            "th": "ไม่พบไฟล์ข้อมูลการจัดการขยะ",
+                                            "id": "File informasi pembuangan limbah tidak dapat ditemukan.",
+                                            "tl": "Hindi nahanap ang file ng impormasyon ng pagtatapon ng basura.",
+                                            "fr": "Le fichier d'informations sur l'élimination des déchets n'a pas pu être trouvé.",
+                                            "de": "Die Informationsdatei zur Abfallentsorgung konnte nicht gefunden werden.",
+                                            "tw": "找不到垃圾處理資訊檔案。"
+                                        }
+                                        return error_messages.get(target_lang, error_messages["ko"])
                                 except Exception as json_error:
                                     print(f"JSON 파일 읽기 오류: {json_error}")
-                                    return "쓰레기 처리 정보를 읽는 중 오류가 발생했습니다."
+                                    # 다국어 오류 메시지
+                                    error_messages = {
+                                        "ko": "쓰레기 처리 정보를 읽는 중 오류가 발생했습니다.",
+                                        "en": "An error occurred while reading waste disposal information.",
+                                        "vi": "Đã xảy ra lỗi khi đọc thông tin xử lý rác thải.",
+                                        "zh": "读取垃圾处理信息时发生错误。",
+                                        "ja": "ゴミ処理情報の読み取り中にエラーが発生しました。",
+                                        "th": "เกิดข้อผิดพลาดขณะอ่านข้อมูลการจัดการขยะ",
+                                        "id": "Terjadi kesalahan saat membaca informasi pembuangan limbah.",
+                                        "tl": "Nagkaroon ng error habang binabasa ang impormasyon ng pagtatapon ng basura.",
+                                        "fr": "Une erreur s'est produite lors de la lecture des informations sur l'élimination des déchets.",
+                                        "de": "Beim Lesen der Abfallentsorgungsinformationen ist ein Fehler aufgetreten.",
+                                        "tw": "讀取垃圾處理資訊時發生錯誤。"
+                                    }
+                                    return error_messages.get(target_lang, error_messages["ko"])
                             else:
                                 # 구군명이 없으면 구군 선택 요청
                                 return get_district_selection_prompt(target_lang)
@@ -1054,7 +1180,21 @@ def main(page: ft.Page):
                         print(f"다문화 가족 RAG 오류: {e}")
                         import traceback
                         traceback.print_exc()
-                        return "죄송합니다. 다문화 가족 한국생활 안내 정보를 찾을 수 없습니다."
+                        # 다국어 오류 메시지
+                        error_messages = {
+                            "ko": "죄송합니다. 다문화 가족 한국생활 안내 정보를 찾을 수 없습니다.",
+                            "en": "Sorry, multicultural family life guidance information could not be found.",
+                            "vi": "Xin lỗi, không thể tìm thấy thông tin hướng dẫn cuộc sống cho gia đình đa văn hóa.",
+                            "zh": "抱歉，找不到多文化家庭生活指导信息。",
+                            "ja": "申し訳ございません。多文化家族の韓国生活案内情報が見つかりませんでした。",
+                            "th": "ขออภัย ไม่พบข้อมูลคำแนะนำการใช้ชีวิตสำหรับครอบครัวพหุวัฒนธรรม",
+                            "id": "Maaf, informasi panduan hidup keluarga multikultural tidak dapat ditemukan.",
+                            "tl": "Paumanhin, hindi nahanap ang impormasyon ng gabay sa pamumuhay para sa multicultural family.",
+                            "fr": "Désolé, les informations de guide de vie pour les familles multiculturelles n'ont pas pu être trouvées.",
+                            "de": "Entschuldigung, Informationen zum Lebensleitfaden für multikulturelle Familien konnten nicht gefunden werden.",
+                            "tw": "抱歉，找不到多文化家庭生活指導資訊。"
+                        }
+                        return error_messages.get(target_lang, error_messages["ko"])
                 
                 page.views.append(ChatRoomPage(
                     page,

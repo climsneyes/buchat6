@@ -1455,7 +1455,7 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
     
     # --- 추방 사용자 체크 ---
     current_nickname = page.session.get('nickname') or ''
-    if current_nickname and is_user_kicked(current_nickname, room_id):
+    if current_nickname and is_user_kicked(current_nickname, room_id, firebase_available):
         # 추방된 사용자라면 접근 차단
         return ft.View(
             f"/kicked/{room_id}",
@@ -1547,8 +1547,9 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         ("en", "🇺🇸 English"),
         ("ja", "🇯🇵 Japanese"),
         ("zh", "🇨🇳 Chinese"),
-        ("zh-TW", "🇹🇼 Taiwanese"),
+        ("tw", "🇹🇼 Taiwanese"),
         ("id", "🇮🇩 Indonesian"),
+        ("tl", "🇵🇭 Tagalog"),
         ("ms", "🇲🇾 Malay"),
         ("ta", "🇮🇳 Tamil"),
         ("fr", "🇫🇷 French"),
@@ -1577,100 +1578,58 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
 
     # 식당 이름 추출 함수
     def extract_restaurant_names(text):
-        """RAG 답변에서 식당 이름들을 추출합니다."""
-        import re
+        """RAG 답변에서 식당 이름들을 JSON 데이터베이스와 매칭하여 추출합니다."""
+        import json
+        import os
         
-        print(f"[DEBUG] 식당 이름 추출 시작. 텍스트 길이: {len(text)}")
-        print(f"[DEBUG] 텍스트 미리보기: {text[:200]}...")
-        
-        # 다양한 패턴으로 식당 이름 추출
-        patterns = [
-            r'(?:^\*\s*)([^:\n]+?)(?:\s*:|\s*-|\s*\(|$)',  # * 식당이름: 또는 * 식당이름 (주소)
-            r'(?:1\.|2\.|3\.|4\.|5\.|6\.|7\.|8\.|9\.|10\.)\s*([^(\n:]+?)(?:\s*\([^)]*\))?(?:\s*-|\s*:|$)',  # 번호. 식당명
-            r'(?:①|②|③|④|⑤|⑥|⑦|⑧|⑨|⑩)\s*([^(\n:]+?)(?:\s*\([^)]*\))?(?:\s*-|\s*:|$)',  # ① 식당명
-            r'(?:▶|►|•|·)\s*([^(\n:]+?)(?:\s*\([^)]*\))?(?:\s*-|\s*:|$)',  # ▶ 식당명
-            r'(?:위치|주소):\s*([^,\n]+?)(?:\s|,)',  # 단순히 이름만 나오는 경우
-            r'([가-힣]{2,15}(?:집|상|점|관|원|루|각|당|국|수|밥|면|치킨|카페|베이커리))\s*(?:[:-]|\([^)]*\))',  # 한국어 식당명 패턴
-            r'^\*\s*([가-힣\s]{3,20})(?:\s*\([^)]*\))?$',  # * 로 시작하는 식당명 (더 포괄적)
-            r'(\S+(?:식당|맛집|횟집|갈비|찜|탕|국밥|냉면|회|치킨|피자|카페|베이커리|빵집))\s*(?:\(|:|-)',  # 식당 관련 키워드가 포함된 이름
-        ]
-        
-        restaurant_names = []
-        for i, pattern in enumerate(patterns):
-            matches = re.findall(pattern, text, re.MULTILINE)
-            print(f"[DEBUG] 패턴 {i+1} 결과: {matches}")
-            for match in matches:
-                name = match.strip()
-                # 불필요한 단어 제거
-                name = re.sub(r'\s*\([^)]*\)\s*', '', name)  # 괄호 내용 제거
-                name = re.sub(r'\s*-.*$', '', name)  # - 이후 내용 제거
-                name = name.strip()
+        try:
+            # JSON 파일 로드
+            json_path = os.path.join(os.path.dirname(__file__), '..', '부산의맛(2025).json')
+            with open(json_path, 'r', encoding='utf-8') as f:
+                busan_data = json.load(f)
+            
+            # 모든 식당 이름 수집 (한글, 영어)
+            all_restaurants = []
+            for district, restaurants in busan_data["부산의 맛 2025"].items():
+                for restaurant in restaurants:
+                    korean_name = restaurant["식당이름"]["한글"]
+                    english_name = restaurant["식당이름"]["영어"]
+                    all_restaurants.append({
+                        'korean': korean_name,
+                        'english': english_name,
+                        'district': district
+                    })
+            
+            # RAG 응답 텍스트에서 언급된 식당들 찾기
+            mentioned_restaurants = []
+            text_lower = text.lower()
+            
+            for restaurant in all_restaurants:
+                korean_name = restaurant['korean']
+                english_name = restaurant['english']
                 
-                if name and len(name) > 1 and len(name) < 30:  # 너무 짧거나 긴 이름 제외
-                    # 일반적이지 않은 단어들 제외 (더 포괄적으로)
-                    exclude_words = [
-                        '가게', '위치', '주소', '전화번호', '영업시간', '메뉴', '가격', '추천', '맛집', '부산',
-                        '특징', '전화', '영업시간', '메뉴', '가격', '추천', '설명', '안내', '정보',
-                        '금정구', '기장군', '강서구', '해운대구', '부산진구', '동래구', '남구', '북구',
-                        '사상구', '사하구', '서구', '수영구', '연제구', '영도구', '중구', '동구'
-                    ]
-                    if not any(word in name for word in exclude_words):
-                        restaurant_names.append(name)
-        
-        # 수동으로 일반적인 식당명 패턴을 찾기 (스크린샷 기반)
-        manual_patterns = [
-            r'([가-힣\s]+식당)\s*(?:\(|위치)',  # XX식당
-            r'([가-힣\s]+집)\s*(?:\(|위치)',   # XX집  
-            r'([가-힣\s]+점)\s*(?:\(|위치)',   # XX점
-            r'([가-힣\s]+관)\s*(?:\(|위치)',   # XX관
-            r'([가-힣\s]+탕)\s*(?:\(|위치)',   # XX탕
-            r'([가-힣\s]+찜)\s*(?:\(|위치)',   # XX찜
-            r'([가-힣\s]+갈비)\s*(?:\(|위치)', # XX갈비
-        ]
-        
-        # 수동 패턴으로 추가 추출
-        for pattern in manual_patterns:
-            matches = re.findall(pattern, text, re.MULTILINE)
-            for match in matches:
-                name = match.strip()
-                if name and len(name) > 2 and len(name) < 25:
-                    exclude_words = [
-                        '가게', '위치', '주소', '전화번호', '영업시간', '메뉴', '가격', '추천', '맛집', '부산',
-                        '특징', '전화', '영업시간', '메뉴', '가격', '추천', '설명', '안내', '정보',
-                        '금정구', '기장군', '강서구', '해운대구', '부산진구', '동래구', '남구', '북구',
-                        '사상구', '사하구', '서구', '수영구', '연제구', '영도구', '중구', '동구'
-                    ]
-                    if not any(word in name for word in exclude_words):
-                        restaurant_names.append(name)
-        
-        # 패턴 2 결과를 우선적으로 사용 (번호. 식당명 패턴이 가장 정확함)
-        pattern_2_results = []
-        if len(patterns) > 1:
-            matches = re.findall(patterns[1], text, re.MULTILINE)  # 패턴 2 = 번호. 식당명
-            for match in matches:
-                name = match.strip()
-                name = re.sub(r'\s*\([^)]*\)\s*', '', name)
-                name = re.sub(r'\s*-.*$', '', name)
-                name = name.strip()
-                if name and len(name) > 2 and len(name) < 30:
-                    pattern_2_results.append(name)
-        
-        print(f"[DEBUG] 패턴 2 (번호 형식) 결과 정제: {pattern_2_results}")
-        print(f"[DEBUG] 모든 패턴 결과: {restaurant_names}")
-        
-        # 패턴 2 결과가 있으면 우선 사용, 없으면 다른 패턴 결과 사용
-        if pattern_2_results:
-            unique_names = pattern_2_results[:8]  # 최대 8개
-        else:
-            # 중복 제거하면서 순서 유지
-            unique_names = []
-            for name in restaurant_names:
-                if name not in unique_names and len(name) > 2:
-                    unique_names.append(name)
-            unique_names = unique_names[:8]  # 최대 8개
-        
-        print(f"[DEBUG] 최종 추출된 식당 이름들: {unique_names}")
-        return unique_names
+                # 한글 이름으로 검색 (부분 매칭)
+                if korean_name in text:
+                    mentioned_restaurants.append(korean_name)
+                # 영어 이름으로 검색 (대소문자 무시)
+                elif english_name.lower() in text_lower:
+                    mentioned_restaurants.append(korean_name)
+                # 한글 이름의 핵심 부분으로 검색 (공백 제거)
+                elif korean_name.replace(' ', '') in text.replace(' ', ''):
+                    mentioned_restaurants.append(korean_name)
+            
+            # 중복 제거
+            unique_restaurants = list(dict.fromkeys(mentioned_restaurants))
+            
+            return unique_restaurants[:8]  # 최대 8개
+            
+        except Exception as e:
+            print(f"JSON 파일 로드 오류: {e}")
+            # 오류 시 기존 정규식 방식으로 폴백
+            import re
+            simple_pattern = r'([가-힣]{2,15}(?:식당|집|점|관|갈비|찜|탕|카페|베이커리))'
+            matches = re.findall(simple_pattern, text)
+            return list(set(matches))[:8]
 
     # Google Maps로 식당 열기 함수
     def open_restaurant_in_maps(restaurant_name):
@@ -1678,9 +1637,18 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         try:
             import urllib.parse
             import webbrowser
+            import re
             
-            # 검색어에 부산 추가
-            search_query = f"{restaurant_name} 부산"
+            # 외국어 번역이 포함된 경우 한국어 부분만 추출
+            # 형식: "한국어이름 (외국어번역)" 또는 "한국어이름(외국어번역)"
+            korean_name_match = re.match(r'^([가-힣\s\d]+)[\s]*\([^)]+\)', restaurant_name)
+            if korean_name_match:
+                korean_name = korean_name_match.group(1).strip()
+                search_query = f"{korean_name} 부산"
+            else:
+                # 한국어만 있는 경우 그대로 사용
+                search_query = f"{restaurant_name} 부산"
+            
             encoded_query = urllib.parse.quote(search_query)
             
             # 부산 맛집 RAG 방에서는 사용자 언어 사용, 일반 채팅방에서는 대상 언어 사용
@@ -1700,7 +1668,7 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                 "en": {"lang": "en", "region": "US", "domain": "maps.google.com"},
                 "ja": {"lang": "ja", "region": "JP", "domain": "maps.google.co.jp"},
                 "zh": {"lang": "ko", "region": "KR", "domain": "maps.google.com"},  # 중국은 한국어 버전
-                "zh-TW": {"lang": "zh-TW", "region": "TW", "domain": "maps.google.com.tw"},
+                "tw": {"lang": "zh-TW", "region": "TW", "domain": "maps.google.com.tw"},
                 "vi": {"lang": "ko", "region": "KR", "domain": "maps.google.com"},  # 베트남은 한국어 버전
                 "th": {"lang": "th", "region": "TH", "domain": "maps.google.co.th"},
                 "id": {"lang": "id", "region": "ID", "domain": "maps.google.co.id"},
@@ -3212,7 +3180,7 @@ def is_room_owner(room_id, nickname, user_id=None):
         print(f"방장 권한 확인 오류: {e}")
         return False
 
-def is_user_kicked(nickname, room_id):
+def is_user_kicked(nickname, room_id, firebase_available=True):
     """사용자가 추방되었는지 확인"""
     try:
         if firebase_available:
@@ -3224,11 +3192,13 @@ def is_user_kicked(nickname, room_id):
         print(f"추방 확인 오류: {e}")
         return False
 
-def unkick_user(nickname, room_id):
+def unkick_user(nickname, room_id, firebase_available=True):
     """사용자 추방 해제"""
     try:
         if firebase_available:
             db.reference(f'rooms/{room_id}/kicked_users').child(nickname).delete()
             print(f"사용자 {nickname} 추방 해제됨")
+        else:
+            print("Firebase를 사용할 수 없어서 추방 해제할 수 없습니다.")
     except Exception as e:
         print(f"추방 해제 오류: {e}")

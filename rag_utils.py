@@ -134,7 +134,8 @@ def get_district_selection_prompt(target_lang):
         "vi": "Bạn muốn biết thông tin xử lý rác thải ở quận nào của thành phố Busan?\n\n16 quận của Busan: Jung-gu, Seo-gu, Dong-gu, Yeongdo-gu, Busanjin-gu, Dongrae-gu, Nam-gu, Buk-gu, Haeundae-gu, Saha-gu, Geumjeong-gu, Gangseo-gu, Yeonje-gu, Suyeong-gu, Sasang-gu, Gijang-gun\n\nVui lòng cho tôi biết tên quận và tôi sẽ cung cấp thông tin chi tiết về xử lý rác thải cho quận đó.",
         "ja": "釜山広域市のどの区でごみ処理情報を知りたいですか？\n\n釜山広域市16区: 中区、西区、东区、影岛区、釜山镇区、东莱区、南区、北区、海云台区、沙下区、金井区、江西区、莲堤区、水营区、沙上区、机张郡\n\n区名を教えてください。該当区の詳細なごみ処理情報をご提供いたします。",
         "zh": "您想了解釜山广域市哪个区的垃圾处理信息？\n\n釜山广域市16个区：中区、西区、东区、影岛区、釜山镇区、东莱区、南区、北区、海云台区、沙下区、金井区、江西区、莲堤区、水营区、沙上区、机张郡\n\n请告诉我区名，我将为您提供该区的详细垃圾处理信息。",
-        "zh-TW": "您想了解釜山廣域市哪個區的垃圾處理資訊？\n\n釜山廣域市16個區：中區、西區、東區、影島區、釜山鎮區、東萊區、南區、北區、海雲台區、沙下區、金井區、江西區、蓮堤區、水營區、沙上區、機張郡\n\n請告訴我區名，我將為您提供該區的詳細垃圾處理資訊。",
+        "tw": "您想了解釜山廣域市哪個區的垃圾處理資訊？\n\n釜山廣域市16個區：中區、西區、東區、影島區、釜山鎮區、東萊區、南區、北區、海雲台區、沙下區、金井區、江西區、蓮堤區、水營區、沙上區、機張郡\n\n請告訴我區名，我將為您提供該區的詳細垃圾處理資訊。",
+        "tl": "Alin sa mga distrito ng Busan Metropolitan City ang gusto mong malaman ang tungkol sa waste disposal information?\n\n16 districts sa Busan: Jung-gu, Seo-gu, Dong-gu, Yeongdo-gu, Busanjin-gu, Dongrae-gu, Nam-gu, Buk-gu, Haeundae-gu, Saha-gu, Geumjeong-gu, Gangseo-gu, Yeonje-gu, Suyeong-gu, Sasang-gu, Gijang-gun\n\nPakisabi sa akin ang pangalan ng distrito at magbibigay ako ng detalyadong waste disposal information para sa distrito na iyon.",
         "id": "Distrik mana di Kota Metropolitan Busan yang ingin Anda ketahui informasi pengelolaan sampahnya?\n\n16 distrik di Busan: Jung-gu, Seo-gu, Dong-gu, Yeongdo-gu, Busanjin-gu, Dongrae-gu, Nam-gu, Buk-gu, Haeundae-gu, Saha-gu, Geumjeong-gu, Gangseo-gu, Yeonje-gu, Suyeong-gu, Sasang-gu, Gijang-gun\n\nSilakan beri tahu saya nama distrik dan saya akan memberikan informasi detail pengelolaan sampah untuk distrik tersebut.",
         "th": "คุณต้องการทราบข้อมูลการจัดการขยะในเขตใดของเมืองปูซาน?\n\n16 เขตในปูซาน: Jung-gu, Seo-gu, Dong-gu, Yeongdo-gu, Busanjin-gu, Dongrae-gu, Nam-gu, Buk-gu, Haeundae-gu, Saha-gu, Geumjeong-gu, Gangseo-gu, Yeonje-gu, Suyeong-gu, Sasang-gu, Gijang-gun\n\nกรุณาบอกชื่อเขตและฉันจะให้ข้อมูลรายละเอียดการจัดการขยะสำหรับเขตนั้น",
         "fr": "Dans quel district de la ville métropolitaine de Busan souhaitez-vous connaître les informations sur l'élimination des déchets ?\n\n16 districts à Busan : Jung-gu, Seo-gu, Dong-gu, Yeongdo-gu, Busanjin-gu, Dongrae-gu, Nam-gu, Buk-gu, Haeundae-gu, Saha-gu, Geumjeong-gu, Gangseo-gu, Yeonje-gu, Suyeong-gu, Sasang-gu, Gijang-gun\n\nVeuillez me dire le nom du district et je vous fournirai des informations détaillées sur l'élimination des déchets pour ce district.",
@@ -626,7 +627,115 @@ Hướng dẫn trả lời:
 5. Nếu câu trả lời không đủ hoặc không liên quan, hãy nói "Tôi không thể tìm thấy thông tin liên quan."
 6. Giải thích theo cách mà các gia đình đa văn hóa có thể dễ dàng hiểu.
 
-Trả lời:"""
+Trả lời:""",
+
+        "tw": """您是為多文化家庭提供韓國生活指導的聊天機器人。
+以下是參考資訊。請用繁體中文提供準確有用的答案。
+
+[參考資訊]
+{context}
+
+問題: {query}
+
+回答指引:
+1. 如果使用者只輸入區郡名，請考慮之前的對話脈絡提供適當資訊。
+2. 如果是垃圾處理相關問題，請引導該區的垃圾處理方法。
+3. 如果是其他生活資訊問題，請提供該區的相關資訊。  
+4. 提供具體且實用的資訊。
+5. 如果答案不充分或相關性低，請回答「找不到相關資訊」。
+6. 以多文化家庭容易理解的方式說明。
+
+回答:""",
+
+        "th": """คุณเป็นแชทบอทสำหรับให้คำแนะนำการใช้ชีวิตในเกาหลีแก่ครอบครัวพหุวัฒนธรรม
+ต่อไปนี้เป็นข้อมูลอ้างอิง กรุณาให้คำตอบที่ถูกต้องและเป็นประโยชน์เป็นภาษาไทย
+
+[ข้อมูลอ้างอิง]
+{context}
+
+คำถาม: {query}
+
+แนวทางการตอบ:
+1. หากผู้ใช้ป้อนเพียงชื่อเขต ให้ข้อมูลที่เหมาะสมโดยพิจารณาบริบทการสนทนาก่อนหน้านี้
+2. หากเป็นคำถามเกี่ยวกับการจัดการขยะ ให้แนะนำวิธีการกำจัดขยะสำหรับเขตนั้น
+3. หากเป็นคำถามข้อมูลการใช้ชีวิตอื่นๆ ให้ข้อมูลที่เกี่ยวข้องสำหรับเขตนั้น
+4. ให้ข้อมูลที่เฉพาะเจาะจงและใช้ได้จริง
+5. หากคำตอบไม่เพียงพอหรือไม่เกี่ยวข้อง ให้ตอบว่า "ไม่สามารถหาข้อมูลที่เกี่ยวข้องได้"
+6. อธิบายในลักษณะที่ครอบครัวพหุวัฒนธรรมสามารถเข้าใจได้ง่าย
+
+คำตอบ:""",
+
+        "id": """Anda adalah chatbot panduan hidup Korea untuk keluarga multikultural.
+Berikut adalah informasi referensi. Harap berikan jawaban yang akurat dan bermanfaat dalam bahasa Indonesia.
+
+[Informasi Referensi]
+{context}
+
+Pertanyaan: {query}
+
+Panduan Jawaban:
+1. Jika pengguna hanya memasukkan nama distrik, berikan informasi yang sesuai dengan mempertimbangkan konteks percakapan sebelumnya.
+2. Jika pertanyaan tentang pengelolaan sampah, panduan metode pembuangan sampah untuk distrik tersebut.
+3. Jika pertanyaan informasi kehidupan lainnya, berikan informasi terkait untuk distrik tersebut.
+4. Berikan informasi yang spesifik dan praktis.
+5. Jika jawaban tidak memadai atau kurang relevan, katakan "Tidak dapat menemukan informasi terkait."
+6. Jelaskan dengan cara yang mudah dipahami oleh keluarga multikultural.
+
+Jawaban:""",
+
+        "tl": """Ikaw ay isang Korean life guidance chatbot para sa mga multicultural family.
+Narito ang reference information. Mangyaring magbigay ng tumpak at kapaki-pakinabang na sagot sa Tagalog.
+
+[Reference Information]
+{context}
+
+Tanong: {query}
+
+Gabay sa Pagsagot:
+1. Kung ang user ay nag-input lang ng district name, magbigay ng appropriate information na isasaalang-alang ang previous conversation context.
+2. Kung waste disposal question, gabayan ang waste disposal method para sa district na iyon.
+3. Kung ibang life information question, magbigay ng related information para sa district na iyon.
+4. Magbigay ng specific at practical na information.
+5. Kung ang sagot ay hindi sapat o hindi relevant, sabihin "Hindi mahanap ang relevant information."
+6. Ipaliwanag sa paraan na madaling maintindihan ng mga multicultural family.
+
+Sagot:""",
+
+        "fr": """Vous êtes un chatbot de guide de vie coréenne pour les familles multiculturelles.
+Voici les informations de référence. Veuillez fournir des réponses précises et utiles en français.
+
+[Informations de référence]
+{context}
+
+Question: {query}
+
+Directives de réponse:
+1. Si l'utilisateur ne saisit que le nom du district, fournissez des informations appropriées en tenant compte du contexte de conversation précédent.
+2. S'il s'agit d'une question sur l'élimination des déchets, guidez la méthode d'élimination des déchets pour ce district.
+3. S'il s'agit d'autres questions d'information sur la vie, fournissez des informations pertinentes pour ce district.
+4. Fournissez des informations spécifiques et pratiques.
+5. Si la réponse est insuffisante ou peu pertinente, dites "Je ne peux pas trouver d'informations pertinentes."
+6. Expliquez d'une manière que les familles multiculturelles peuvent facilement comprendre.
+
+Réponse:""",
+
+        "de": """Sie sind ein koreanischer Lebensleitfaden-Chatbot für multikulturelle Familien.
+Hier sind Referenzinformationen. Bitte geben Sie genaue und hilfreiche Antworten auf Deutsch.
+
+[Referenzinformationen]
+{context}
+
+Frage: {query}
+
+Antwortrichtlinien:
+1. Wenn der Benutzer nur den Bezirksnamen eingibt, geben Sie angemessene Informationen unter Berücksichtigung des vorherigen Gesprächskontexts.
+2. Bei Fragen zur Abfallentsorgung leiten Sie die Abfallentsorgungsmethode für diesen Bezirk an.
+3. Bei anderen Lebensinformationsfragen geben Sie relevante Informationen für diesen Bezirk.
+4. Geben Sie spezifische und praktische Informationen.
+5. Wenn die Antwort unzureichend oder nicht relevant ist, sagen Sie "Ich kann keine relevanten Informationen finden."
+6. Erklären Sie auf eine Weise, die multikulturelle Familien leicht verstehen können.
+
+Antwort:"""
     }
     
     return templates.get(target_lang, templates["ko"])
@@ -652,7 +761,7 @@ def get_foreign_worker_prompt_template(target_lang):
 问题: {query}
 
 回答: 请从外籍劳工权益保护的角度用中文回答。""",
-        "zh-TW": """以下是外籍勞工權益保護相關資訊。請用繁體中文詳細回答問題。
+        "tw": """以下是外籍勞工權益保護相關資訊。請用繁體中文詳細回答問題。
 
 [參考資訊]
 {context}
@@ -660,6 +769,15 @@ def get_foreign_worker_prompt_template(target_lang):
 問題: {query}
 
 回答: 請以外籍勞工權益保護的角度用繁體中文回答。""",
+
+        "tl": """Narito ang impormasyon tungkol sa proteksyon ng mga karapatan ng foreign worker. Mangyaring sumagot nang tumpak at kapaki-pakinabang sa Tagalog.
+
+[Reference Information]
+{context}
+
+Tanong: {query}
+
+Sagot: Mangyaring sumagot mula sa pananaw ng proteksyon ng mga karapatan ng foreign worker sa Tagalog.""",
         "id": """Berikut adalah informasi perlindungan hak pekerja asing. Silakan jawab dengan akurat dan membantu dalam bahasa Indonesia.\n\n[Informasi Referensi]\n{context}\n\nPertanyaan: {query}\n\nJawaban: Silakan jawab dari sudut pandang perlindungan hak pekerja asing dalam bahasa Indonesia.""",
         "th": """ต่อไปนี้เป็นข้อมูลเกี่ยวกับการคุ้มครองสิทธิแรงงานต่างชาติ กรุณาตอบเป็นภาษาไทยอย่างถูกต้องและเป็นประโยชน์\n\n[ข้อมูลอ้างอิง]\n{context}\n\nคำถาม: {query}\n\nคำตอบ: กรุณาตอบจากมุมมองของคู่มือการใช้ชีวิตในเกาหลีสำหรับครอบครัวพหุวัฒนธรรมเป็นภาษาไทย""",
         "fr": """Voici des informations sur la protection des droits des travailleurs étrangers. Veuillez répondre en français de manière précise et utile.\n\n[Informations de référence]\n{context}\n\nQuestion : {query}\n\nRéponse : Veuillez répondre du point de vue de la protection des droits des travailleurs étrangers en français.""",
@@ -1081,6 +1199,24 @@ Antwort: Bitte antworten Sie detailliert auf Deutsch basierend auf Busan Restaur
 Pertanyaan: {query}
 
 Jawaban: Mohon jawab secara detail dalam bahasa Indonesia berdasarkan informasi restoran Busan. Sertakan nama restoran, lokasi, menu, harga, dan fitur khusus.""",
+
+        "tw": """以下是釜山的餐廳資訊。請用繁體中文提供準確且有幫助的回答。
+
+[參考資訊]
+{context}
+
+問題: {query}
+
+回答: 請基於釜山餐廳資訊用繁體中文詳細回答。包括餐廳名稱、位置、菜單、價格、特色等。""",
+
+        "tl": """Narito ang impormasyon tungkol sa mga restaurant sa Busan. Mangyaring magbigay ng tumpak at kapaki-pakinabang na sagot sa Tagalog.
+
+[Reference Information]
+{context}
+
+Tanong: {query}
+
+Sagot: Mangyaring sumagot nang detalyado sa Tagalog batay sa impormasyon ng restaurant sa Busan. Isama ang mga pangalan ng restaurant, lokasyon, menu, presyo, at mga special features.""",
     }
     return templates.get(target_lang, templates["ko"])
 
@@ -1111,24 +1247,24 @@ def clean_markdown_text(text):
 
 def extract_location_from_query(query):
     """사용자 질문에서 지역/구 정보를 추출합니다."""
-    # 부산 구/지역 매핑 (실제 JSON 키와 매칭)
+    # 부산 구/지역 매핑 (실제 JSON 키와 매칭) - 다국어 지원
     district_keywords = {
-        "해운대구": ["해운대", "해운대구", "해운대역", "해운대해수욕장", "센텀시티"],
-        "부산진구": ["서면", "부산진구", "전포동", "양정", "가야", "개금"],
-        "동래구": ["동래", "동래구", "온천장", "명륜동", "사직", "안락"],
-        "남구": ["남구", "대연", "용호", "용당", "문현", "감만"],
-        "연제구": ["연제구", "연산", "거제", "연산동"],
-        "사상구": ["사상구", "사상", "덕포", "괘법", "감전"],
-        "금정구": ["금정구", "부산대", "장전", "구서", "금샘"],
-        "강서구": ["강서구", "대저", "명지", "가락", "녹산"],
-        "사하구": ["사하구", "하단", "신평", "괴정", "당리"],
-        "중구": ["중구", "남포동", "국제시장", "자갈치", "BIFF광장", "광복로"],
-        "동구": ["동구", "범일동", "초량", "수정"],
-        "서구": ["서구", "암남동", "동대신", "충무동"],
-        "북구": ["북구", "구포", "덕천", "화명"],
-        "영도구": ["영도구", "영도", "태종대", "절영도", "봉래"],
-        "기장군": ["기장군", "기장", "일광", "정관"],
-        "수영구": ["수영구", "광안리", "수영", "민락", "망미"]
+        "해운대구": ["해운대", "해운대구", "해운대역", "해운대해수욕장", "센텀시티", "海雲台區", "海雲台", "海云台区", "海云台", "haeundae", "Haeundae", "Haeundae-gu"],
+        "부산진구": ["서면", "부산진구", "전포동", "양정", "가야", "개금", "釜山鎮區", "西面", "釜山镇区", "西面", "busanjin", "Busanjin", "Busanjin-gu", "Seomyeon"],
+        "동래구": ["동래", "동래구", "온천장", "명륜동", "사직", "안락", "東萊區", "東萊", "东莱区", "东莱", "dongrae", "Dongrae", "Dongrae-gu"],
+        "남구": ["남구", "대연", "용호", "용당", "문현", "감만", "南區", "南区", "nam-gu", "Nam-gu"],
+        "연제구": ["연제구", "연산", "거제", "연산동", "蓮堤區", "莲堤区", "yeonje", "Yeonje", "Yeonje-gu"],
+        "사상구": ["사상구", "사상", "덕포", "괘법", "감전", "沙上區", "沙上区", "sasang", "Sasang", "Sasang-gu"],
+        "금정구": ["금정구", "부산대", "장전", "구서", "금샘", "金井區", "金井区", "geumjeong", "Geumjeong", "Geumjeong-gu"],
+        "강서구": ["강서구", "대저", "명지", "가락", "녹산", "江西區", "江西区", "江西", "gangseo", "Gangseo", "Gangseo-gu"],
+        "사하구": ["사하구", "하단", "신평", "괴정", "당리", "沙下區", "沙下区", "saha", "Saha", "Saha-gu"],
+        "중구": ["중구", "남포동", "국제시장", "자갈치", "BIFF광장", "광복로", "中區", "南浦洞", "中区", "南浦洞", "jung-gu", "Jung-gu", "Nampo", "Nampo-dong"],
+        "동구": ["동구", "범일동", "초량", "수정", "東區", "东区", "dong-gu", "Dong-gu"],
+        "서구": ["서구", "암남동", "동대신", "충무동", "西區", "西区", "seo-gu", "Seo-gu"],
+        "북구": ["북구", "구포", "덕천", "화명", "北區", "北区", "buk-gu", "Buk-gu"],
+        "영도구": ["영도구", "영도", "태종대", "절영도", "봉래", "影島區", "影島区", "yeongdo", "Yeongdo", "Yeongdo-gu"],
+        "기장군": ["기장군", "기장", "일광", "정관", "機張郡", "機張郡", "gijang", "Gijang", "Gijang-gun"],
+        "수영구": ["수영구", "광안리", "수영", "민락", "망미", "水營區", "光安里", "水营区", "光安里", "suyeong", "Suyeong", "Suyeong-gu", "Gwangalli"]
     }
     
     found_districts = []
@@ -1259,21 +1395,43 @@ def answer_with_busan_food_json(query, busan_food_data, taek_sulling_data, gemin
 
 답변: 위의 부산 맛집 정보를 바탕으로 질문에 대해 구체적이고 도움이 되는 답변을 해주세요. 가게 이름, 위치, 메뉴, 가격, 연락처, 영업시간 등을 포함해서 상세히 설명해주세요. 만약 질문과 정확히 일치하는 정보가 없다면 유사한 정보나 대안을 제시해주세요.""",
 
-        "en": f"""Here is the latest 2025 Busan restaurant information. Please provide accurate and detailed answers to the question.
+        "en": f"""【IMPORTANT: Answer MUST be in English】Here is the latest 2025 Busan restaurant information. Please provide accurate and detailed answers to the question.
 
 {context}
 
 Question: {query}
 
-Answer: Based on the Busan restaurant information above, please provide specific and helpful answers to the question. Include restaurant names, locations, menus, prices, contact information, business hours, etc. in detail. If there is no exact match for the question, please suggest similar information or alternatives.""",
+【Answer in English ONLY】Answer: Based on the Busan restaurant information above, please provide specific and helpful answers to the question in English.
 
-        "ja": f"""以下は2025年最新の釜山グルメ情報です。質問に対して正確で詳細な回答をお願いします。
+**Important Instructions:**
+1. Restaurant names should include both Korean original name and English translation, format: Korean Name (English Translation)
+2. Use Korean district names like: 해운대구, 부산진구, 남구, etc.
+3. If the question mentions English area names like Haeundae, Seomyeon, Nampo-dong, convert them to corresponding Korean district names for search
+4. Include detailed information about location, menu, prices, contact information, business hours, etc.
+5. If there is no exact match, please suggest similar information or alternatives
+
+Area Reference: Haeundae→해운대구, Seomyeon→부산진구, Nampo-dong→중구, Gwangalli→수영구
+
+【Remember: Your response MUST be in English】""",
+
+        "ja": f"""【重要：必ず日本語で回答してください】以下は2025年最新の釜山グルメ情報です。質問に対して正確で詳細な回答をお願いします。
 
 {context}
 
 質問: {query}
 
-回答: 上記の釜山グルメ情報に基づいて、質問に対して具体的で役立つ回答をしてください。店名、場所、メニュー、価格、連絡先、営業時間などを詳しく説明してください。質問と正確に一致する情報がない場合は、類似の情報や代替案を提示してください。""",
+【日本語で回答必須】回答: 上記の釜山グルメ情報に基づいて、日本語で質問に対して具体的で役立つ回答をしてください。
+
+**重要な指示:**
+1. レストラン名は韓国語原名と日本語翻訳を併記してください。形式：韓国語店名(日本語翻訳)
+2. 地区名は韓国語原名を使用してください：해운대구、부산진구、남구 など
+3. 質問で海雲台、西面、南浦洞などの日本語地名が出たら、対応する韓国語地区名に変換して検索してください
+4. 場所、メニュー、価格、連絡先、営業時間などを詳しく説明してください
+5. 質問と正確に一致する情報がない場合は、類似の情報や代替案を提示してください
+
+地区対照：海雲台→해운대구、西面→부산진구、南浦洞→중구、広安里→수영구
+
+【再確認：回答は必ず日本語で】""",
 
         "zh": f"""以下是2025年最新釜山美食信息。请对问题提供准确详细的回答。
 
@@ -1281,7 +1439,16 @@ Answer: Based on the Busan restaurant information above, please provide specific
 
 问题: {query}
 
-回答: 基于上述釜山美食信息，请对问题提供具体有用的回答。请详细说明餐厅名称、位置、菜单、价格、联系方式、营业时间等。如果没有与问题完全匹配的信息，请提供类似信息或替代方案。""",
+回答: 基于上述釜山美食信息，请对问题提供具体有用的回答。
+
+**重要指示:**
+1. 餐厅名称请同时提供韩文原名和中文翻译，格式：韩文餐厅名(中文翻译)
+2. 地区名称请使用韩文原名，如：해운대구、부산진구、남구 等
+3. 如果问题中提到海云台、西面、南浦洞等中文地名，请转换为对应的韩文地区名称进行搜索
+4. 请详细说明餐厅位置、菜单、价格、联系方式、营业时间等
+5. 如果没有与问题完全匹配的信息，请提供类似信息或替代方案
+
+地区对照：海云台→해운대구, 西面→부산진구, 南浦洞→중구, 光安里→수영구""",
 
         "vi": f"""Sau đây là thông tin nhà hàng Busan mới nhất năm 2025. Vui lòng cung cấp câu trả lời chính xác và chi tiết cho câu hỏi.
 
@@ -1289,7 +1456,77 @@ Answer: Based on the Busan restaurant information above, please provide specific
 
 Câu hỏi: {query}
 
-Trả lời: Dựa trên thông tin nhà hàng Busan ở trên, vui lòng cung cấp câu trả lời cụ thể và hữu ích cho câu hỏi. Bao gồm tên nhà hàng, vị trí, thực đơn, giá cả, thông tin liên hệ, giờ mở cửa, v.v. một cách chi tiết. Nếu không có thông tin khớp chính xác với câu hỏi, vui lòng đề xuất thông tin tương tự hoặc giải pháp thay thế."""
+Trả lời: Dựa trên thông tin nhà hàng Busan ở trên, vui lòng cung cấp câu trả lời cụ thể và hữu ích cho câu hỏi.
+
+**Hướng dẫn quan trọng:**
+1. Tên nhà hàng vui lòng cung cấp cả tên gốc tiếng Hàn và bản dịch tiếng Việt, định dạng: Tên tiếng Hàn (Bản dịch tiếng Việt)
+2. Tên khu vực sử dụng tên gốc tiếng Hàn như: 해운대구, 부산진구, 남구, v.v.
+3. Nếu câu hỏi đề cập đến tên địa danh tiếng Việt như Haeundae, Seomyeon, Nampo-dong, vui lòng chuyển đổi thành tên khu vực tiếng Hàn tương ứng để tìm kiếm
+4. Bao gồm thông tin chi tiết về vị trí, thực đơn, giá cả, thông tin liên hệ, giờ mở cửa, v.v.
+5. Nếu không có thông tin khớp chính xác với câu hỏi, vui lòng đề xuất thông tin tương tự hoặc giải pháp thay thế
+
+Tham khảo khu vực: Haeundae→해운대구, Seomyeon→부산진구, Nampo-dong→중구, Gwangalli→수영구""",
+
+        "tw": f"""【重要：請務必用繁體中文回答】以下是2025年最新釜山美食資訊。請對問題提供準確詳細的回答。
+
+{context}
+
+問題: {query}
+
+【必須用繁體中文回答】回答: 基於上述釜山美食資訊，請用繁體中文對問題提供具體有用的回答。
+
+**重要指示:**
+1. 餐廳名稱請同時提供韓文原名和中文翻譯，格式：韓文餐廳名(中文翻譯)
+2. 地區名稱請使用韓文原名，如：해운대구、부산진구、남구 等
+3. 如果問題中提到海雲台、西面、南浦洞等中文地名，請轉換為對應的韓文地區名稱進行搜尋
+4. 請詳細說明餐廳位置、菜單、價格、聯絡方式、營業時間等
+5. 如果沒有與問題完全匹配的資訊，請提供類似資訊或替代方案
+
+地區對照：海雲台→해운대구, 西面→부산진구, 南浦洞→중구, 光安里→수영구
+
+【再次提醒：回答必須用繁體中文】""",
+
+        "th": f"""ต่อไปนี้เป็นข้อมูลร้านอาหารปูซานล่าสุดปี 2025 โปรดให้คำตอบที่ถูกต้องและละเอียดต่อคำถาม
+
+{context}
+
+คำถาม: {query}
+
+คำตอบ: จากข้อมูลร้านอาหารปูซานข้างต้น โปรดให้คำตอบที่เฉพาะเจาะจงและมีประโยชน์ต่อคำถาม รวมถึงชื่อร้าน ที่ตั้ง เมนู ราคา ข้อมูลติดต่อ เวลาทำการ ฯลฯ อย่างละเอียด หากไม่มีข้อมูลที่ตรงกับคำถามทุกประการ โปรดแนะนำข้อมูลที่คล้ายกันหรือทางเลือกอื่น""",
+
+        "id": f"""【PENTING: Jawab HARUS dalam Bahasa Indonesia】Berikut adalah informasi restoran Busan terbaru 2025. Harap berikan jawaban yang akurat dan detail untuk pertanyaan.
+
+{context}
+
+Pertanyaan: {query}
+
+【Jawab dalam Bahasa Indonesia SAJA】Jawaban: Berdasarkan informasi restoran Busan di atas, harap berikan jawaban dalam Bahasa Indonesia yang spesifik dan bermanfaat untuk pertanyaan. Sertakan nama restoran, lokasi, menu, harga, informasi kontak, jam operasional dll secara detail. Jika tidak ada informasi yang persis sesuai dengan pertanyaan, harap sarankan informasi serupa atau alternatif.
+
+【Ingat: Jawaban HARUS dalam Bahasa Indonesia】""",
+
+        "tl": f"""Narito ang pinakabagong impormasyon ng mga restaurant sa Busan para sa 2025. Mangyaring magbigay ng tumpak at detalyadong sagot sa tanong.
+
+{context}
+
+Tanong: {query}
+
+Sagot: Batay sa impormasyon ng mga restaurant sa Busan sa itaas, mangyaring magbigay ng tiyak at kapaki-pakinabang na sagot sa tanong. Isama ang mga pangalan ng restaurant, lokasyon, menu, presyo, contact information, business hours atbp nang detalyado. Kung walang eksaktong tugma sa tanong, mangyaring magmungkahi ng katulad na impormasyon o alternatibo.""",
+
+        "fr": f"""Voici les dernières informations sur les restaurants de Busan pour 2025. Veuillez fournir une réponse précise et détaillée à la question.
+
+{context}
+
+Question: {query}
+
+Réponse: Basé sur les informations des restaurants de Busan ci-dessus, veuillez fournir une réponse spécifique et utile à la question. Incluez les noms des restaurants, emplacements, menus, prix, informations de contact, heures d'ouverture, etc. en détail. S'il n'y a pas d'information exactement correspondante à la question, veuillez suggérer des informations similaires ou des alternatives.""",
+
+        "de": f"""Hier sind die neuesten Informationen zu Busan-Restaurants für 2025. Bitte geben Sie eine genaue und detaillierte Antwort auf die Frage.
+
+{context}
+
+Frage: {query}
+
+Antwort: Basierend auf den obigen Busan-Restaurant-Informationen geben Sie bitte eine spezifische und hilfreiche Antwort auf die Frage. Fügen Sie Restaurantnamen, Standorte, Menüs, Preise, Kontaktinformationen, Öffnungszeiten usw. detailliert hinzu. Wenn es keine genau passenden Informationen zur Frage gibt, schlagen Sie bitte ähnliche Informationen oder Alternativen vor."""
     }
     
     # 타겟 언어에 맞는 프롬프트 선택
