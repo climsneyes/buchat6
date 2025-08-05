@@ -2198,10 +2198,66 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
     firebase_listener = None  # 리스너 객체 저장용 변수
     if firebase_available:
         try:
-            # Firebase 리스너 설정
+            # 기존 메시지들을 먼저 로드
+            def load_existing_messages():
+                try:
+                    messages_ref = db.reference(f'rooms/{room_id}/messages')
+                    existing_messages = messages_ref.get()
+                    
+                    if existing_messages:
+                        print(f"기존 메시지 {len(existing_messages)}개 발견, 로딩 중...")
+                        
+                        # 메시지를 timestamp 순으로 정렬
+                        sorted_messages = []
+                        for msg_id, msg_data in existing_messages.items():
+                            if isinstance(msg_data, dict):
+                                msg_data['msg_id'] = msg_id
+                                sorted_messages.append(msg_data)
+                        
+                        sorted_messages.sort(key=lambda x: x.get('timestamp', 0))
+                        
+                        # 각 메시지를 UI에 추가
+                        for msg_data in sorted_messages:
+                            try:
+                                # 차단된 사용자의 메시지는 무시
+                                if is_user_blocked(msg_data.get('nickname', '')):
+                                    continue
+                                
+                                # 시스템 메시지 처리
+                                if msg_data.get('nickname') == '시스템':
+                                    system_bubble = create_system_message_bubble(msg_data.get('text', ''))
+                                    if system_bubble:
+                                        chat_messages.controls.append(system_bubble)
+                                    continue
+                                
+                                # 일반 메시지 처리
+                                current_user = page.session.get('nickname') or ''
+                                is_me = msg_data.get('nickname') == current_user
+                                
+                                message_bubble = create_message_bubble(msg_data, is_me)
+                                if message_bubble:
+                                    chat_messages.controls.append(message_bubble)
+                                    
+                            except Exception as e:
+                                print(f"메시지 로드 중 오류: {e}")
+                                continue
+                        
+                        print(f"기존 메시지 로딩 완료: {len(sorted_messages)}개")
+                        page.update()
+                    else:
+                        print("기존 메시지가 없습니다.")
+                        
+                except Exception as e:
+                    print(f"기존 메시지 로드 오류: {e}")
+            
+            # 기존 메시지 로드
+            load_existing_messages()
+            
+            # Firebase 리스너 설정 (새로운 메시지용)
             firebase_listener = db.reference(f'rooms/{room_id}/messages').listen(on_message)
+            
         except Exception as e:
-            print(f"Firebase 리스너 설정 오류: {e}")
+            print(f"Firebase 초기화 오류: {e}")
 
     # --- UI 구성 ---
     # RAG 채팅방이면 예시/가이드 메시지를 항상 맨 위에 추가 (중복 방지)
