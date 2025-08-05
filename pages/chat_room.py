@@ -1558,6 +1558,8 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             r'(?:▶|►|•|·)\s*([^(\n:]+?)(?:\s*\([^)]*\))?(?:\s*-|\s*:|$)',  # ▶ 식당명
             r'(?:위치|주소):\s*([^,\n]+?)(?:\s|,)',  # 단순히 이름만 나오는 경우
             r'([가-힣]{2,15}(?:집|상|점|관|원|루|각|당|국|수|밥|면|치킨|카페|베이커리))\s*(?:[:-]|\([^)]*\))',  # 한국어 식당명 패턴
+            r'^\*\s*([가-힣\s]{3,20})(?:\s*\([^)]*\))?$',  # * 로 시작하는 식당명 (더 포괄적)
+            r'(\S+(?:식당|맛집|횟집|갈비|찜|탕|국밥|냉면|회|치킨|피자|카페|베이커리|빵집))\s*(?:\(|:|-)',  # 식당 관련 키워드가 포함된 이름
         ]
         
         restaurant_names = []
@@ -1582,6 +1584,32 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                     if not any(word in name for word in exclude_words):
                         restaurant_names.append(name)
         
+        # 수동으로 일반적인 식당명 패턴을 찾기 (스크린샷 기반)
+        manual_patterns = [
+            r'([가-힣\s]+식당)\s*(?:\(|위치)',  # XX식당
+            r'([가-힣\s]+집)\s*(?:\(|위치)',   # XX집  
+            r'([가-힣\s]+점)\s*(?:\(|위치)',   # XX점
+            r'([가-힣\s]+관)\s*(?:\(|위치)',   # XX관
+            r'([가-힣\s]+탕)\s*(?:\(|위치)',   # XX탕
+            r'([가-힣\s]+찜)\s*(?:\(|위치)',   # XX찜
+            r'([가-힣\s]+갈비)\s*(?:\(|위치)', # XX갈비
+        ]
+        
+        # 수동 패턴으로 추가 추출
+        for pattern in manual_patterns:
+            matches = re.findall(pattern, text, re.MULTILINE)
+            for match in matches:
+                name = match.strip()
+                if name and len(name) > 2 and len(name) < 25:
+                    exclude_words = [
+                        '가게', '위치', '주소', '전화번호', '영업시간', '메뉴', '가격', '추천', '맛집', '부산',
+                        '특징', '전화', '영업시간', '메뉴', '가격', '추천', '설명', '안내', '정보',
+                        '금정구', '기장군', '강서구', '해운대구', '부산진구', '동래구', '남구', '북구',
+                        '사상구', '사하구', '서구', '수영구', '연제구', '영도구', '중구', '동구'
+                    ]
+                    if not any(word in name for word in exclude_words):
+                        restaurant_names.append(name)
+        
         # 패턴 2 결과를 우선적으로 사용 (번호. 식당명 패턴이 가장 정확함)
         pattern_2_results = []
         if len(patterns) > 1:
@@ -1595,6 +1623,7 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                     pattern_2_results.append(name)
         
         print(f"[DEBUG] 패턴 2 (번호 형식) 결과 정제: {pattern_2_results}")
+        print(f"[DEBUG] 모든 패턴 결과: {restaurant_names}")
         
         # 패턴 2 결과가 있으면 우선 사용, 없으면 다른 패턴 결과 사용
         if pattern_2_results:
@@ -1602,9 +1631,10 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         else:
             # 중복 제거하면서 순서 유지
             unique_names = []
-            for name in restaurant_names[:10]:  # 최대 10개만
+            for name in restaurant_names:
                 if name not in unique_names and len(name) > 2:
                     unique_names.append(name)
+            unique_names = unique_names[:8]  # 최대 8개
         
         print(f"[DEBUG] 최종 추출된 식당 이름들: {unique_names}")
         return unique_names
