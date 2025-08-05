@@ -1914,14 +1914,9 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             # --- 입장/퇴장 감지 및 안내 메시지 ---
             nickname = msg_data['nickname']
             if nickname != '익명' and nickname != 'RAG' and nickname != '시스템':
-                # 입장 감지
-                if nickname not in current_users:
-                    current_users.add(nickname)
-                    join_text = f"{nickname}님이 채팅방에 들어왔습니다."
-                    join_bubble = create_system_message_bubble(join_text)
-                    if join_bubble:  # None이 아닌 경우만 추가
-                        chat_messages.controls.append(join_bubble)
-                        page.update()
+                # 입장 감지 - 단순히 current_users에 추가만 하고 메시지는 생성하지 않음
+                # (입장 메시지는 push_join_system_message()에서 한 번만 처리)
+                current_users.add(nickname)
             
             # 메시지 말풍선 생성
             is_me = msg_data['nickname'] == (page.session.get('nickname') or '')
@@ -2825,13 +2820,14 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                 # 방장 여부는 room_id 생성 직후 바로 입장하는 경우로 추정 (정확히 하려면 DB에 생성자 정보 필요)
                 # 일단 최초 입장자만 안내 메시지 push 안 함
                 return
-            # 2. 최근 2분 내 같은 닉네임의 시스템 메시지가 이미 있으면 push 안 함
+            # 2. 최근 5분 내 같은 닉네임의 시스템 메시지가 이미 있으면 push 안 함 (시간 확대)
             for msg in messages.values():
                 if (
                     msg.get('nickname') == '시스템'
                     and msg.get('text', '').startswith(f'{nickname}님이 채팅방에 들어왔습니다')
-                    and now - float(msg.get('timestamp', 0)) < 120
+                    and now - float(msg.get('timestamp', 0)) < 300  # 5분으로 확대
                 ):
+                    print(f"중복 입장 메시지 방지: {nickname}")
                     return  # 중복 방지
             # 3. 안내 메시지 push (메시지 1개 이상이면 무조건 push)
             join_text = f"{nickname}님이 채팅방에 들어왔습니다."
