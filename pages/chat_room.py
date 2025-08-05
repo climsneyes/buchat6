@@ -1490,7 +1490,11 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         "id": "Ketik pesan",
         "tl": "Mag-type ng mensahe",
     }.get(user_lang, "Type a message")
-    input_box = ft.TextField(hint_text=input_hint, expand=True, height=input_height)
+    input_box = ft.TextField(
+        hint_text=input_hint, 
+        expand=True, 
+        height=input_height
+    )
     if is_rag_room:
         if is_busan_food_rag or room_id == "busan_food_search_rag":
             # 부산 맛집 RAG 방에서는 번역 스위치 제거
@@ -2188,6 +2192,9 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                     setattr(error_bubble, 'timestamp', error_msg_data['timestamp'])
                     chat_messages.controls.append(error_bubble)
                 page.update()
+
+    # Enter 키로 메시지 전송 설정
+    input_box.on_submit = send_message
 
     # --- 뒤로가기 함수 ---
     def go_back(e):
