@@ -1636,7 +1636,6 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         """식당을 Google Maps에서 엽니다."""
         try:
             import urllib.parse
-            import webbrowser
             import re
             
             # 외국어 번역이 포함된 경우 한국어 부분만 추출
@@ -1695,8 +1694,8 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             print(f"🗺️ [{current_lang}] {restaurant_name} Google Maps: {maps_url}")
             print(f"   도메인: {map_config['domain']}, 언어: {map_config['lang']}, 지역: {map_config['region']}")
             
-            # 브라우저에서 열기
-            webbrowser.open(maps_url)
+            # 클라이언트 브라우저에서 새 탭으로 열기 (서버 환경 호환)
+            page.launch_url(maps_url)
             
             # 알림 메시지 (snack_bar 사용하지 않고 콘솔 출력)
             print(f"🗺️ {restaurant_name} 위치를 {map_config['domain']}에서 열고 있습니다...")
