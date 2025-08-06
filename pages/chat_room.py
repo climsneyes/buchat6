@@ -1708,9 +1708,15 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         # 닉네임이 '익명'이고 본문/번역문이 모두 비어있으면 말풍선 생성하지 않음
         if msg_data.get('nickname', '') == '익명' and not msg_data.get('text', '').strip() and not msg_data.get('translated', '').strip():
             return None
-        bubble_width = int(page.width * 0.5) if is_mobile else 400
-        base_size = 16 if is_mobile else 18  # 기존보다 2pt 크게
         is_rag = msg_data.get('nickname', '') == 'RAG'
+        
+        # RAG 답변은 더 넓은 말풍선 사용
+        if is_rag:
+            bubble_width = int(page.width * 0.85) if is_mobile else 700
+        else:
+            bubble_width = int(page.width * 0.5) if is_mobile else 400
+            
+        base_size = 16 if is_mobile else 18  # 기존보다 2pt 크게
         font_family = "Noto Sans KR, Malgun Gothic, Arial, Apple SD Gothic Neo, sans-serif" if is_rag else None
         # RAG 답변 특수문자 치환
         if is_rag:
