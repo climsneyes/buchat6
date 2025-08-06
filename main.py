@@ -1303,8 +1303,12 @@ def main(page: ft.Page):
         # 고유 방 ID 및 타이틀
         room_id = "busan_food_search_rag"
         room_title = BUSAN_FOOD_ROOM_CARD_TEXTS.get(lang, BUSAN_FOOD_ROOM_CARD_TEXTS["ko"])["title"]
+        
+        # 대만 사용자의 경우 답변 언어를 대만어로 설정
+        target_lang = "tw" if lang == "tw" else lang
+        
         # 채팅방 진입 (is_busan_food_rag=True로 설정)
-        go_chat(lang, lang, room_id, room_title, is_rag=False, is_foreign_worker_rag=False, is_busan_food_rag=True)
+        go_chat(lang, target_lang, room_id, room_title, is_rag=False, is_foreign_worker_rag=False, is_busan_food_rag=True)
 
     # --- MBTI 관광지 추천 페이지 진입 함수 ---
     def go_mbti_tourism(lang):
