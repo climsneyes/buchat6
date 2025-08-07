@@ -104,16 +104,57 @@ def extract_district_from_query(query):
         ("사상구에요", "사상구"), ("기장군에요", "기장군"), ("중구에요", "중구"), ("서구에요", "서구"),
         ("동구에요", "동구"), ("남구에요", "남구"), ("북구에요", "북구"), ("사하구에요", "사하구"),
         
-        # 영어 매칭
+        # 영어 매칭 (하이픈 형태)
         ("haeundae-gu", "해운대구"), ("busanjin-gu", "부산진구"), ("dongrae-gu", "동래구"), ("yeongdo-gu", "영도구"),
         ("geumjeong-gu", "금정구"), ("gangseo-gu", "강서구"), ("yeonje-gu", "연제구"), ("suyeong-gu", "수영구"),
         ("sasang-gu", "사상구"), ("gijang-gun", "기장군"), ("jung-gu", "중구"), ("seo-gu", "서구"),
         ("dong-gu", "동구"), ("nam-gu", "남구"), ("buk-gu", "북구"), ("saha-gu", "사하구"),
         
+        # 영어 매칭 (공백 형태)
+        ("haeundae gu", "해운대구"), ("busanjin gu", "부산진구"), ("dongrae gu", "동래구"), ("yeongdo gu", "영도구"),
+        ("geumjeong gu", "금정구"), ("gangseo gu", "강서구"), ("yeonje gu", "연제구"), ("suyeong gu", "수영구"),
+        ("sasang gu", "사상구"), ("gijang gun", "기장군"), ("jung gu", "중구"), ("seo gu", "서구"),
+        ("dong gu", "동구"), ("nam gu", "남구"), ("buk gu", "북구"), ("saha gu", "사하구"),
+        
+        # 영어 매칭 (긴 이름들 - 더 구체적이므로 우선)
+        ("haeundae", "해운대구"), ("busanjin", "부산진구"), ("dongrae", "동래구"), ("yeongdo", "영도구"),
+        ("geumjeong", "금정구"), ("gangseo", "강서구"), ("yeonje", "연제구"), ("suyeong", "수영구"),
+        ("sasang", "사상구"), ("gijang", "기장군"),
+        
         # 부분 매칭 (구/군 포함, 더 구체적인 것 우선)
         ("해운대", "해운대구"), ("부산진", "부산진구"), ("동래", "동래구"), ("영도", "영도구"),
         ("금정", "금정구"), ("강서", "강서구"), ("연제", "연제구"), ("수영", "수영구"),
         ("사상", "사상구"), ("기장", "기장군"),
+        
+        # 중국어 매핑 (간체)
+        ("中区", "중구"), ("西区", "서구"), ("东区", "동구"), ("南区", "남구"), ("北区", "북구"),
+        ("影岛区", "영도구"), ("釜山镇区", "부산진구"), ("东莱区", "동래구"), ("沙下区", "사하구"),
+        ("海云台区", "해운대구"), ("金井区", "금정구"), ("江西区", "강서구"), ("莲堤区", "연제구"),
+        ("水营区", "수영구"), ("沙上区", "사상구"), ("机张郡", "기장군"),
+        
+        # 중국어 매핑 (번체 - 대만)
+        ("中區", "중구"), ("西區", "서구"), ("東區", "동구"), ("南區", "남구"), ("北區", "북구"),
+        ("影島區", "영도구"), ("釜山鎮區", "부산진구"), ("東萊區", "동래구"), ("沙下區", "사하구"),
+        ("海雲台區", "해운대구"), ("金井區", "금정구"), ("江西區", "강서구"), ("蓮堤區", "연제구"),
+        ("水營區", "수영구"), ("沙上區", "사상구"), ("機張郡", "기장군"),
+        
+        # 일본어 매핑
+        ("中区", "중구"), ("西区", "서구"), ("東区", "동구"), ("南区", "남구"), ("北区", "북구"),
+        ("影島区", "영도구"), ("釜山鎮区", "부산진구"), ("東莱区", "동래구"), ("沙下区", "사하구"),
+        ("海雲台区", "해운대구"), ("金井区", "금정구"), ("江西区", "강서구"), ("蓮堤区", "연제구"),
+        ("水営区", "수영구"), ("沙上区", "사상구"), ("機張郡", "기장군"),
+        
+        # 베트남어 매핑 (음성학적 표기)
+        ("jung gu", "중구"), ("seo gu", "서구"), ("dong gu", "동구"), ("nam gu", "남구"), ("buk gu", "북구"),
+        ("yeongdo gu", "영도구"), ("busanjin gu", "부산진구"), ("dongrae gu", "동래구"), ("saha gu", "사하구"),
+        ("haeundae gu", "해운대구"), ("geumjeong gu", "금정구"), ("gangseo gu", "강서구"), ("yeonje gu", "연제구"),
+        ("suyeong gu", "수영구"), ("sasang gu", "사상구"), ("gijang gun", "기장군"),
+        
+        # 태국어/필리핀어/인도네시아어/프랑스어/독일어는 영어 표기법 사용
+        # 이미 위의 영어 매핑에서 커버됨
+        
+        # 영어 단순 매칭 (매우 조심스럽게, 한국어와 함께 사용시에만)
+        ("jung", "중구"), ("seo", "서구"), ("dong", "동구"), ("nam", "남구"), ("buk", "북구"), ("saha", "사하구"),
         
         # 단순 매칭 (마지막 우선순위)
         ("중", "중구"), ("서", "서구"), ("동", "동구"), ("남", "남구"), ("북", "북구"), ("사하", "사하구")
@@ -130,18 +171,510 @@ def get_district_selection_prompt(target_lang):
     """구군 선택을 요청하는 프롬프트를 반환합니다."""
     templates = {
         "ko": "부산광역시 어느 구에서 쓰레기 처리 정보를 알고 싶으신가요?\n\n부산광역시 16개 구군: 중구, 서구, 동구, 영도구, 부산진구, 동래구, 남구, 북구, 해운대구, 사하구, 금정구, 강서구, 연제구, 수영구, 사상구, 기장군\n\n구군명을 알려주시면 해당 구의 상세한 쓰레기 처리 정보를 제공해드리겠습니다.",
+        
         "en": "Which district in Busan Metropolitan City would you like to know about waste disposal information?\n\n16 districts in Busan: Jung-gu, Seo-gu, Dong-gu, Yeongdo-gu, Busanjin-gu, Dongrae-gu, Nam-gu, Buk-gu, Haeundae-gu, Saha-gu, Geumjeong-gu, Gangseo-gu, Yeonje-gu, Suyeong-gu, Sasang-gu, Gijang-gun\n\nPlease tell me the district name and I will provide detailed waste disposal information for that district.",
+        
         "vi": "Bạn muốn biết thông tin xử lý rác thải ở quận nào của thành phố Busan?\n\n16 quận của Busan: Jung-gu, Seo-gu, Dong-gu, Yeongdo-gu, Busanjin-gu, Dongrae-gu, Nam-gu, Buk-gu, Haeundae-gu, Saha-gu, Geumjeong-gu, Gangseo-gu, Yeonje-gu, Suyeong-gu, Sasang-gu, Gijang-gun\n\nVui lòng cho tôi biết tên quận và tôi sẽ cung cấp thông tin chi tiết về xử lý rác thải cho quận đó.",
-        "ja": "釜山広域市のどの区でごみ処理情報を知りたいですか？\n\n釜山広域市16区: 中区、西区、东区、影岛区、釜山镇区、东莱区、南区、北区、海云台区、沙下区、金井区、江西区、莲堤区、水营区、沙上区、机张郡\n\n区名を教えてください。該当区の詳細なごみ処理情報をご提供いたします。",
+        
+        "ja": "釜山広域市のどの区でごみ処理情報を知りたいですか？\n\n釜山広域市16区: 中区、西区、東区、影島区、釜山鎮区、東莱区、南区、北区、海雲台区、沙下区、金井区、江西区、蓮堤区、水営区、沙上区、機張郡\n\n区名を教えてください。該当区の詳細なごみ処理情報をご提供いたします。",
+        
         "zh": "您想了解釜山广域市哪个区的垃圾处理信息？\n\n釜山广域市16个区：中区、西区、东区、影岛区、釜山镇区、东莱区、南区、北区、海云台区、沙下区、金井区、江西区、莲堤区、水营区、沙上区、机张郡\n\n请告诉我区名，我将为您提供该区的详细垃圾处理信息。",
+        
         "tw": "您想了解釜山廣域市哪個區的垃圾處理資訊？\n\n釜山廣域市16個區：中區、西區、東區、影島區、釜山鎮區、東萊區、南區、北區、海雲台區、沙下區、金井區、江西區、蓮堤區、水營區、沙上區、機張郡\n\n請告訴我區名，我將為您提供該區的詳細垃圾處理資訊。",
+        
         "tl": "Alin sa mga distrito ng Busan Metropolitan City ang gusto mong malaman ang tungkol sa waste disposal information?\n\n16 districts sa Busan: Jung-gu, Seo-gu, Dong-gu, Yeongdo-gu, Busanjin-gu, Dongrae-gu, Nam-gu, Buk-gu, Haeundae-gu, Saha-gu, Geumjeong-gu, Gangseo-gu, Yeonje-gu, Suyeong-gu, Sasang-gu, Gijang-gun\n\nPakisabi sa akin ang pangalan ng distrito at magbibigay ako ng detalyadong waste disposal information para sa distrito na iyon.",
+        
         "id": "Distrik mana di Kota Metropolitan Busan yang ingin Anda ketahui informasi pengelolaan sampahnya?\n\n16 distrik di Busan: Jung-gu, Seo-gu, Dong-gu, Yeongdo-gu, Busanjin-gu, Dongrae-gu, Nam-gu, Buk-gu, Haeundae-gu, Saha-gu, Geumjeong-gu, Gangseo-gu, Yeonje-gu, Suyeong-gu, Sasang-gu, Gijang-gun\n\nSilakan beri tahu saya nama distrik dan saya akan memberikan informasi detail pengelolaan sampah untuk distrik tersebut.",
+        
         "th": "คุณต้องการทราบข้อมูลการจัดการขยะในเขตใดของเมืองปูซาน?\n\n16 เขตในปูซาน: Jung-gu, Seo-gu, Dong-gu, Yeongdo-gu, Busanjin-gu, Dongrae-gu, Nam-gu, Buk-gu, Haeundae-gu, Saha-gu, Geumjeong-gu, Gangseo-gu, Yeonje-gu, Suyeong-gu, Sasang-gu, Gijang-gun\n\nกรุณาบอกชื่อเขตและฉันจะให้ข้อมูลรายละเอียดการจัดการขยะสำหรับเขตนั้น",
+        
         "fr": "Dans quel district de la ville métropolitaine de Busan souhaitez-vous connaître les informations sur l'élimination des déchets ?\n\n16 districts à Busan : Jung-gu, Seo-gu, Dong-gu, Yeongdo-gu, Busanjin-gu, Dongrae-gu, Nam-gu, Buk-gu, Haeundae-gu, Saha-gu, Geumjeong-gu, Gangseo-gu, Yeonje-gu, Suyeong-gu, Sasang-gu, Gijang-gun\n\nVeuillez me dire le nom du district et je vous fournirai des informations détaillées sur l'élimination des déchets pour ce district.",
+        
         "de": "In welchem Bezirk der Stadt Busan möchten Sie Informationen über die Abfallentsorgung erfahren?\n\n16 Bezirke in Busan: Jung-gu, Seo-gu, Dong-gu, Yeongdo-gu, Busanjin-gu, Dongrae-gu, Nam-gu, Buk-gu, Haeundae-gu, Saha-gu, Geumjeong-gu, Gangseo-gu, Yeonje-gu, Suyeong-gu, Sasang-gu, Gijang-gun\n\nBitte teilen Sie mir den Namen des Bezirks mit und ich werde Ihnen detaillierte Informationen zur Abfallentsorgung für diesen Bezirk zur Verfügung stellen."
     }
     return templates.get(target_lang, templates["ko"])
+
+def get_waste_info_translations():
+    """쓰레기 처리 정보 번역 매핑을 반환합니다."""
+    return {
+        "en": {
+            # 부서명 번역
+            "자원순환과": "Resource Circulation Department",
+            "청소행정과": "Sanitation Administration Department", 
+            "환경위생과": "Environmental Sanitation Department",
+            "환경과": "Environment Department",
+            "청소과": "Sanitation Department",
+            
+            # 배출 품목 번역
+            "일반쓰레기": "General waste",
+            "음식물쓰레기": "Food waste",
+            "재활용품": "Recyclables",
+            "재활용품(캔,병,고철,플라스틱,우유.종이팩, 투명폐트병)": "Recyclables (cans, bottles, scrap metal, plastic, milk/paper cartons, clear PET bottles)",
+            "재활용품(종이,의류,비닐포장재,스치로폼류)": "Recyclables (paper, clothing, plastic packaging, styrofoam)",
+            "소형폐가전": "Small waste electronics",
+            "불연성폐기물": "Non-combustible waste",
+            "연탄재": "Briquette ash",
+            "소규모건설폐기물(PP전용마대)": "Small construction waste (PP bags only)",
+            "배출금지": "No disposal",
+            
+            # 위치 및 일반 텍스트 번역
+            "대문 앞 또는 지정된 장소": "In front of main gate or designated location",
+            "구체적인 수거업체 정보는 구청에 문의 필요": "Contact district office for specific collection company information",
+            "무단투기 시 100만원 이하 과태료 부과": "Fine up to 1 million won for illegal dumping",
+            
+            # 업체명 번역
+            "여기로": "YeoGiRo",
+            "뉴그린환경": "New Green Environment",
+            "부산환경": "Busan Environment",
+            "(주)모두환경": "Modu Environment Co., Ltd.",
+            "㈜모두환경": "Modu Environment Co., Ltd.",
+            "백양환경": "Baekyang Environment",
+            "유한회사 우리환경": "Woori Environment Co., Ltd.",
+            "(유)우리환경": "Woori Environment Co., Ltd.",
+            "경인산업": "Gyeongin Industry",
+            "민하산업": "Minha Industry",
+            "맑은사하환경": "Clear Saha Environment",
+            "㈜연성기업": "Yeonseong Enterprise Co., Ltd.",
+            "대남환경": "Daenam Environment",
+            "대도환경": "Daedo Environment",
+            "기장군도시관리공단": "Gijang County Urban Management Corporation",
+            "구청 문의": "Contact District Office",
+            
+            # 요일 번역
+            "일요일": "Sunday", "월요일": "Monday", "화요일": "Tuesday", "수요일": "Wednesday",
+            "목요일": "Thursday", "금요일": "Friday", "토요일": "Saturday"
+        },
+        "vi": {
+            # 부서명 번역
+            "자원순환과": "Phòng Tuần hoàn Tài nguyên",
+            "청소행정과": "Phòng Hành chính Vệ sinh",
+            "환경위생과": "Phòng Vệ sinh Môi trường",
+            "환경과": "Phòng Môi trường", 
+            "청소과": "Phòng Vệ sinh",
+            
+            # 배출 품목 번역
+            "일반쓰레기": "Rác thải chung",
+            "음식물쓰레기": "Rác thực phẩm",
+            "재활용품": "Đồ tái chế",
+            "재활용품(캔,병,고철,플라스틱,우유.종이팩, 투명폐트병)": "Đồ tái chế (lon, chai, kim loại phế, nhựa, hộp sữa/giấy, chai PET trong suốt)",
+            "재활용품(종이,의류,비닐포장재,스치로폼류)": "Đồ tái chế (giấy, quần áo, bao bì nhựa, xốp)",
+            "소형폐가전": "Thiết bị điện tử phế liệu nhỏ",
+            "불연성폐기물": "Chất thải không cháy",
+            "연탄재": "Tro than củi",
+            "소규모건설폐기물(PP전용마대)": "Chất thải xây dựng nhỏ (chỉ túi PP)",
+            "배출금지": "Cấm thải",
+            
+            # 위치 및 일반 텍스트 번역
+            "대문 앞 또는 지정된 장소": "Trước cổng chính hoặc nơi được chỉ định",
+            "구체적인 수거업체 정보는 구청에 문의 필요": "Liên hệ văn phòng quận để biết thông tin chi tiết về công ty thu gom",
+            "무단투기 시 100만원 이하 과태료 부과": "Phạt tiền lên đến 1 triệu won cho việc đổ rác bừa bãi",
+            
+            # 업체명 번역
+            "여기로": "YeoGiRo",
+            "뉴그린환경": "New Green Environment",
+            "부산환경": "Busan Environment",
+            "(주)모두환경": "Modu Environment Co., Ltd.",
+            "㈜모두환경": "Modu Environment Co., Ltd.",
+            "백양환경": "Baekyang Environment",
+            "유한회사 우리환경": "Woori Environment Co., Ltd.",
+            "(유)우리환경": "Woori Environment Co., Ltd.",
+            "경인산업": "Gyeongin Industry",
+            "민하산업": "Minha Industry",
+            "맑은사하환경": "Clear Saha Environment",
+            "㈜연성기업": "Yeonseong Enterprise Co., Ltd.",
+            "대남환경": "Daenam Environment",
+            "대도환경": "Daedo Environment",
+            "기장군도시관리공단": "Gijang County Urban Management Corporation",
+            "구청 문의": "Liên hệ Văn phòng Quận",
+            
+            # 요일 번역
+            "일요일": "Chủ nhật", "월요일": "Thứ hai", "화요일": "Thứ ba", "수요일": "Thứ tư",
+            "목요일": "Thứ năm", "금요일": "Thứ sáu", "토요일": "Thứ bảy"
+        },
+        "zh": {
+            # 부서명 번역
+            "자원순환과": "资源循环科",
+            "청소행정과": "清扫行政科",
+            "환경위생과": "环境卫生科",
+            "환경과": "环境科",
+            "청소과": "清扫科",
+            
+            # 배출 품목 번역
+            "일반쓰레기": "一般垃圾",
+            "음식물쓰레기": "食物垃圾",
+            "재활용품": "可回收物",
+            "재활용품(캔,병,고철,플라스틱,우유.종이팩, 투명폐트병)": "可回收物（罐头、瓶子、废铁、塑料、牛奶纸盒、透明PET瓶）",
+            "재활용품(종이,의류,비닐포장재,스치로폼류)": "可回收物（纸类、衣物、塑料包装、泡沫塑料）",
+            "소형폐가전": "小型废旧家电",
+            "불연성폐기물": "不可燃垃圾",
+            "연탄재": "煤球灰",
+            "소규모건설폐기물(PP전용마대)": "小型建筑垃圾（PP专用袋）",
+            "배출금지": "禁止投放",
+            
+            # 위치 및 일반 텍스트 번역
+            "대문 앞 또는 지정된 장소": "大门前或指定场所",
+            "구체적인 수거업체 정보는 구청에 문의 필요": "具体收集公司信息请联系区政府",
+            "무단투기 시 100만원 이하 과태료 부과": "乱扔垃圾将被处以不超过100万韩元的罚款",
+            
+            # 업체명 번역
+            "여기로": "YeoGiRo",
+            "뉴그린환경": "新绿色环境",
+            "부산환경": "釜山环境",
+            "(주)모두환경": "牟都环境股份有限公司",
+            "㈜모두환경": "牟都环境股份有限公司",
+            "백양환경": "白阳环境",
+            "유한회사 우리환경": "我们环境有限公司",
+            "(유)우리환경": "我们环境有限公司",
+            "경인산업": "京仁产业",
+            "민하산업": "敏河产业",
+            "맑은사하환경": "清洁沙河环境",
+            "㈜연성기업": "联成企业股份有限公司",
+            "대남환경": "大南环境",
+            "대도환경": "大道环境",
+            "기장군도시관리공단": "机张郡城市管理公团",
+            "구청 문의": "联系区政府",
+            
+            # 요일 번역
+            "일요일": "星期日", "월요일": "星期一", "화요일": "星期二", "수요일": "星期三",
+            "목요일": "星期四", "금요일": "星期五", "토요일": "星期六"
+        },
+        "tw": {
+            # 부서명 번역
+            "자원순환과": "資源循環科",
+            "청소행정과": "清掃行政科",
+            "환경위생과": "環境衛生科",
+            "환경과": "環境科",
+            "청소과": "清掃科",
+            
+            # 배출 품목 번역
+            "일반쓰레기": "一般垃圾",
+            "음식물쓰레기": "食物垃圾",
+            "재활용품": "可回收物",
+            "재활용품(캔,병,고철,플라스틱,우유.종이팩, 투명폐트병)": "可回收物（罐頭、瓶子、廢鐵、塑料、牛奶紙盒、透明PET瓶）",
+            "재활용품(종이,의류,비닐포장재,스치로폼류)": "可回收物（紙類、衣物、塑料包裝、泡沫塑料）",
+            "소형폐가전": "小型廢舊家電",
+            "불연성폐기물": "不可燃垃圾",
+            "연탄재": "煤球灰",
+            "소규모건설폐기물(PP전용마대)": "小型建築垃圾（PP專用袋）",
+            "배출금지": "禁止投放",
+            
+            # 위치 및 일반 텍스트 번역
+            "대문 앞 또는 지정된 장소": "大門前或指定場所",
+            "구체적인 수거업체 정보는 구청에 문의 필요": "具體收集公司資訊請聯繫區政府",
+            "무단투기 시 100만원 이하 과태료 부과": "亂扔垃圾將被處以不超過100萬韓元的罰款",
+            
+            # 업체명 번역
+            "여기로": "YeoGiRo",
+            "뉴그린환경": "新綠色環境",
+            "부산환경": "釜山環境",
+            "(주)모두환경": "牟都環境股份有限公司",
+            "㈜모두환경": "牟都環境股份有限公司",
+            "백양환경": "白陽環境",
+            "유한회사 우리환경": "我們環境有限公司",
+            "(유)우리환경": "我們環境有限公司",
+            "경인산업": "京仁產業",
+            "민하산업": "敏河產業",
+            "맑은사하환경": "清潔沙河環境",
+            "㈜연성기업": "聯成企業股份有限公司",
+            "대남환경": "大南環境",
+            "대도환경": "大道環境",
+            "기장군도시관리공단": "機張郡城市管理公團",
+            "구청 문의": "聯繫區政府",
+            
+            # 요일 번역
+            "일요일": "星期日", "월요일": "星期一", "화요일": "星期二", "수요일": "星期三",
+            "목요일": "星期四", "금요일": "星期五", "토요일": "星期六"
+        },
+        "ja": {
+            # 부서명 번역
+            "자원순환과": "資源循環課",
+            "청소행정과": "清掃行政課",
+            "환경위생과": "環境衛生課",
+            "환경과": "環境課",
+            "청소과": "清掃課",
+            
+            # 배출 품목 번역
+            "일반쓰레기": "一般ゴミ",
+            "음식물쓰레기": "生ゴミ",
+            "재활용품": "リサイクル品",
+            "재활용품(캔,병,고철,플라스틱,우유.종이팩, 투명폐트병)": "リサイクル品（缶、瓶、鉄くず、プラスチック、牛乳紙パック、透明ペットボトル）",
+            "재활용품(종이,의류,비닐포장재,스치로폼류)": "リサイクル品（紙、衣類、ビニール包装材、発泡スチロール）",
+            "소형폐가전": "小型廃家電",
+            "불연성폐기물": "不燃ゴミ",
+            "연탄재": "練炭灰",
+            "소규모건설폐기물(PP전용마대)": "小規模建設廃棄物（PP専用袋）",
+            "배출금지": "排出禁止",
+            
+            # 위치 및 일반 텍스트 번역
+            "대문 앞 또는 지정된 장소": "正門前または指定された場所",
+            "구체적인 수거업체 정보는 구청에 문의 필요": "具体的な収集業者情報は区役所にお問い合わせください",
+            "무단투기 시 100만원 이하 과태료 부과": "不法投棄の場合、100万ウォン以下の過料が課せられます",
+            
+            # 업체명 번역
+            "여기로": "YeoGiRo",
+            "뉴그린환경": "ニューグリーン環境",
+            "부산환경": "釜山環境",
+            "(주)모두환경": "株式会社モドゥ環境",
+            "㈜모두환경": "株式会社モドゥ環境",
+            "백양환경": "白陽環境",
+            "유한회사 우리환경": "有限会社ウリ環境",
+            "(유)우리환경": "有限会社ウリ環境",
+            "경인산업": "京仁産業",
+            "민하산업": "ミナ産業",
+            "맑은사하환경": "清らかなサハ環境",
+            "㈜연성기업": "株式会社ヨンソン企業",
+            "대남환境": "大南環境",
+            "대도환경": "大道環境",
+            "기장군도시관리공단": "機張郡都市管理公団",
+            "구청 문의": "区役所にお問い合わせください",
+            
+            # 요일 번역
+            "일요일": "日曜日", "월요일": "月曜日", "화요일": "火曜日", "수요일": "水曜日",
+            "목요일": "木曜日", "금요일": "金曜日", "토요일": "土曜日"
+        },
+        "th": {
+            # 부서명 번역
+            "자원순환과": "แผนกหมุนเวียนทรัพยากร",
+            "청소행정과": "แผนกบริหารสุขาภิบาล",
+            "환경위생과": "แผนกสุขาภิบาลสิ่งแวดล้อม",
+            "환경과": "แผนกสิ่งแวดล้อม",
+            "청소과": "แผนกสุขาภิบาล",
+            
+            # 배출 품목 번역
+            "일반쓰레기": "ขยะทั่วไป",
+            "음식물쓰레기": "ขยะอาหาร",
+            "재활용품": "ของรีไซเคิล",
+            "재활용품(캔,병,고철,플라스틱,우유.종이팩, 투명폐트병)": "ของรีไซเคิล (กระป๋อง, ขวด, เหล็กเก่า, พลาสติก, กล่องนม/กระดาษ, ขวดPETใส)",
+            "재활용품(종이,의류,비닐포장재,스치로폼류)": "ของรีไซเคิล (กระดาษ, เสื้อผ้า, บรรจุภัณฑ์พลาสติก, โฟม)",
+            "소형폐가전": "เครื่องใช้ไฟฟ้าเก่าขนาดเล็ก",
+            "불연성폐기물": "ขยะที่ไม่ไหม้",
+            "연탄재": "เถ้าถ่านก้อน",
+            "소규모건설폐기물(PP전용마대)": "ขยะก่อสร้างขนาดเล็ก (ถุงPPเท่านั้น)",
+            "배출금지": "ห้ามทิ้ง",
+            
+            # 위치 및 일반 텍스트 번역
+            "대문 앞 또는 지정된 장소": "หน้าประตูหลักหรือสถานที่ที่กำหนด",
+            "구체적인 수거업체 정보는 구청에 문의 필요": "ติดต่อสำนักงานเขตเพื่อขอข้อมูลบริษัทเก็บขยะที่เจาะจง",
+            "무단투기 시 100만원 이하 과태료 부과": "ปรับไม่เกิน 1 ล้านวอนสำหรับการทิ้งขยะผิดกฎหมาย",
+            
+            # 업체명 번역
+            "여기로": "YeoGiRo",
+            "뉴그린환경": "New Green Environment",
+            "부산환경": "Busan Environment", 
+            "(주)모두환경": "Modu Environment Co., Ltd.",
+            "㈜모두환경": "Modu Environment Co., Ltd.",
+            "백양환경": "Baekyang Environment",
+            "유한회사 우리환경": "Woori Environment Co., Ltd.",
+            "(유)우리환경": "Woori Environment Co., Ltd.",
+            "경인산업": "Gyeongin Industry",
+            "민하산업": "Minha Industry",
+            "맑은사하환경": "Clear Saha Environment",
+            "㈜연성기업": "Yeonseong Enterprise Co., Ltd.",
+            "대남환경": "Daenam Environment", 
+            "대도환경": "Daedo Environment",
+            "기장군도시관리공단": "Gijang County Urban Management Corporation",
+            "구청 문의": "ติดต่อสำนักงานเขต",
+            
+            # 요일 번역
+            "일요일": "วันอาทิตย์", "월요일": "วันจันทร์", "화요일": "วันอังคาร", "수요일": "วันพุธ",
+            "목요일": "วันพฤหัสบดี", "금요일": "วันศุกร์", "토요일": "วันเสาร์"
+        },
+        "tl": {
+            # 부서명 번역
+            "자원순환과": "Kagawaran ng Resource Circulation",
+            "청소행정과": "Kagawaran ng Sanitation Administration",
+            "환경위생과": "Kagawaran ng Environmental Sanitation",
+            "환경과": "Kagawaran ng Environment",
+            "청소과": "Kagawaran ng Sanitation",
+            
+            # 배출 품목 번역
+            "일반쓰레기": "General na basura",
+            "음식물쓰레기": "Food waste",
+            "재활용품": "Recyclables",
+            "재활용품(캔,병,고철,플라스틱,우유.종이팩, 투명폐트병)": "Recyclables (lata, bote, scrap metal, plastic, milk/paper carton, linaw na PET bottle)",
+            "재활용품(종이,의류,비닐포장재,스치로폼류)": "Recyclables (papel, damit, plastic packaging, styrofoam)",
+            "소형폐가전": "Maliliit na sirang appliance",
+            "불연성폐기물": "Hindi nasusunog na basura",
+            "연탄재": "Briquette ash",
+            "소규모건설폐기물(PP전용마대)": "Maliit na construction waste (PP bag lang)",
+            "배출금지": "Bawal itapon",
+            
+            # 위치 및 일반 텍스트 번역
+            "대문 앞 또는 지정된 장소": "Sa harap ng pangunahing gate o itinakdang lugar",
+            "구체적인 수거업체 정보는 구청에 문의 필요": "Makipag-ugnayan sa district office para sa tukoy na impormasyon ng collection company",
+            "무단투기 시 100만원 이하 과태료 부과": "Multa hanggang 1 milyong won para sa illegal na pagtatapon",
+            
+            # 업체명 번역
+            "여기로": "YeoGiRo",
+            "뉴그린환경": "New Green Environment",
+            "부산환경": "Busan Environment",
+            "(주)모두환경": "Modu Environment Co., Ltd.",
+            "㈜모두환경": "Modu Environment Co., Ltd.",
+            "백양환경": "Baekyang Environment",
+            "유한회사 우리환경": "Woori Environment Co., Ltd.",
+            "(유)우리환경": "Woori Environment Co., Ltd.",
+            "경인산업": "Gyeongin Industry",
+            "민하산업": "Minha Industry",
+            "맑은사하환경": "Clear Saha Environment",
+            "㈜연성기업": "Yeonseong Enterprise Co., Ltd.",
+            "대남환경": "Daenam Environment",
+            "대도환경": "Daedo Environment",
+            "기장군도시관리공단": "Gijang County Urban Management Corporation",
+            "구청 문의": "Makipag-ugnayan sa District Office",
+            
+            # 요일 번역
+            "일요일": "Linggo", "월요일": "Lunes", "화요일": "Martes", "수요일": "Miyerkules",
+            "목요일": "Huwebes", "금요일": "Biyernes", "토요일": "Sabado"
+        },
+        "id": {
+            # 부서명 번역
+            "자원순환과": "Departemen Sirkulasi Sumber Daya",
+            "청소행정과": "Departemen Administrasi Sanitasi",
+            "환경위생과": "Departemen Sanitasi Lingkungan",
+            "환경과": "Departemen Lingkungan",
+            "청소과": "Departemen Sanitasi",
+            
+            # 배출 품목 번역
+            "일반쓰레기": "Sampah umum",
+            "음식물쓰레기": "Sampah makanan",
+            "재활용품": "Barang daur ulang",
+            "재활용품(캔,병,고철,플라스틱,우유.종이팩, 투명폐트병)": "Barang daur ulang (kaleng, botol, besi tua, plastik, karton susu/kertas, botol PET bening)",
+            "재활용품(종이,의류,비닐포장재,스치로폼류)": "Barang daur ulang (kertas, pakaian, kemasan plastik, styrofoam)",
+            "소형폐가전": "Elektronik kecil bekas",
+            "불연성폐기물": "Sampah tidak mudah terbakar",
+            "연탄재": "Abu briket",
+            "소규모건설폐기물(PP전용마대)": "Sampah konstruksi kecil (kantong PP saja)",
+            "배출금지": "Dilarang buang",
+            
+            # 위치 및 일반 텍스트 번역
+            "대문 앞 또는 지정된 장소": "Di depan gerbang utama atau tempat yang ditentukan",
+            "구체적인 수거업체 정보는 구청에 문의 필요": "Hubungi kantor distrik untuk informasi perusahaan pengumpul yang spesifik",
+            "무단투기 시 100만원 이하 과태료 부과": "Denda hingga 1 juta won untuk pembuangan ilegal",
+            
+            # 업체명 번역
+            "여기로": "YeoGiRo",
+            "뉴그린환경": "New Green Environment",
+            "부산환경": "Busan Environment",
+            "(주)모두환경": "Modu Environment Co., Ltd.",
+            "㈜모두환경": "Modu Environment Co., Ltd.",
+            "백양환경": "Baekyang Environment",
+            "유한회사 우리환경": "Woori Environment Co., Ltd.",
+            "(유)우리환경": "Woori Environment Co., Ltd.",
+            "경인산업": "Gyeongin Industry",
+            "민하산업": "Minha Industry",
+            "맑은사하환경": "Clear Saha Environment",
+            "㈜연성기업": "Yeonseong Enterprise Co., Ltd.",
+            "대남환경": "Daenam Environment",
+            "대도환경": "Daedo Environment",
+            "기장군도시관리공단": "Gijang County Urban Management Corporation",
+            "구청 문의": "Hubungi Kantor Distrik",
+            
+            # 요일 번역
+            "일요일": "Minggu", "월요일": "Senin", "화요일": "Selasa", "수요일": "Rabu",
+            "목요일": "Kamis", "금요일": "Jumat", "토요일": "Sabtu"
+        },
+        "fr": {
+            # 부서명 번역
+            "자원순환과": "Département de circulation des ressources",
+            "청소행정과": "Département d'administration sanitaire",
+            "환경위생과": "Département d'assainissement environnemental", 
+            "환경과": "Département de l'environnement",
+            "청소과": "Département d'assainissement",
+            
+            # 배출 품목 번역
+            "일반쓰레기": "Déchets généraux",
+            "음식물쓰레기": "Déchets alimentaires",
+            "재활용품": "Recyclables",
+            "재활용품(캔,병,고철,플라스틱,우유.종이팩, 투명폐트병)": "Recyclables (boîtes, bouteilles, ferraille, plastique, emballages lait/papier, bouteilles PET transparentes)",
+            "재활용품(종이,의류,비닐포장재,스치로폼류)": "Recyclables (papier, vêtements, emballages plastiques, polystyrène)",
+            "소형폐가전": "Petits appareils électroniques usagés",
+            "불연성폐기물": "Déchets non combustibles",
+            "연탄재": "Cendres de briquettes",
+            "소규모건설폐기물(PP전용마대)": "Petits déchets de construction (sacs PP uniquement)",
+            "배출금지": "Interdiction de jeter",
+            
+            # 위치 및 일반 텍스트 번역
+            "대문 앞 또는 지정된 장소": "Devant le portail principal ou à l'endroit désigné",
+            "구체적인 수거업체 정보는 구청에 문의 필요": "Contactez le bureau de district pour des informations spécifiques sur l'entreprise de collecte",
+            "무단투기 시 100만원 이하 과태료 부과": "Amende jusqu'à 1 million de wons pour dépôt illégal",
+            
+            # 업체명 번역
+            "여기로": "YeoGiRo",
+            "뉴그린환경": "New Green Environment",
+            "부산환경": "Busan Environment",
+            "(주)모두환경": "Modu Environment Co., Ltd.",
+            "㈜모두환경": "Modu Environment Co., Ltd.",
+            "백양환경": "Baekyang Environment",
+            "유한회사 우리환경": "Woori Environment Co., Ltd.",
+            "(유)우리환경": "Woori Environment Co., Ltd.",
+            "경인산업": "Gyeongin Industry",
+            "민하산업": "Minha Industry",
+            "맑은사하환경": "Clear Saha Environment",
+            "㈜연성기업": "Yeonseong Enterprise Co., Ltd.",
+            "대남환경": "Daenam Environment",
+            "대도환경": "Daedo Environment",
+            "기장군도시관리공단": "Gijang County Urban Management Corporation",
+            "구청 문의": "Contactez le Bureau de District",
+            
+            # 요일 번역
+            "일요일": "Dimanche", "월요일": "Lundi", "화요일": "Mardi", "수요일": "Mercredi",
+            "목요일": "Jeudi", "금요일": "Vendredi", "토요일": "Samedi"
+        },
+        "de": {
+            # 부서명 번역
+            "자원순환과": "Abteilung für Ressourcenkreislauf",
+            "청소행정과": "Sanitätsverwaltungsabteilung",
+            "환경위생과": "Umwelthygiene-Abteilung",
+            "환경과": "Umweltabteilung", 
+            "청소과": "Sanitätsabteilung",
+            
+            # 배출 품목 번역
+            "일반쓰레기": "Allgemeiner Abfall",
+            "음식물쓰레기": "Lebensmittelabfall",
+            "재활용품": "Recyclingsmaterialien",
+            "재활용품(캔,병,고철,플라스틱,우유.종이팩, 투명폐트병)": "Recyclingsmaterialien (Dosen, Flaschen, Schrott, Kunststoff, Milch-/Papierkartons, transparente PET-Flaschen)",
+            "재활용품(종이,의류,비닐포장재,스치로폼류)": "Recyclingsmaterialien (Papier, Kleidung, Kunststoffverpackungen, Styropor)",
+            "소형폐가전": "Kleine Elektroaltgeräte",
+            "불연성폐기물": "Nicht brennbarer Abfall",
+            "연탄재": "Brikettsasche",
+            "소규모건설폐기물(PP전용마대)": "Kleine Bauabfälle (nur PP-Säcke)",
+            "배출금지": "Entsorgung verboten",
+            
+            # 위치 및 일반 텍스트 번역
+            "대문 앞 또는 지정된 장소": "Vor dem Haupttor oder an der designierten Stelle",
+            "구체적인 수거업체 정보는 구청에 문의 필요": "Kontaktieren Sie das Bezirksamt für spezifische Informationen zum Sammelunternehmen",
+            "무단투기 시 100만원 이하 과태료 부과": "Geldstrafe bis zu 1 Million Won für illegale Entsorgung",
+            
+            # 업체명 번역
+            "여기로": "YeoGiRo",
+            "뉴그린환경": "New Green Environment",
+            "부산환경": "Busan Environment",
+            "(주)모두환경": "Modu Environment Co., Ltd.",
+            "㈜모두환경": "Modu Environment Co., Ltd.",
+            "백양환경": "Baekyang Environment",
+            "유한회사 우리환경": "Woori Environment Co., Ltd.",
+            "(유)우리환경": "Woori Environment Co., Ltd.",
+            "경인산업": "Gyeongin Industry",
+            "민하산업": "Minha Industry",
+            "맑은사하환경": "Clear Saha Environment",
+            "㈜연성기업": "Yeonseong Enterprise Co., Ltd.",
+            "대남환경": "Daenam Environment",
+            "대도환경": "Daedo Environment",
+            "기장군도시관리공단": "Gijang County Urban Management Corporation",
+            "구청 문의": "Kontaktieren Sie das Bezirksamt",
+            
+            # 요일 번역
+            "일요일": "Sonntag", "월요일": "Montag", "화요일": "Dienstag", "수요일": "Mittwoch",
+            "목요일": "Donnerstag", "금요일": "Freitag", "토요일": "Samstag"
+        }
+    }
+
+def translate_waste_text(text, target_lang):
+    """쓰레기 처리 관련 텍스트를 번역합니다."""
+    translations = get_waste_info_translations()
+    if target_lang == "ko" or target_lang not in translations:
+        return text
+    return translations[target_lang].get(text, text)
 
 def filter_documents_by_district(documents, target_district):
     """특정 구군의 문서만 필터링합니다."""
@@ -231,12 +764,57 @@ BUSAN_DISTRICTS = [
     "해운대구", "사하구", "금정구", "강서구", "연제구", "수영구", "사상구", "기장군"
 ]
 
-# 쓰레기 처리 관련 키워드 (핵심 키워드만 포함)
+# 쓰레기 처리 관련 키워드 (다국어 지원)
 WASTE_KEYWORDS = [
+    # 한국어 키워드
     "쓰레기", "폐기물", "배출", "종량제", "봉투", "버리는", "버리기", "버려", "버리다",
     "음식물쓰레기", "재활용", "대형폐기물", "소형폐가전", "특수폐기물", 
     "수거", "분리배출", "폐기", "쓰레기처리", "폐기물처리", "배출방법", "버리는방법",
-    "쓰레기봉투", "종량제봉투", "음식물쓰레기봉투", "배출시간", "배출장소", "배출요일"
+    "쓰레기봉투", "종량제봉투", "음식물쓰레기봉투", "배출시간", "배출장소", "배출요일",
+    
+    # 영어 키워드
+    "waste", "trash", "garbage", "rubbish", "disposal", "dispose", "throw", "throwing", "discard",
+    "recycle", "recycling", "food waste", "large waste", "collection", "pickup", "bag", "bags",
+    "waste bag", "garbage bag", "trash bag", "collection time", "collection day", "collection schedule",
+    "waste disposal", "trash disposal", "garbage disposal", "how to dispose", "where to throw",
+    "waste management", "trash management", "garbage management",
+    
+    # 베트남어 키워드
+    "rác", "rác thải", "xử lý rác", "vứt rác", "bỏ rác", "túi rác", "thu gom", "tái chế",
+    "phân loại rác", "rác sinh hoạt", "rác thực phẩm", "rác tái chế",
+    
+    # 중국어 키워드 (간체)
+    "垃圾", "废物", "处理", "丢弃", "回收", "垃圾袋", "收集", "分类",
+    "垃圾处理", "垃圾分类", "生活垃圾", "厨余垃圾", "可回收垃圾", "垃圾清运",
+    
+    # 중국어 키워드 (번체 - 대만)
+    "垃圾", "廢物", "處理", "丟棄", "回收", "垃圾袋", "收集", "分類",
+    "垃圾處理", "垃圾分類", "生活垃圾", "廚餘垃圾", "可回收垃圾", "垃圾清運",
+    
+    # 일본어 키워드
+    "ゴミ", "廃棄物", "処理", "捨てる", "リサイクル", "ゴミ袋", "収集", "分別",
+    "ゴミ処理", "ゴミ分別", "生活ゴミ", "生ゴミ", "資源ゴミ", "ゴミ収集",
+    "廃棄", "廃棄処理", "ごみ", "ごみ処理", "ごみ分別",
+    
+    # 태국어 키워드
+    "ขยะ", "การจัดการขยะ", "ทิ้งขยะ", "รีไซเคิล", "ถุงขยะ", "เก็บขยะ",
+    "แยกขยะ", "ขยะอินทรีย์", "ขยะรีไซเคิล",
+    
+    # 필리핀어(타갈로그) 키워드
+    "basura", "tapon", "itapon", "kolekta", "recycle", "supot", "paghahati",
+    "organic na basura", "recyclable", "koleksyon ng basura",
+    
+    # 인도네시아어 키워드
+    "sampah", "limbah", "pembuangan", "buang", "daur ulang", "kantong sampah",
+    "pengumpulan", "pemilahan", "sampah organik", "sampah daur ulang",
+    
+    # 프랑스어 키워드
+    "déchet", "déchets", "ordure", "poubelle", "jeter", "recyclage", "tri",
+    "collecte", "sac poubelle", "déchets organiques", "déchets recyclables",
+    
+    # 독일어 키워드
+    "müll", "abfall", "entsorgen", "werfen", "recycling", "mülltüte",
+    "sammlung", "trennung", "biomüll", "recyclbare abfälle"
 ]
 
 # 외국인 등록 관련 키워드

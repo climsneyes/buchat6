@@ -41,7 +41,7 @@ from firebase_admin import credentials, db
 from rag_utils import get_or_create_vector_db, answer_with_rag, answer_with_rag_foreign_worker, answer_with_rag_busan_food, answer_with_busan_food_json
 from rag_utils import SimpleVectorDB, GeminiEmbeddings, answer_with_langgraph_rag
 from rag_utils import is_waste_related_query, extract_district_from_query, get_waste_info_from_json, get_district_selection_prompt
-from rag_utils import is_alien_registration_related_query, get_detailed_alien_registration_guide
+from rag_utils import is_alien_registration_related_query, get_detailed_alien_registration_guide, translate_waste_text
 
 
 IS_SERVER = os.environ.get("CLOUDTYPE") == "1"  # Cloudtype 환경변수 등으로 구분
@@ -1074,45 +1074,321 @@ def main(page: ft.Page):
                                         
                                         district_info = waste_data.get("부산광역시_쓰레기처리정보", {}).get("구군별_정보", {}).get(district)
                                         if district_info:
-                                            # 쓰레기 배출 정보를 구성
-                                            response_lines = [f"📍 {district} 쓰레기 배출 안내"]
+                                            # 다국어 레이블 템플릿
+                                            labels = {
+                                                "ko": {
+                                                    "title": f"📍 {district} 쓰레기 배출 안내",
+                                                    "department": "🏢 담당부서",
+                                                    "time": "⏰ 배출시간",
+                                                    "place": "📍 배출장소",
+                                                    "schedule": "📅 배출요일별 안내:",
+                                                    "price": "💰 종량제봉투 가격:",
+                                                    "notes": "⚠️ 특이사항:",
+                                                    "large_waste": "🚛 대형폐기물 수거업체:",
+                                                    "no_disposal": "배출금지",
+                                                    "report_method": "신고방법",
+                                                    "won": "원"
+                                                },
+                                                "en": {
+                                                    "title": f"📍 {district} Waste Disposal Guide",
+                                                    "department": "🏢 Department",
+                                                    "time": "⏰ Collection Time",
+                                                    "place": "📍 Collection Location",
+                                                    "schedule": "📅 Weekly Collection Schedule:",
+                                                    "price": "💰 Waste Bag Prices:",
+                                                    "notes": "⚠️ Special Notes:",
+                                                    "large_waste": "🚛 Large Waste Collection Companies:",
+                                                    "no_disposal": "No disposal",
+                                                    "report_method": "Reporting method",
+                                                    "won": "KRW"
+                                                },
+                                                "vi": {
+                                                    "title": f"📍 Hướng dẫn xử lý rác thải {district}",
+                                                    "department": "🏢 Phòng ban phụ trách",
+                                                    "time": "⏰ Thời gian thu gom",
+                                                    "place": "📍 Địa điểm thu gom",
+                                                    "schedule": "📅 Lịch thu gom hàng tuần:",
+                                                    "price": "💰 Giá túi rác:",
+                                                    "notes": "⚠️ Lưu ý đặc biệt:",
+                                                    "large_waste": "🚛 Công ty thu gom rác lớn:",
+                                                    "no_disposal": "Không được vứt",
+                                                    "report_method": "Phương pháp báo cáo",
+                                                    "won": "KRW"
+                                                },
+                                                "zh": {
+                                                    "title": f"📍 {district}垃圾处理指南",
+                                                    "department": "🏢 负责部门",
+                                                    "time": "⏰ 收集时间",
+                                                    "place": "📍 收集地点",
+                                                    "schedule": "📅 每周收集时间表:",
+                                                    "price": "💰 垃圾袋价格:",
+                                                    "notes": "⚠️ 特别注意事项:",
+                                                    "large_waste": "🚛 大型垃圾收集公司:",
+                                                    "no_disposal": "禁止投放",
+                                                    "report_method": "申报方法",
+                                                    "won": "韩元"
+                                                },
+                                                "ja": {
+                                                    "title": f"📍 {district}ゴミ処理ガイド",
+                                                    "department": "🏢 担当部署",
+                                                    "time": "⏰ 収集時間",
+                                                    "place": "📍 収集場所",
+                                                    "schedule": "📅 週間収集スケジュール:",
+                                                    "price": "💰 ゴミ袋価格:",
+                                                    "notes": "⚠️ 特記事項:",
+                                                    "large_waste": "🚛 大型ゴミ収集業者:",
+                                                    "no_disposal": "排出禁止",
+                                                    "report_method": "報告方法",
+                                                    "won": "ウォン"
+                                                },
+                                                "tw": {
+                                                    "title": f"📍 {district}垃圾處理指南",
+                                                    "department": "🏢 負責部門",
+                                                    "time": "⏰ 收集時間",
+                                                    "place": "📍 收集地點",
+                                                    "schedule": "📅 每週收集時間表:",
+                                                    "price": "💰 垃圾袋價格:",
+                                                    "notes": "⚠️ 特別注意事項:",
+                                                    "large_waste": "🚛 大型垃圾收集公司:",
+                                                    "no_disposal": "禁止投放",
+                                                    "report_method": "申報方法",
+                                                    "won": "台幣"
+                                                },
+                                                "th": {
+                                                    "title": f"📍 คู่มือการจัดการขยะ {district}",
+                                                    "department": "🏢 หน่วยงานที่รับผิดชอบ",
+                                                    "time": "⏰ เวลาเก็บขยะ",
+                                                    "place": "📍 สถานที่เก็บขยะ",
+                                                    "schedule": "📅 ตารางเก็บขยะรายสัปดาห์:",
+                                                    "price": "💰 ราคาถุงขยะ:",
+                                                    "notes": "⚠️ ข้อสังเกตพิเศษ:",
+                                                    "large_waste": "🚛 บริษัทเก็บขยะขนาดใหญ่:",
+                                                    "no_disposal": "ห้ามทิ้ง",
+                                                    "report_method": "วิธีการแจ้ง",
+                                                    "won": "วอน"
+                                                },
+                                                "tl": {
+                                                    "title": f"📍 Gabay sa Pagtatapon ng Basura sa {district}",
+                                                    "department": "🏢 Departamentong may hawak",
+                                                    "time": "⏰ Oras ng koleksyon",
+                                                    "place": "📍 Lugar ng koleksyon",
+                                                    "schedule": "📅 Lingguhang iskedyul ng koleksyon:",
+                                                    "price": "💰 Presyo ng supot ng basura:",
+                                                    "notes": "⚠️ Espesyal na paalala:",
+                                                    "large_waste": "🚛 Mga kumpanya ng malaking basura:",
+                                                    "no_disposal": "Bawal itapon",
+                                                    "report_method": "Paraan ng pag-report",
+                                                    "won": "Won"
+                                                },
+                                                "id": {
+                                                    "title": f"📍 Panduan Pembuangan Sampah {district}",
+                                                    "department": "🏢 Departemen yang bertanggung jawab",
+                                                    "time": "⏰ Waktu pengumpulan",
+                                                    "place": "📍 Lokasi pengumpulan",
+                                                    "schedule": "📅 Jadwal pengumpulan mingguan:",
+                                                    "price": "💰 Harga kantong sampah:",
+                                                    "notes": "⚠️ Catatan khusus:",
+                                                    "large_waste": "🚛 Perusahaan pengumpul sampah besar:",
+                                                    "no_disposal": "Dilarang buang",
+                                                    "report_method": "Metode pelaporan",
+                                                    "won": "Won"
+                                                },
+                                                "fr": {
+                                                    "title": f"📍 Guide d'élimination des déchets {district}",
+                                                    "department": "🏢 Département responsable",
+                                                    "time": "⏰ Heure de collecte",
+                                                    "place": "📍 Lieu de collecte",
+                                                    "schedule": "📅 Horaire de collecte hebdomadaire:",
+                                                    "price": "💰 Prix des sacs poubelles:",
+                                                    "notes": "⚠️ Notes spéciales:",
+                                                    "large_waste": "🚛 Entreprises de collecte de gros déchets:",
+                                                    "no_disposal": "Interdiction de jeter",
+                                                    "report_method": "Méthode de signalement",
+                                                    "won": "Won"
+                                                },
+                                                "de": {
+                                                    "title": f"📍 Abfallentsorgungshandbuch {district}",
+                                                    "department": "🏢 Zuständige Abteilung",
+                                                    "time": "⏰ Abholzeit",
+                                                    "place": "📍 Abholort",
+                                                    "schedule": "📅 Wöchentlicher Abholplan:",
+                                                    "price": "💰 Müllbeutelpreise:",
+                                                    "notes": "⚠️ Besondere Hinweise:",
+                                                    "large_waste": "🚛 Sperrmüll-Entsorgungsunternehmen:",
+                                                    "no_disposal": "Entsorgung verboten",
+                                                    "report_method": "Meldeverfahren",
+                                                    "won": "Won"
+                                                }
+                                            }
+                                            
+                                            # 언어별 레이블 선택
+                                            current_labels = labels.get(target_lang, labels["ko"])
+                                            
+                                            # 한국어 데이터 번역 매핑
+                                            translations = {
+                                                "en": {
+                                                    # 부서명 번역
+                                                    "자원순환과": "Resource Circulation Department",
+                                                    "청소행정과": "Sanitation Administration Department",
+                                                    "환경위생과": "Environmental Sanitation Department",
+                                                    "환경과": "Environment Department",
+                                                    "청소과": "Sanitation Department",
+                                                    
+                                                    # 배출 품목 번역
+                                                    "일반쓰레기": "General waste",
+                                                    "음식물쓰레기": "Food waste",
+                                                    "재활용품": "Recyclables",
+                                                    "재활용품(캔,병,고철,플라스틱,우유.종이팩, 투명폐트병)": "Recyclables (cans, bottles, scrap metal, plastic, milk/paper cartons, clear PET bottles)",
+                                                    "재활용품(종이,의류,비닐포장재,스치로폼류)": "Recyclables (paper, clothing, plastic packaging, styrofoam)",
+                                                    "소형폐가전": "Small waste electronics",
+                                                    "불연성폐기물": "Non-combustible waste",
+                                                    "연탄재": "Briquette ash",
+                                                    "소규모건설폐기물(PP전용마대)": "Small construction waste (PP bags only)",
+                                                    "배출금지": "No disposal",
+                                                    
+                                                    # 요일 번역
+                                                    "일요일": "Sunday",
+                                                    "월요일": "Monday", 
+                                                    "화요일": "Tuesday",
+                                                    "수요일": "Wednesday",
+                                                    "목요일": "Thursday",
+                                                    "금요일": "Friday",
+                                                    "토요일": "Saturday"
+                                                },
+                                                "vi": {
+                                                    # 부서명 번역
+                                                    "자원순환과": "Phòng Tuần hoàn Tài nguyên",
+                                                    "청소행정과": "Phòng Hành chính Vệ sinh",
+                                                    "환경위생과": "Phòng Vệ sinh Môi trường", 
+                                                    "환경과": "Phòng Môi trường",
+                                                    "청소과": "Phòng Vệ sinh",
+                                                    
+                                                    # 배출 품목 번역
+                                                    "일반쓰레기": "Rác thải chung",
+                                                    "음식물쓰레기": "Rác thực phẩm",
+                                                    "재활용품": "Đồ tái chế",
+                                                    "재활용품(캔,병,고철,플라스틱,우유.종이팩, 투명폐트병)": "Đồ tái chế (lon, chai, kim loại phế, nhựa, hộp sữa/giấy, chai PET trong suốt)",
+                                                    "재활용품(종이,의류,비닐포장재,스치로폼류)": "Đồ tái chế (giấy, quần áo, bao bì nhựa, xốp)",
+                                                    "소형폐가전": "Thiết bị điện tử phế liệu nhỏ",
+                                                    "불연성폐기물": "Chất thải không cháy",
+                                                    "연탄재": "Tro than củi",
+                                                    "소규모건설폐기물(PP전용마대)": "Chất thải xây dựng nhỏ (chỉ túi PP)",
+                                                    "배출금지": "Cấm thải",
+                                                    
+                                                    # 요일 번역
+                                                    "일요일": "Chủ nhật",
+                                                    "월요일": "Thứ hai",
+                                                    "화요일": "Thứ ba", 
+                                                    "수요일": "Thứ tư",
+                                                    "목요일": "Thứ năm",
+                                                    "금요일": "Thứ sáu",
+                                                    "토요일": "Thứ bảy"
+                                                },
+                                                "zh": {
+                                                    # 부서명 번역
+                                                    "자원순환과": "资源循环科",
+                                                    "청소행정과": "清扫行政科",
+                                                    "환경위생과": "环境卫生科",
+                                                    "환경과": "环境科", 
+                                                    "청소과": "清扫科",
+                                                    
+                                                    # 배출 품목 번역
+                                                    "일반쓰레기": "一般垃圾",
+                                                    "음식물쓰레기": "食物垃圾",
+                                                    "재활용품": "可回收物",
+                                                    "재활용품(캔,병,고철,플라스틱,우유.종이팩, 투명폐트병)": "可回收物（罐头、瓶子、废铁、塑料、牛奶纸盒、透明PET瓶）",
+                                                    "재활용품(종이,의류,비닐포장재,스치로폼류)": "可回收物（纸类、衣物、塑料包装、泡沫塑料）",
+                                                    "소형폐가전": "小型废旧家电",
+                                                    "불연성폐기물": "不可燃垃圾",
+                                                    "연탄재": "煤球灰",
+                                                    "소규모건설폐기물(PP전용마대)": "小型建筑垃圾（PP专用袋）",
+                                                    "배출금지": "禁止投放",
+                                                    
+                                                    # 요일 번역
+                                                    "일요일": "星期日",
+                                                    "월요일": "星期一",
+                                                    "화요일": "星期二",
+                                                    "수요일": "星期三", 
+                                                    "목요일": "星期四",
+                                                    "금요일": "星期五",
+                                                    "토요일": "星期六"
+                                                },
+                                                "ja": {
+                                                    # 부서명 번역
+                                                    "자원순환과": "資源循環課",
+                                                    "청소행정과": "清掃行政課",
+                                                    "환경위생과": "環境衛生課",
+                                                    "환경과": "環境課",
+                                                    "청소과": "清掃課",
+                                                    
+                                                    # 배출 품목 번역
+                                                    "일반쓰레기": "一般ゴミ",
+                                                    "음식물쓰레기": "生ゴミ",
+                                                    "재활용품": "リサイクル品",
+                                                    "재활용품(캔,병,고철,플라스틱,우유.종이팩, 투명폐트병)": "リサイクル品（缶、瓶、鉄くず、プラスチック、牛乳紙パック、透明ペットボトル）",
+                                                    "재활용품(종이,의류,비닐포장재,스치로폼류)": "リサイクル品（紙、衣類、ビニール包装材、発泡スチロール）",
+                                                    "소형폐가전": "小型廃家電",
+                                                    "불연성폐기물": "不燃ゴミ",
+                                                    "연탄재": "練炭灰",
+                                                    "소규모건설폐기물(PP전용마대)": "小規模建設廃棄物（PP専用袋）",
+                                                    "배출금지": "排出禁止",
+                                                    
+                                                    # 요일 번역
+                                                    "일요일": "日曜日",
+                                                    "월요일": "月曜日",
+                                                    "화요일": "火曜日",
+                                                    "수요일": "水曜日",
+                                                    "목요일": "木曜日", 
+                                                    "금요일": "金曜日",
+                                                    "토요일": "土曜日"
+                                                }
+                                            }
+                                            
+                                            # 쓰레기 배출 정보를 구성 (다국어 번역 적용)
+                                            response_lines = [current_labels["title"]]
                                             response_lines.append("")
-                                            response_lines.append(f"🏢 담당부서: {district_info.get('담당부서', '')} ({district_info.get('연락처', '')})")
-                                            response_lines.append(f"⏰ 배출시간: {district_info.get('배출시간', '')}")
-                                            response_lines.append(f"📍 배출장소: {district_info.get('배출장소', '')}")
+                                            
+                                            # 담당부서명 번역
+                                            dept_name = translate_waste_text(district_info.get('담당부서', ''), target_lang)
+                                            response_lines.append(f"{current_labels['department']}: {dept_name} ({district_info.get('연락처', '')})")
+                                            response_lines.append(f"{current_labels['time']}: {district_info.get('배출시간', '')}")
+                                            response_lines.append(f"{current_labels['place']}: {district_info.get('배출장소', '')}")
                                             response_lines.append("")
                                             
                                             # 배출요일 정보
                                             if '배출요일' in district_info:
-                                                response_lines.append("📅 배출요일별 안내:")
+                                                response_lines.append(current_labels["schedule"])
                                                 for day, items in district_info['배출요일'].items():
+                                                    translated_day = translate_waste_text(day, target_lang)
                                                     if items and items != ["배출금지"]:
-                                                        response_lines.append(f"• {day}: {', '.join(items)}")
+                                                        # 배출 품목들 번역
+                                                        translated_items = [translate_waste_text(item, target_lang) for item in items]
+                                                        response_lines.append(f"• {translated_day}: {', '.join(translated_items)}")
                                                     elif items == ["배출금지"]:
-                                                        response_lines.append(f"• {day}: 배출금지")
+                                                        response_lines.append(f"• {translated_day}: {current_labels['no_disposal']}")
                                                 response_lines.append("")
                                             
                                             # 종량제봉투 가격 정보
                                             if '종량제봉투_가격' in district_info:
-                                                response_lines.append("💰 종량제봉투 가격:")
+                                                response_lines.append(current_labels["price"])
                                                 for size, price in district_info['종량제봉투_가격'].items():
-                                                    response_lines.append(f"• {size}: {price:,}원")
+                                                    response_lines.append(f"• {size}: {price:,}{current_labels['won']}")
                                                 response_lines.append("")
                                             
                                             # 특이사항
                                             if '특이사항' in district_info and district_info['특이사항']:
-                                                response_lines.append("⚠️ 특이사항:")
+                                                response_lines.append(current_labels["notes"])
                                                 for item in district_info['특이사항']:
                                                     response_lines.append(f"• {item}")
                                                 response_lines.append("")
                                             
                                             # 대형폐기물 정보
                                             if '대형폐기물_수거업체' in district_info and district_info['대형폐기물_수거업체']:
-                                                response_lines.append("🚛 대형폐기물 수거업체:")
+                                                response_lines.append(current_labels["large_waste"])
                                                 for company in district_info['대형폐기물_수거업체']:
                                                     response_lines.append(f"• {company.get('업체명', '')}: {company.get('연락처', '')}")
                                                     if company.get('신고방법'):
-                                                        response_lines.append(f"  신고방법: {company.get('신고방법', '')}")
+                                                        response_lines.append(f"  {current_labels['report_method']}: {company.get('신고방법', '')}")
                                             
                                             result = "\n".join(response_lines)
                                             print(f"구별 쓰레기 처리 정보 제공 완료: {len(result)} 문자")
