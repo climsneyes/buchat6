@@ -42,6 +42,7 @@ from rag_utils import get_or_create_vector_db, answer_with_rag, answer_with_rag_
 from rag_utils import SimpleVectorDB, GeminiEmbeddings, answer_with_langgraph_rag
 from rag_utils import is_waste_related_query, extract_district_from_query, get_waste_info_from_json, get_district_selection_prompt
 from rag_utils import is_alien_registration_related_query, get_detailed_alien_registration_guide, translate_waste_text
+from rag_utils import foreign_worker_rag_answer
 
 
 IS_SERVER = os.environ.get("CLOUDTYPE") == "1"  # Cloudtype 환경변수 등으로 구분
@@ -93,8 +94,14 @@ vector_db_busan_food = None
 # 부산 맛집 JSON 파일 경로
 BUSAN_FOOD_JSON_PATH = "부산의맛(2025).json"
 TAEK_SULLING_JSON_PATH = "택슐랭(2025).json"
+
+# 외국인 근로자 안전 관련 JSON 파일 경로
+JANGMACHUL_JSON_PATH = "jangmachul.json"
+ONYUL_JSON_PATH = "onyul.json"
 busan_food_json_data = None
 taek_sulling_json_data = None
+jangmachul_json_data = None
+onyul_json_data = None
 
 # 다문화가족 한국생활안내 벡터DB 로드
 try:
@@ -141,20 +148,46 @@ try:
     import json
     
     # 부산의맛(2025).json 로드
-    if os.path.exists(BUSAN_FOOD_JSON_PATH):
-        with open(BUSAN_FOOD_JSON_PATH, "r", encoding="utf-8") as f:
-            busan_food_json_data = json.load(f)
-        print(f"부산의맛(2025).json 로드 완료")
-    else:
-        print(f"{BUSAN_FOOD_JSON_PATH} 파일이 없습니다.")
+    try:
+        if os.path.exists(BUSAN_FOOD_JSON_PATH):
+            with open(BUSAN_FOOD_JSON_PATH, "r", encoding="utf-8") as f:
+                busan_food_json_data = json.load(f)
+            print(f"부산의맛(2025).json 로드 완료 - 데이터 크기: {len(busan_food_json_data)} keys")
+        else:
+            print(f"{BUSAN_FOOD_JSON_PATH} 파일이 없습니다.")
+            busan_food_json_data = None
+    except Exception as e:
+        print(f"부산의맛(2025).json 로드 중 오류: {e}")
+        busan_food_json_data = None
     
     # 택슐랭(2025).json 로드
-    if os.path.exists(TAEK_SULLING_JSON_PATH):
-        with open(TAEK_SULLING_JSON_PATH, "r", encoding="utf-8") as f:
-            taek_sulling_json_data = json.load(f)
-        print(f"택슐랭(2025).json 로드 완료")
+    try:
+        if os.path.exists(TAEK_SULLING_JSON_PATH):
+            with open(TAEK_SULLING_JSON_PATH, "r", encoding="utf-8") as f:
+                taek_sulling_json_data = json.load(f)
+            print(f"택슐랭(2025).json 로드 완료 - 데이터 크기: {len(taek_sulling_json_data.get('restaurants', []))} restaurants")
+        else:
+            print(f"{TAEK_SULLING_JSON_PATH} 파일이 없습니다.")
+            taek_sulling_json_data = None
+    except Exception as e:
+        print(f"택슐랭(2025).json 로드 중 오류: {e}")
+        taek_sulling_json_data = None
+    
+    # jangmachul.json 로드
+    if os.path.exists(JANGMACHUL_JSON_PATH):
+        with open(JANGMACHUL_JSON_PATH, "r", encoding="utf-8") as f:
+            jangmachul_json_data = json.load(f)
+        print(f"jangmachul.json 로드 완료")
     else:
-        print(f"{TAEK_SULLING_JSON_PATH} 파일이 없습니다.")
+        print(f"{JANGMACHUL_JSON_PATH} 파일이 없습니다.")
+        
+    # onyul.json 로드
+    if os.path.exists(ONYUL_JSON_PATH):
+        with open(ONYUL_JSON_PATH, "r", encoding="utf-8") as f:
+            onyul_json_data = json.load(f)
+        print(f"onyul.json 로드 완료")
+    else:
+        print(f"{ONYUL_JSON_PATH} 파일이 없습니다.")
         
 except Exception as e:
     print(f"JSON 파일 로드 중 오류 발생: {e}")
@@ -236,6 +269,13 @@ FIND_ROOM_TEXTS = {
         "rag": "Panduan Hidup di Korea untuk Keluarga Multikultural",
         "rag_desc": "Chatbot berdasarkan portal Danuri - Panduan Hidup di Korea untuk Keluarga Multikultural"
     },
+    "tl": {
+        "title": "Pumili ng paraan upang mahanap ang chat room",
+        "id": "Hanapin sa pamamagitan ng ID",
+        "id_desc": "Sumali sa pamamagitan ng paglalagay ng chat room ID",
+        "rag": "Gabay sa Buhay sa Korea para sa Multikultural na Pamilya",
+        "rag_desc": "Chatbot na batay sa Danuri portal - Gabay sa Buhay sa Korea para sa Multikultural na Pamilya"
+    },
 }
 
 # 닉네임 입력 화면 다국어 지원
@@ -264,6 +304,14 @@ NICKNAME_TEXTS = {
         "enter": "Masuk ke Ruang Obrolan",
         "back": "Kembali"
     },
+    "tl": {
+        "title": "Itakda ang Palayaw",
+        "desc": "Itakda ang pangalang ipapakita sa iba",
+        "label": "Palayaw",
+        "hint": "Ilagay ang inyong palayaw",
+        "enter": "Pumasok sa Chat Room",
+        "back": "Bumalik"
+    },
 }
 
 # --- 외국인 근로자 권리구제 방 카드/버튼 다국어 사전 ---
@@ -288,7 +336,8 @@ FOREIGN_WORKER_ROOM_CARD_TEXTS = {
     "si": {"title": "විදේශීය කම්කරුවන්ගේ අයිතිවාසිකම් ආරක්ෂාව", "desc": "විදේශීය කම්කරුවන්ගේ අයිතිවාසිකම් මාර්ගෝපදේශය මත පදනම් වූ RAG චැට්බොට්"},
     "km": {"title": "ការការពារសិទ្ធិកម្មករជាតិផ្សេង", "desc": "RAG chatbot ផ្អែកលើមគ្គុទ្ទេសក៍សិទ្ធិកម្មករជាតិផ្សេង"},
     "ky": {"title": "Чет эл жумушчуларынын укуктарын коргоо", "desc": "Чет эл жумушчуларынын укук колдонмосуна негизделген RAG чатбот"},
-    "ur": {"title": "غیر ملکی مزدوروں کے حقوق کا تحفظ", "desc": "غیر ملکی مزدوروں کے حقوق کی گائیڈ بک پر مبنی RAG چیٹ بوٹ"}
+    "ur": {"title": "غیر ملکی مزدوروں کے حقوق کا تحفظ", "desc": "غیر ملکی مزدوروں کے حقوق کی گائیڈ بک پر مبنی RAG چیٹ بوٹ"},
+    "tl": {"title": "Proteksyon ng Karapatan ng Dayuhang Manggagawa", "desc": "RAG chatbot batay sa Gabay para sa Karapatan ng Dayuhang Manggagawa"}
 }
 
 # --- 부산 맛집 검색 방 카드/버튼 다국어 사전 ---
@@ -313,7 +362,8 @@ BUSAN_FOOD_ROOM_CARD_TEXTS = {
     "si": {"title": "Busan අවන්හල් සෙවීම", "desc": "Busan Taste & Taксулing මත පදනම් වූ අවන්හල් සෙවීමේ චැට්බොට්"},
     "km": {"title": "ស្វែងរកភោជនីយដ្ឋាន Busan", "desc": "Chatbot ស្វែងរកភោជនីយដ្ឋានដែលផ្អែកលើ Busan Taste & Taксулing"},
     "ky": {"title": "Бусан ресторандарын издөө", "desc": "Busan Taste & Taксулing негизиндеги ресторан издөө чатботу"},
-    "ur": {"title": "بوسان ریستوران تلاش", "desc": "Busan Taste & Taксулing پر مبنی ریستوران تلاش چیٹ بوٹ"}
+    "ur": {"title": "بوسان ریستوران تلاش", "desc": "Busan Taste & Taксулing پر مبنی ریستوران تلاش چیٹ بوٹ"},
+    "tl": {"title": "Paghahanap ng Busan Restaurant", "desc": "Restaurant search chatbot batay sa Busan Taste & Taксулing"}
 }
 
 def get_text_color(page):
@@ -792,7 +842,10 @@ def main(page: ft.Page):
                 user_id = str(uuid.uuid4())
                 page.session.set("user_id", user_id)
             user_rag_room_id = f"{RAG_ROOM_ID}_{user_id}"
-            go_chat(lang, lang, user_rag_room_id, RAG_ROOM_TITLE, is_rag=True)
+            # 언어별 RAG 채팅방 제목 설정
+            from pages.chat_room import RAG_GUIDE_TEXTS
+            rag_room_title = RAG_GUIDE_TEXTS.get(lang, RAG_GUIDE_TEXTS["ko"])["title"]
+            go_chat(lang, lang, user_rag_room_id, rag_room_title, is_rag=True)
             return
         
         try:
@@ -862,7 +915,7 @@ def main(page: ft.Page):
                                 "ja": "申し訳ございません。釜山レストラン検索機能は現在利用できません。（JSONデータが読み込まれていません。）",
                                 "th": "ขออภัย ฟีเจอร์ค้นหาร้านอาหารปูซานไม่สามารถใช้งานได้ในขณะนี้ (ข้อมูล JSON ยังไม่ได้โหลด)",
                                 "id": "Maaf, fitur pencarian restoran Busan saat ini tidak tersedia. (Data JSON belum dimuat.)",
-                                "tl": "Paumanhin, ang Busan restaurant search feature ay hindi available ngayon. (Hindi pa na-load ang JSON data.)",
+                                "tl": "Paumanhin, ang Busan restaurant search feature ay hindi available ngayon. Subukan mo ulit mamaya o makipag-ugnayan sa admin. (Hindi pa na-load ang JSON data.)",
                                 "fr": "Désolé, la fonction de recherche de restaurants de Busan n'est pas disponible actuellement. (Données JSON non chargées.)",
                                 "de": "Entschuldigung, die Busan-Restaurant-Suchfunktion ist derzeit nicht verfügbar. (JSON-Daten nicht geladen.)",
                                 "tw": "抱歉，釜山美食搜尋功能目前無法使用。（JSON資料未載入。）"
@@ -909,83 +962,17 @@ def main(page: ft.Page):
                 # 대화 컨텍스트를 저장할 변수
                 conversation_context = {}
                 
-                def foreign_worker_rag_answer(query, target_lang):
-                    try:
-                        print(f"외국인 권리구제 RAG 질문: {query}")
-                        print(f"타겟 언어: {target_lang}")
-                        
-                        # 외국인 등록 관련 질문 확인 (최우선 처리)
-                        if is_alien_registration_related_query(query):
-                            print("외국인 등록 관련 질문 감지됨 (외국인 근로자 RAG)")
-                            detailed_guide = get_detailed_alien_registration_guide(target_lang)
-                            return detailed_guide
-                        
-                        # 쓰레기 처리 관련 질문인지 확인
-                        from rag_utils import is_waste_related_query
-                        if is_waste_related_query(query):
-                            # 쓰레기 처리 관련 질문이면 다문화가족 벡터DB 사용
-                            if vector_db_multicultural is None:
-                                print("다문화가족 벡터DB가 None입니다.")
-                                # 다국어 오류 메시지
-                                error_messages = {
-                                    "ko": "죄송합니다. RAG 기능이 현재 사용할 수 없습니다. (다문화가족 벡터DB가 로드되지 않았습니다.)",
-                                    "en": "Sorry, the RAG function is currently unavailable. (Multicultural family vector database not loaded.)",
-                                    "vi": "Xin lỗi, chức năng RAG hiện không khả dụng. (Cơ sở dữ liệu vector gia đình đa văn hóa chưa được tải.)",
-                                    "zh": "抱歉，RAG功能目前不可用。（多文化家庭向量数据库未加载。）",
-                                    "ja": "申し訳ございません。RAG機能は現在利用できません。（多文化家族ベクターデータベースが読み込まれていません。）",
-                                    "th": "ขออภัย ฟังก์ชัน RAG ไม่สามารถใช้งานได้ในขณะนี้ (ฐานข้อมูลเวกเตอร์ครอบครัวพหุวัฒนธรรมยังไม่ได้โหลด)",
-                                    "id": "Maaf, fungsi RAG saat ini tidak tersedia. (Database vektor keluarga multikultural belum dimuat.)",
-                                    "tl": "Paumanhin, ang RAG function ay hindi available ngayon. (Hindi pa na-load ang multicultural family vector database.)",
-                                    "fr": "Désolé, la fonction RAG n'est pas disponible actuellement. (Base de données vectorielle des familles multiculturelles non chargée.)",
-                                    "de": "Entschuldigung, die RAG-Funktion ist derzeit nicht verfügbar. (Multikulturelle Familien-Vektordatenbank nicht geladen.)",
-                                    "tw": "抱歉，RAG功能目前無法使用。（多文化家庭向量資料庫未載入。）"
-                                }
-                                return error_messages.get(target_lang, error_messages["ko"])
-                            print(f"쓰레기 처리 질문 - 다문화가족 벡터DB 사용")
-                            result = answer_with_langgraph_rag(query, vector_db_multicultural, GEMINI_API_KEY, target_lang=target_lang)
-                        else:
-                            # 일반 외국인 근로자 관련 질문이면 외국인 근로자 벡터DB 사용
-                            if vector_db_foreign_worker is None:
-                                print("외국인 권리구제 벡터DB가 None입니다.")
-                                # 다국어 오류 메시지
-                                error_messages = {
-                                    "ko": "죄송합니다. RAG 기능이 현재 사용할 수 없습니다. (외국인 권리구제 벡터DB가 로드되지 않았습니다.)",
-                                    "en": "Sorry, the RAG function is currently unavailable. (Foreign worker rights vector database not loaded.)",
-                                    "vi": "Xin lỗi, chức năng RAG hiện không khả dụng. (Cơ sở dữ liệu vector quyền lợi người lao động nước ngoài chưa được tải.)",
-                                    "zh": "抱歉，RAG功能目前不可用。（外国工人权益向量数据库未加载。）",
-                                    "ja": "申し訳ございません。RAG機能は現在利用できません。（外国人労働者権利ベクターデータベースが読み込まれていません。）",
-                                    "th": "ขออภัย ฟังก์ชัน RAG ไม่สามารถใช้งานได้ในขณะนี้ (ฐานข้อมูลเวกเตอร์สิทธิแรงงานต่างชาติยังไม่ได้โหลด)",
-                                    "id": "Maaf, fungsi RAG saat ini tidak tersedia. (Database vektor hak pekerja asing belum dimuat.)",
-                                    "tl": "Paumanhin, ang RAG function ay hindi available ngayon. (Hindi pa na-load ang foreign worker rights vector database.)",
-                                    "fr": "Désolé, la fonction RAG n'est pas disponible actuellement. (Base de données vectorielle des droits des travailleurs étrangers non chargée.)",
-                                    "de": "Entschuldigung, die RAG-Funktion ist derzeit nicht verfügbar. (Ausländische Arbeitnehmerrechte-Vektordatenbank nicht geladen.)",
-                                    "tw": "抱歉，RAG功能目前無法使用。（外國工人權益向量資料庫未載入。）"
-                                }
-                                return error_messages.get(target_lang, error_messages["ko"])
-                            print(f"외국인 근로자 질문 - 외국인 근로자 벡터DB 사용")
-                            result = answer_with_langgraph_rag(query, vector_db_foreign_worker, GEMINI_API_KEY, target_lang=target_lang)
-                        
-                        print(f"RAG 답변 생성 완료: {len(result)} 문자")
-                        return result
-                    except Exception as e:
-                        print(f"외국인 근로자 RAG 오류: {e}")
-                        import traceback
-                        traceback.print_exc()
-                        # 다국어 오류 메시지
-                        error_messages = {
-                            "ko": "죄송합니다. 외국인 근로자 권리구제 정보를 찾을 수 없습니다.",
-                            "en": "Sorry, foreign worker rights information could not be found.",
-                            "vi": "Xin lỗi, không thể tìm thấy thông tin quyền lợi người lao động nước ngoài.",
-                            "zh": "抱歉，找不到外国工人权益信息。",
-                            "ja": "申し訳ございません。外国人労働者の権利救済情報が見つかりませんでした。",
-                            "th": "ขออภัย ไม่พบข้อมูลสิทธิแรงงานต่างชาติ",
-                            "id": "Maaf, informasi hak pekerja asing tidak dapat ditemukan.",
-                            "tl": "Paumanhin, hindi nahanap ang impormasyon ng mga karapatan ng foreign worker.",
-                            "fr": "Désolé, les informations sur les droits des travailleurs étrangers n'ont pas pu être trouvées.",
-                            "de": "Entschuldigung, Informationen zu Ausländerrechten konnten nicht gefunden werden.",
-                            "tw": "抱歉，找不到外國工人權益資訊。"
-                        }
-                        return error_messages.get(target_lang, error_messages["ko"])
+                def foreign_worker_rag_answer_wrapper(query, target_lang):
+                    # rag_utils.py의 foreign_worker_rag_answer 함수 호출
+                    return foreign_worker_rag_answer(
+                        query=query, 
+                        target_lang=target_lang, 
+                        vector_db_foreign_worker=vector_db_foreign_worker, 
+                        gemini_api_key=GEMINI_API_KEY, 
+                        conversation_context=conversation_context,
+                        jangmachul_json_data=jangmachul_json_data,
+                        onyul_json_data=onyul_json_data
+                    )
                 
                 page.views.append(ChatRoomPage(
                     page,
@@ -995,7 +982,7 @@ def main(page: ft.Page):
                     target_lang=target_lang,
                     on_back=lambda e: go_room_list(lang),
                     on_share=on_share_clicked,
-                    custom_translate_message=foreign_worker_rag_answer,
+                    custom_translate_message=foreign_worker_rag_answer_wrapper,
                     firebase_available=FIREBASE_AVAILABLE,
                     is_foreign_worker_rag=True
                 ))
@@ -1570,7 +1557,8 @@ def main(page: ft.Page):
     def go_foreign_worker_rag_chat(lang):
         # 고유 방 ID 및 타이틀
         room_id = "foreign_worker_rights_rag"
-        room_title = "외국인 근로자 권리구제"
+        # 언어별 채팅방 제목 설정
+        room_title = FOREIGN_WORKER_ROOM_CARD_TEXTS.get(lang, FOREIGN_WORKER_ROOM_CARD_TEXTS["ko"])["title"]
         # 채팅방 진입 (is_foreign_worker_rag=True로 설정)
         go_chat(lang, lang, room_id, room_title, is_rag=False, is_foreign_worker_rag=True)
 
@@ -1630,4 +1618,4 @@ def main(page: ft.Page):
     page.go(page.route)
 
 if __name__ == "__main__":
-    ft.app(target=main, port=8016, view=ft.WEB_BROWSER)
+    ft.app(target=main, port=8018, view=ft.WEB_BROWSER)

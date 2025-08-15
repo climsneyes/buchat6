@@ -47,10 +47,18 @@ def detect_language(text):
     german_pattern = re.compile(r'[äöüß]')
     # 태국어 패턴
     thai_pattern = re.compile(r'[\u0e00-\u0e7f]')
+    # 타갈로그어(필리핀어) 패턴 - ng, mga, at, sa 등의 일반적인 단어들과 특수문자
+    tagalog_pattern = re.compile(r'\b(ng|mga|at|sa|ang|na|ay|para|kung|may|kasi|pero|hindi|oo|naman|din|rin|yung|yun|namin|natin|nila|kayo|tayo|sila|ako|ikaw|siya|mga|masarap|restaurant|pagkain|kumain|lugar)\b', re.IGNORECASE)
     
     text_lower = text.lower()
     
-    # 각 언어별 점수 계산
+    # 각 언어별 점수 계산 (타갈로그에 가중치 부여)
+    tagalog_score = len(tagalog_pattern.findall(text))
+    
+    # 타갈로그 키워드가 2개 이상 있으면 강제로 타갈로그로 인식
+    if tagalog_score >= 2:
+        return 'tl'
+    
     scores = {
         'ko': len(korean_pattern.findall(text)),
         'en': len(english_pattern.findall(text)),
@@ -59,7 +67,8 @@ def detect_language(text):
         'vi': len(vietnamese_pattern.findall(text)),
         'fr': len(french_pattern.findall(text)),
         'de': len(german_pattern.findall(text)),
-        'th': len(thai_pattern.findall(text))
+        'th': len(thai_pattern.findall(text)),
+        'tl': tagalog_score * 5  # 타갈로그 패턴에 더 높은 가중치 부여
     }
     
     # 가장 높은 점수의 언어 반환
@@ -1094,7 +1103,7 @@ def retrieve_relevant_chunks(query, vector_db, k=3):
         print(f"  - 유사 청크 검색 완료: {len(docs)}개 찾음")
         return docs
     except Exception as e:
-        print(f"  - ❌ 유사 청크 검색 실패: {e}")
+        print(f"  - 유사 청크 검색 실패: {e}")
         return []
 
 def insert_linebreaks(text, max_length=60):
@@ -1486,7 +1495,7 @@ def load_busan_waste_info():
             data = json.load(f)
         return data
     except Exception as e:
-        print(f"❌ 부산광역시_쓰레기처리정보.json 로드 실패: {e}")
+        print(f"부산광역시_쓰레기처리정보.json 로드 실패: {e}")
         return None
 
 def get_waste_info_from_json(district):
@@ -2082,13 +2091,25 @@ Pertanyaan: {query}
 
 【Ingat: Jawaban HARUS dalam Bahasa Indonesia】""",
 
-        "tl": f"""Narito ang pinakabagong impormasyon ng mga restaurant sa Busan para sa 2025. Mangyaring magbigay ng tumpak at detalyadong sagot sa tanong.
+        "tl": f"""【MAHALAGA: Ang sagot ay dapat nasa Tagalog】Narito ang pinakabagong impormasyon ng mga restaurant sa Busan para sa 2025. Mangyaring magbigay ng tumpak at detalyadong sagot sa tanong.
 
 {context}
 
 Tanong: {query}
 
-Sagot: Batay sa impormasyon ng mga restaurant sa Busan sa itaas, mangyaring magbigay ng tiyak at kapaki-pakinabang na sagot sa tanong. Isama ang mga pangalan ng restaurant, lokasyon, menu, presyo, contact information, business hours atbp nang detalyado. Kung walang eksaktong tugma sa tanong, mangyaring magmungkahi ng katulad na impormasyon o alternatibo.""",
+【Sumagot sa Tagalog lamang】Sagot: Batay sa impormasyon ng mga restaurant sa Busan sa itaas, mangyaring magbigay ng tiyak at kapaki-pakinabang na sagot sa tanong sa Tagalog.
+
+**Mahalagang Instructions:**
+1. Ang mga pangalan ng restaurant ay dapat kasama ang Korean original name at Tagalog translation, format: Korean Name (Tagalog Translation)
+2. Gamitin ang Korean district names tulad ng: 해운대구, 부산진구, 남구, atbp.
+3. Kung nabanggit sa tanong ang English area names tulad ng Haeundae, Seomyeon, Nampo-dong, i-convert sa corresponding Korean district names para sa search
+4. Isama ang detalyadong impormasyon tungkol sa lokasyon, menu, presyo, contact information, business hours, atbp nang detalyado
+5. Para sa bawat restaurant, magbigay ng Google Maps link gamit ang address: [Tignan sa Google Maps](https://maps.google.com/maps?q=주소정보)
+6. Kung walang eksaktong tugma sa tanong, mangyaring magmungkahi ng katulad na impormasyon o alternatibo
+
+Area Reference: Haeundae→해운대구, Seomyeon→부산진구, Nampo-dong→중구, Gwangalli→수영구
+
+【Tandaan: Ang inyong sagot ay dapat nasa Tagalog】""",
 
         "fr": f"""Voici les dernières informations sur les restaurants de Busan pour 2025. Veuillez fournir une réponse précise et détaillée à la question.
 
@@ -2353,15 +2374,15 @@ def get_or_create_vector_db_multi(pdf_paths, gemini_api_key):
     all_chunks = []
     for pdf_path in pdf_paths:
         if not os.path.exists(pdf_path):
-            print(f"❌ PDF 파일이 존재하지 않습니다: {pdf_path}")
+            print(f"PDF 파일이 존재하지 않습니다: {pdf_path}")
             continue
-        print(f"✅ PDF 파일 확인됨: {os.path.abspath(pdf_path)}")
+        print(f"PDF 파일 확인됨: {os.path.abspath(pdf_path)}")
         chunks = chunk_pdf_to_text_chunks(pdf_path)
         all_chunks.extend(chunks)
         print(f"{pdf_path} → 청크 {len(chunks)}개")
     print(f"총 청크 개수: {len(all_chunks)}")
     if not all_chunks:
-        print("❌ 임베딩할 청크가 없습니다.")
+        print("임베딩할 청크가 없습니다.")
         return None
     embeddings = GeminiEmbeddings(gemini_api_key)
     doc_embeddings = embeddings.embed_documents([doc['page_content'] for doc in all_chunks])
@@ -2376,14 +2397,14 @@ def merge_vector_dbs(db_paths, gemini_api_key, save_path="다문화.pkl"):
     all_chunks = []
     for db_path in db_paths:
         if not os.path.exists(db_path):
-            print(f"❌ DB 파일이 존재하지 않습니다: {db_path}")
+            print(f"DB 파일이 존재하지 않습니다: {db_path}")
             continue
         with open(db_path, "rb") as f:
             db = pickle.load(f)
             all_chunks.extend(db.documents)
     print(f"총 합쳐진 청크 개수: {len(all_chunks)}")
     if not all_chunks:
-        print("❌ 합칠 청크가 없습니다.")
+        print("합칠 청크가 없습니다.")
         return None
     embeddings = GeminiEmbeddings(gemini_api_key)
     doc_embeddings = embeddings.embed_documents([doc['page_content'] for doc in all_chunks])
@@ -2402,11 +2423,11 @@ def create_langgraph_rag_system(gemini_api_key: str, vector_db_path: str, target
     print(f"   - Target Lang: {target_lang}")
     
     if not LANGGRAPH_AVAILABLE:
-        print("❌ LangGraph를 사용할 수 없습니다. 기본 RAG 시스템을 사용합니다.")
+        print("LangGraph를 사용할 수 없습니다. 기본 RAG 시스템을 사용합니다.")
         return None
     
     try:
-        print("✅ LangGraph 사용 가능 확인됨")
+        print("LangGraph 사용 가능 확인됨")
         
         # LLM 설정 - API 키를 환경변수로 설정
         print("🤖 LLM 설정 중...")
@@ -2419,7 +2440,7 @@ def create_langgraph_rag_system(gemini_api_key: str, vector_db_path: str, target
             max_output_tokens=2000,
             google_api_key=gemini_api_key  # 명시적으로 API 키 전달
         )
-        print("✅ LLM 설정 완료")
+        print("LLM 설정 완료")
         
         # 임베딩 모델 설정
         print("🔤 임베딩 모델 설정 중...")
@@ -2427,20 +2448,20 @@ def create_langgraph_rag_system(gemini_api_key: str, vector_db_path: str, target
             model="models/embedding-001",
             google_api_key=gemini_api_key  # 명시적으로 API 키 전달
         )
-        print("✅ 임베딩 모델 설정 완료")
+        print("임베딩 모델 설정 완료")
         
         # 벡터스토어 로드
         print("📚 벡터스토어 로드 중...")
         vector_store = load_vector_store_for_langgraph(vector_db_path, embeddings)
         if not vector_store:
-            print("❌ 벡터스토어 로드 실패")
+            print("벡터스토어 로드 실패")
             return None
-        print("✅ 벡터스토어 로드 완료")
+        print("벡터스토어 로드 완료")
         
         # RAG 그래프 생성
         print("🔄 RAG 그래프 생성 중...")
         rag_graph = create_rag_workflow(llm, vector_store, target_lang)
-        print("✅ RAG 그래프 생성 완료")
+        print("RAG 그래프 생성 완료")
         
         result = {
             "graph": rag_graph,
@@ -2453,7 +2474,7 @@ def create_langgraph_rag_system(gemini_api_key: str, vector_db_path: str, target
         return result
         
     except Exception as e:
-        print(f"❌ LangGraph RAG 시스템 생성 실패: {e}")
+        print(f"LangGraph RAG 시스템 생성 실패: {e}")
         import traceback
         traceback.print_exc()
         return None
@@ -2465,7 +2486,7 @@ def load_vector_store_for_langgraph(vector_db_path: str, embeddings):
     try:
         # 파일 존재 확인
         if not os.path.exists(vector_db_path):
-            print(f"❌ 벡터DB 파일이 존재하지 않습니다: {vector_db_path}")
+            print(f"벡터DB 파일이 존재하지 않습니다: {vector_db_path}")
             return None
         
         print("📄 벡터DB 파일 읽는 중...")
@@ -2497,11 +2518,11 @@ def load_vector_store_for_langgraph(vector_db_path: str, embeddings):
             embeddings
         )
         
-        print(f"✅ LangGraph 벡터스토어 로드 완료: {len(documents)}개 문서")
+        print(f"LangGraph 벡터스토어 로드 완료: {len(documents)}개 문서")
         return vector_store
         
     except Exception as e:
-        print(f"❌ 벡터스토어 로드 실패: {e}")
+        print(f"벡터스토어 로드 실패: {e}")
         import traceback
         traceback.print_exc()
         return None
@@ -2995,17 +3016,17 @@ Trả lời:"""
 
 def answer_with_langgraph_rag(query: str, vector_db, gemini_api_key: str, target_lang: str = "ko"):
     """LangGraph 기반 RAG 답변 생성"""
-    print(f"🚀 LangGraph RAG 답변 생성 시작...")
+    print(f"LangGraph RAG 답변 생성 시작...")
     print(f"   - 질문: {query}")
     print(f"   - 언어: {target_lang}")
     print(f"   - API Key: {'있음' if gemini_api_key else '없음'}")
     
     if not LANGGRAPH_AVAILABLE:
-        print("❌ LangGraph를 사용할 수 없습니다. 기본 RAG를 사용합니다.")
+        print("LangGraph를 사용할 수 없습니다. 기본 RAG를 사용합니다.")
         return answer_with_rag(query, vector_db, gemini_api_key, target_lang=target_lang)
     
     try:
-        print("✅ LangGraph 사용 가능 확인됨")
+        print("LangGraph 사용 가능 확인됨")
         
         # 벡터DB 경로 추출
         vector_db_path = None
@@ -3016,19 +3037,19 @@ def answer_with_langgraph_rag(query: str, vector_db, gemini_api_key: str, target
             print(f"💾 임시 벡터DB 파일 생성: {vector_db_path}")
             with open(vector_db_path, 'wb') as f:
                 pickle.dump(vector_db, f)
-            print("✅ 임시 벡터DB 파일 저장 완료")
+            print("임시 벡터DB 파일 저장 완료")
         else:
-            print("❌ 벡터DB에 documents 속성이 없습니다")
+            print("벡터DB에 documents 속성이 없습니다")
             return answer_with_rag(query, vector_db, gemini_api_key, target_lang=target_lang)
         
         # LangGraph RAG 시스템 생성
         print("🔧 LangGraph RAG 시스템 생성 중...")
         rag_system = create_langgraph_rag_system(gemini_api_key, vector_db_path, target_lang)
         if not rag_system:
-            print("❌ LangGraph RAG 시스템 생성 실패, 기본 RAG 사용")
+            print("LangGraph RAG 시스템 생성 실패, 기본 RAG 사용")
             return answer_with_rag(query, vector_db, gemini_api_key, target_lang=target_lang)
         
-        print("✅ LangGraph RAG 시스템 생성 완료")
+        print("LangGraph RAG 시스템 생성 완료")
         
         # 그래프 실행
         print("🔄 LangGraph 워크플로우 실행 중...")
@@ -3038,7 +3059,7 @@ def answer_with_langgraph_rag(query: str, vector_db, gemini_api_key: str, target
         }
         
         result = rag_system["graph"].invoke(initial_state)
-        print("✅ LangGraph 워크플로우 실행 완료")
+        print("LangGraph 워크플로우 실행 완료")
         
         # 임시 파일 정리
         if vector_db_path and os.path.exists(vector_db_path):
@@ -3050,7 +3071,7 @@ def answer_with_langgraph_rag(query: str, vector_db, gemini_api_key: str, target
         return answer
         
     except Exception as e:
-        print(f"❌ LangGraph RAG 오류: {e}")
+        print(f"LangGraph RAG 오류: {e}")
         import traceback
         traceback.print_exc()
         # 오류 발생 시 기본 RAG 사용
@@ -3063,13 +3084,13 @@ if __name__ == "__main__":
     # API Key 디버깅
     print("=== API Key 확인 ===")
     if not api_key:
-        print("❌ 환경변수 GEMINI_API_KEY가 설정되어 있지 않습니다.")
+        print("환경변수 GEMINI_API_KEY가 설정되어 있지 않습니다.")
         print("환경변수 설정 방법:")
         print("Windows: set GEMINI_API_KEY=your-api-key-here")
         print("Linux/Mac: export GEMINI_API_KEY=your-api-key-here")
         exit(1)
     else:
-        print(f"✅ API Key 확인됨: {api_key[:10]}...{api_key[-4:]}")
+        print(f"API Key 확인됨: {api_key[:10]}...{api_key[-4:]}")
     
     # 캐시 상태 확인
     print("\n=== 캐시 상태 확인 ===")
@@ -3128,11 +3149,11 @@ def get_detailed_alien_registration_guide(target_lang="ko"):
 • 지연 시 과태료 부과 (10만원~100만원)
 
 📋 **필요 서류**
-✅ 외국인등록 신청서 (현장 작성)
-✅ 여권 원본
-✅ 여권용 사진 1매 (3.5cm × 4.5cm, 6개월 이내 촬영)
-✅ 수수료 3만원
-✅ 체류자격별 추가 서류:
+- 외국인등록 신청서 (현장 작성)
+- 여권 원본
+- 여권용 사진 1매 (3.5cm × 4.5cm, 6개월 이내 촬영)
+- 수수료 3만원
+- 체류자격별 추가 서류:
    - 결혼이민: 혼인관계증명서, 가족관계증명서
    - 취업: 근로계약서, 사업자등록증 사본
    - 유학: 재학증명서, 학비납입증명서
@@ -3170,11 +3191,11 @@ def get_detailed_alien_registration_guide(target_lang="ko"):
 • Late application penalty: 100,000~1,000,000 KRW
 
 📋 **Required Documents**
-✅ Alien Registration Application Form (fill on-site)
-✅ Original passport
-✅ Passport photo (3.5cm × 4.5cm, taken within 6 months)
-✅ Fee: 30,000 KRW
-✅ Additional documents by visa type:
+- Alien Registration Application Form (fill on-site)
+- Original passport
+- Passport photo (3.5cm × 4.5cm, taken within 6 months)
+- Fee: 30,000 KRW
+- Additional documents by visa type:
    - Marriage: Marriage certificate, family relation certificate
    - Work: Employment contract, business registration
    - Study: Enrollment certificate, tuition payment proof
@@ -3212,11 +3233,11 @@ def get_detailed_alien_registration_guide(target_lang="ko"):
 • Phạt nộp muộn: 100,000~1,000,000 KRW
 
 📋 **Giấy Tờ Cần Thiết**
-✅ Đơn đăng ký người nước ngoài (điền tại chỗ)
-✅ Hộ chiếu gốc
-✅ Ảnh hộ chiếu (3.5cm × 4.5cm, chụp trong 6 tháng)
-✅ Phí: 30,000 KRW
-✅ Giấy tờ bổ sung theo loại visa:
+- Đơn đăng ký người nước ngoài (điền tại chỗ)
+- Hộ chiếu gốc
+- Ảnh hộ chiếu (3.5cm × 4.5cm, chụp trong 6 tháng)
+- Phí: 30,000 KRW
+- Giấy tờ bổ sung theo loại visa:
    - Kết hôn: Giấy chứng nhận hôn nhân, quan hệ gia đình
    - Làm việc: Hợp đồng lao động, đăng ký kinh doanh
    - Du học: Giấy chứng nhận học tập, chứng minh đóng học phí
@@ -3245,3 +3266,1334 @@ def get_detailed_alien_registration_guide(target_lang="ko"):
     }
     
     return guides.get(target_lang, guides["ko"]) 
+
+
+# 장마철 안전점검표 외국어별 키워드 매핑
+JANGMACHUL_KEYWORDS = {
+    "ko": [
+        "장마철", "자율안전", "점검표",
+        "기상특보", "비상대피", "재해취약", "긴급복구", "비상구호",
+        "배수로", "배수시설", "지하구조물", "침수", "호우",
+        "옹벽", "석축", "붕괴", "매몰", "방수포", "흙막이", "지보공",
+        "가설물", "결속상태", "태풍", "강풍", "유리창",
+        "충전부", "배전반", "누전차단기", "접지", "절연상태",
+        "굴착", "사면", "무너짐", "지반상태", "매설물", "굴착공법",
+        "흙막이지보공", "철골공사", "전기공사", "밀폐공간",
+        "단부", "개구부", "비계", "작업발판", "사다리", "이동식비계", "달비계",
+        "거푸집", "동바리", "굴착기", "고소작업대", "트럭",
+        "이동식크레인", "타워크레인", "항타", "항발기", "건설용리프트",
+        "용접장치", "용접", "크레인"
+    ],
+    "en": [
+        "rainy season", "safety checklist", "construction site", "safety inspection",
+        "weather warning", "emergency evacuation", "disaster vulnerable", "emergency recovery", "emergency supplies",
+        "drainage", "drainage facilities", "underground structure", "flooding", "heavy rain",
+        "retaining wall", "stone wall", "collapse", "burial", "waterproof", "earth retaining", "shoring",
+        "temporary structure", "fastening", "typhoon", "strong wind", "glass window",
+        "live parts", "distribution panel", "circuit breaker", "grounding", "insulation",
+        "excavation", "slope", "collapse", "ground condition", "buried objects", "excavation method",
+        "earth retaining shoring", "steel construction", "electrical work", "confined space",
+        "edge", "opening", "scaffold", "work platform", "ladder", "mobile scaffold", "suspended scaffold",
+        "formwork", "shores", "excavator", "aerial work platform", "truck",
+        "mobile crane", "tower crane", "pile driver", "pile extractor", "construction lift",
+        "welding equipment", "welding", "crane"
+    ],
+    "vi": [
+        "mùa mưa", "danh sách kiểm tra an toàn", "công trường xây dựng", "kiểm tra an toàn",
+        "cảnh báo thời tiết", "sơ tán khẩn cấp", "dễ bị thiên tai", "phục hồi khẩn cấp", "đồ dùng khẩn cấp",
+        "thoát nước", "cơ sở thoát nước", "công trình ngầm", "ngập lụt", "mưa lớn",
+        "tường chắn", "tường đá", "sụp đổ", "chôn vùi", "chống thấm", "chắn đất", "chống đỡ",
+        "công trình tạm", "buộc chặt", "bão", "gió mạnh", "cửa kính",
+        "phần mang điện", "tủ phân phối", "cầu dao", "tiếp đất", "cách điện",
+        "đào", "dốc", "sụp đổ", "điều kiện nền", "vật chôn", "phương pháp đào",
+        "chống đỡ chắn đất", "xây dựng thép", "công việc điện", "không gian kín",
+        "rìa", "lỗ hở", "giàn giáo", "sàn làm việc", "thang", "giàn giáo di động", "giàn giáo treo",
+        "ván khuôn", "chống", "máy đào", "sàn làm việc trên cao", "xe tải",
+        "cần cẩu di động", "cần cẩu tháp", "máy đóng cọc", "máy rút cọc", "thang máy công trình",
+        "thiết bị hàn", "hàn", "cần cẩu"
+    ],
+    "ja": [
+        "梅雨期", "安全点検表", "建設現場", "安全点検",
+        "気象警報", "緊急避難", "災害脆弱", "緊急復旧", "緊急用品",
+        "排水路", "排水設備", "地下構造物", "浸水", "大雨",
+        "擁壁", "石積み", "崩壊", "埋没", "防水", "土留め", "支保工",
+        "仮設物", "結束", "台風", "強風", "ガラス窓",
+        "充電部", "配電盤", "漏電遮断器", "接地", "絶縁",
+        "掘削", "法面", "崩れ", "地盤状態", "埋設物", "掘削工法",
+        "土留め支保工", "鉄骨工事", "電気工事", "密閉空間",
+        "端部", "開口部", "足場", "作業床", "梯子", "移動式足場", "吊り足場",
+        "型枠", "支保", "掘削機", "高所作業台", "トラック",
+        "移動式クレーン", "タワークレーン", "杭打ち", "杭抜き", "建設用リフト",
+        "溶接装置", "溶接", "クレーン"
+    ],
+    "zh": [
+        "雨季", "安全检查表", "建筑工地", "安全检查",
+        "气象预警", "紧急疏散", "灾害脆弱", "紧急恢复", "紧急用品",
+        "排水", "排水设施", "地下结构", "洪水", "大雨",
+        "挡土墙", "石墙", "坍塌", "掩埋", "防水", "挡土", "支撑",
+        "临时结构", "紧固", "台风", "强风", "玻璃窗",
+        "带电部分", "配电盘", "断路器", "接地", "绝缘",
+        "挖掘", "坡面", "坍塌", "地面条件", "埋藏物", "挖掘方法",
+        "挡土支撑", "钢结构", "电气工程", "密闭空间",
+        "边缘", "开口", "脚手架", "工作平台", "梯子", "移动脚手架", "悬挂脚手架",
+        "模板", "支撑", "挖掘机", "高空作业平台", "卡车",
+        "移动式起重机", "塔式起重机", "打桩", "拔桩", "建筑升降机",
+        "焊接设备", "焊接", "起重机"
+    ],
+    "zh-TW": [
+        "雨季", "安全檢查表", "建築工地", "安全檢查",
+        "氣象預警", "緊急疏散", "災害脆弱", "緊急恢復", "緊急用品",
+        "排水", "排水設施", "地下結構", "洪水", "大雨",
+        "擋土牆", "石牆", "坍塌", "掩埋", "防水", "擋土", "支撐",
+        "臨時結構", "緊固", "颱風", "強風", "玻璃窗",
+        "帶電部分", "配電盤", "斷路器", "接地", "絕緣",
+        "挖掘", "坡面", "坍塌", "地面條件", "埋藏物", "挖掘方法",
+        "擋土支撐", "鋼結構", "電氣工程", "密閉空間",
+        "邊緣", "開口", "鷹架", "工作平台", "梯子", "移動式鷹架", "懸掛鷹架",
+        "模板", "支撐", "挖掘機", "高空作業平台", "卡車",
+        "移動式起重機", "塔式起重機", "打樁", "拔樁", "建築升降機",
+        "焊接設備", "焊接", "起重機"
+    ],
+    "id": [
+        "musim hujan", "daftar periksa keselamatan", "lokasi konstruksi", "inspeksi keselamatan",
+        "peringatan cuaca", "evakuasi darurat", "rentan bencana", "pemulihan darurat", "persediaan darurat",
+        "drainase", "fasilitas drainase", "struktur bawah tanah", "banjir", "hujan deras",
+        "dinding penahan", "dinding batu", "runtuh", "tertimbun", "tahan air", "penahan tanah", "penyangga",
+        "struktur sementara", "pengikat", "topan", "angin kencang", "jendela kaca",
+        "bagian bermuatan", "panel distribusi", "pemutus sirkuit", "pembumian", "insulasi",
+        "penggalian", "lereng", "runtuh", "kondisi tanah", "benda terkubur", "metode penggalian",
+        "penyangga penahan tanah", "konstruksi baja", "pekerjaan listrik", "ruang terbatas",
+        "tepi", "bukaan", "perancah", "platform kerja", "tangga", "perancah bergerak", "perancah gantung",
+        "bekisting", "penyangga", "ekskavator", "platform kerja tinggi", "truk",
+        "derek bergerak", "derek menara", "pemancang", "pencabut tiang", "lift konstruksi",
+        "peralatan las", "las", "derek"
+    ],
+    "th": [
+        "ฤดูฝน", "รายการตรวจสอบความปลอดภัย", "ไซต์ก่อสร้าง", "การตรวจสอบความปลอดภัย",
+        "คำเตือนสภาพอากาศ", "การอพยพฉุกเฉิน", "เสี่ยงต่อภัยพิบัติ", "การฟื้นตัวฉุกเฉิน", "เสบียงฉุกเฉิน",
+        "ระบายน้ำ", "สิ่งอำนวยความสะดวกระบายน้ำ", "โครงสร้างใต้ดิน", "น้ำท่วม", "ฝนหนัก",
+        "กำแพงกันดิน", "กำแพงหิน", "พังทลาย", "ถูกฝัง", "กันน้ำ", "กั้นดิน", "ค้ำยัน",
+        "โครงสร้างชั่วคราว", "การยึดแน่น", "ไต้ฝุ่น", "ลมแรง", "หน้าต่างกระจก",
+        "ส่วนที่มีไฟฟ้า", "แผงจำหน่าย", "เบรกเกอร์", "ต่อดิน", "ฉนวน",
+        "ขุดเจาะ", "ความชัน", "พังทลาย", "สภาพพื้น", "วัตถุที่ฝังอยู่", "วิธีขุดเจาะ",
+        "ค้ำยันกั้นดิน", "การก่อสร้างเหล็ก", "งานไฟฟ้า", "พื้นที่ปิด",
+        "ขอบ", "ช่องเปิด", "นั่งร้าน", "แพลตฟอร์มทำงาน", "บันได", "นั่งร้านเคลื่อนที่", "นั่งร้านแขวน",
+        "แบบหล่อ", "ค้ำยัน", "รถขุด", "แพลตฟอร์มทำงานที่ความสูง", "รถบรรทุก",
+        "เครนเคลื่อนที่", "เครนหอคอย", "เครื่องตอกเสาเข็ม", "เครื่องถอนเสาเข็ม", "ลิฟต์ก่อสร้าง",
+        "อุปกรณ์เชื่อม", "เชื่อม", "เครน"
+    ],
+    "fr": [
+        "saison des pluies", "liste de contrôle de sécurité", "chantier de construction", "inspection de sécurité",
+        "alerte météo", "évacuation d'urgence", "vulnérable aux catastrophes", "récupération d'urgence", "fournitures d'urgence",
+        "drainage", "installations de drainage", "structure souterraine", "inondation", "fortes pluies",
+        "mur de soutènement", "mur de pierre", "effondrement", "enterrement", "imperméable", "soutènement", "étayage",
+        "structure temporaire", "fixation", "typhon", "vent fort", "fenêtre en verre",
+        "parties sous tension", "panneau de distribution", "disjoncteur", "mise à la terre", "isolation",
+        "excavation", "pente", "effondrement", "état du sol", "objets enterrés", "méthode d'excavation",
+        "étayage de soutènement", "construction en acier", "travaux électriques", "espace confiné",
+        "bord", "ouverture", "échafaudage", "plateforme de travail", "échelle", "échafaudage mobile", "échafaudage suspendu",
+        "coffrage", "étais", "excavatrice", "plateforme de travail en hauteur", "camion",
+        "grue mobile", "grue à tour", "battage de pieux", "extracteur de pieux", "ascenseur de construction",
+        "équipement de soudage", "soudage", "grue"
+    ],
+    "de": [
+        "regenzeit", "sicherheitscheckliste", "baustelle", "sicherheitsinspektion",
+        "wetterwarnung", "notevakuierung", "katastrophenanfällig", "notfallwiederherstellung", "notvorräte",
+        "entwässerung", "entwässerungsanlagen", "unterirdische struktur", "überflutung", "starkregen",
+        "stützmauer", "steinmauer", "einsturz", "verschüttung", "wasserdicht", "erdstützung", "abstützung",
+        "temporäre struktur", "befestigung", "taifun", "starker wind", "glasfenster",
+        "stromführende teile", "verteilertafel", "schutzschalter", "erdung", "isolierung",
+        "aushub", "böschung", "einsturz", "bodenverhältnisse", "vergrabene objekte", "aushubmethode",
+        "erdstützung", "stahlbau", "elektroarbeiten", "geschlossener raum",
+        "kante", "öffnung", "gerüst", "arbeitsplattform", "leiter", "mobiles gerüst", "hängegerüst",
+        "schalung", "abstützung", "bagger", "arbeitsbühne", "lkw",
+        "mobilkran", "turmkran", "pfahlramme", "pfahlzieher", "bauaufzug",
+        "schweißausrüstung", "schweißen", "kran"
+    ],
+    "tl": [
+        "tag-ulan", "checklist ng kaligtasan", "construction site", "safety inspection",
+        "weather warning", "emergency evacuation", "disaster vulnerable", "emergency recovery", "emergency supplies",
+        "drainage", "drainage facilities", "underground structure", "flooding", "heavy rain",
+        "retaining wall", "stone wall", "collapse", "burial", "waterproof", "earth retaining", "shoring",
+        "temporary structure", "fastening", "typhoon", "malakas na hangin", "glass window",
+        "live parts", "distribution panel", "circuit breaker", "grounding", "insulation",
+        "excavation", "slope", "collapse", "ground condition", "buried objects", "excavation method",
+        "earth retaining shoring", "steel construction", "electrical work", "confined space",
+        "edge", "opening", "scaffold", "work platform", "hagdan", "mobile scaffold", "suspended scaffold",
+        "formwork", "shores", "excavator", "aerial work platform", "truck",
+        "mobile crane", "tower crane", "pile driver", "pile extractor", "construction lift",
+        "welding equipment", "welding", "crane"
+    ]
+}
+
+# 장마철 안전점검표 메뉴 텍스트 (외국어별)
+JANGMACHUL_MENU_TEXT = {
+    "ko": """**장마철 건설 현장 자율안전 점검표**
+
+**장마철 공통점검사항**
+**붕괴 굴착사면 사고예방 자율점검표** 
+**흙막이지보공 사고예방 자율점검표**
+**철골공사 사고예방 자율점검표**
+**전기공사·작업 사고예방 자율점검표**
+**밀폐공간 사고예방 자율점검표**
+**단부·개구부 추락 사고예방 자율점검표**
+**비계·작업발판 사고예방 자율점검표**
+**사다리·이동식비계 사고예방 자율점검표**
+**달비계 사고예방 자율점검표**
+**거푸집·동바리 사고예방 자율점검표**
+**굴착기 사고예방 자율점검표**
+**고소작업대 사고예방 자율점검표**
+**트럭 사고예방 자율점검표**
+**이동식크레인 사고예방 자율점검표**
+**타워크레인 사고예방 자율점검표**
+**항타·항발기 사고예방 자율점검표**
+**건설용리프트 사고예방 자율점검표**
+**용접장치 사고예방 자율점검표**
+
+위 항목 중 궁금한 내용의 키워드를 입력하시면 상세한 안전점검표를 확인할 수 있습니다.""",
+    
+    "en": """**Rainy Season Construction Site Safety Checklist**
+
+**Rainy Season Common Inspection Items**
+**Collapse Excavation Slope Accident Prevention Checklist**
+**Earth Retaining Shoring Accident Prevention Checklist**
+**Steel Construction Accident Prevention Checklist**
+**Electrical Work Accident Prevention Checklist**
+**Confined Space Accident Prevention Checklist**
+**Edge/Opening Fall Accident Prevention Checklist**
+**Scaffold/Work Platform Accident Prevention Checklist**
+**Ladder/Mobile Scaffold Accident Prevention Checklist**
+**Suspended Scaffold Accident Prevention Checklist**
+**Formwork/Shores Accident Prevention Checklist**
+**Excavator Accident Prevention Checklist**
+**Aerial Work Platform Accident Prevention Checklist**
+**Truck Accident Prevention Checklist**
+**Mobile Crane Accident Prevention Checklist**
+**Tower Crane Accident Prevention Checklist**
+**Pile Driver/Extractor Accident Prevention Checklist**
+**Construction Lift Accident Prevention Checklist**
+**Welding Equipment Accident Prevention Checklist**
+
+Enter keywords from the above items to view detailed safety checklists.""",
+
+    "vi": """**Danh Sách Kiểm Tra An Toàn Công Trường Mùa Mưa**
+
+**Các Mục Kiểm Tra Chung Mùa Mưa**
+**Danh Sách Kiểm Tra Phòng Chống Tai Nạn Sụp Đổ Dốc Đào**
+**Danh Sách Kiểm Tra Phòng Chống Tai Nạn Chống Đỡ Chắn Đất**
+**Danh Sách Kiểm Tra Phòng Chống Tai Nạn Xây Dựng Thép**
+**Danh Sách Kiểm Tra Phòng Chống Tai Nạn Công Việc Điện**
+**Danh Sách Kiểm Tra Phòng Chống Tai Nạn Không Gian Kín**
+**Danh Sách Kiểm Tra Phòng Chống Tai Nạn Rơi Từ Rìa/Lỗ Hở**
+**Danh Sách Kiểm Tra Phòng Chống Tai Nạn Giàn Giáo/Sàn Làm Việc**
+**Danh Sách Kiểm Tra Phòng Chống Tai Nạn Thang/Giàn Giáo Di Động**
+**Danh Sách Kiểm Tra Phòng Chống Tai Nạn Giàn Giáo Treo**
+**Danh Sách Kiểm Tra Phòng Chống Tai Nạn Ván Khuôn/Chống**
+**Danh Sách Kiểm Tra Phòng Chống Tai Nạn Máy Đào**
+**Danh Sách Kiểm Tra Phòng Chống Tai Nạn Sàn Làm Việc Trên Cao**
+**Danh Sách Kiểm Tra Phòng Chống Tai Nạn Xe Tải**
+**Danh Sách Kiểm Tra Phòng Chống Tai Nạn Cần Cẩu Di Động**
+**Danh Sách Kiểm Tra Phòng Chống Tai Nạn Cần Cẩu Tháp**
+**Danh Sách Kiểm Tra Phòng Chống Tai Nạn Máy Đóng/Rút Cọc**
+**Danh Sách Kiểm Tra Phòng Chống Tai Nạn Thang Máy Công Trình**
+**Danh Sách Kiểm Tra Phòng Chống Tai Nạn Thiết Bị Hàn**
+
+Nhập từ khóa từ các mục trên để xem danh sách kiểm tra an toàn chi tiết.""",
+
+    "ja": """**梅雨期建設現場安全点検表**
+
+**梅雨期共通点検事項**
+**崩壊掘削法面事故防止自律点検表**
+**土留め支保工事故防止自律点検表**
+**鉄骨工事事故防止自律点検表**
+**電気工事作業事故防止自律点検表**
+**密閉空間事故防止自律点検表**
+**端部・開口部墜落事故防止自律点検表**
+**足場・作業床事故防止自律点検表**
+**梯子・移動式足場事故防止自律点検表**
+**吊り足場事故防止自律点検表**
+**型枠・支保事故防止自律点検表**
+**掘削機事故防止自律点検表**
+**高所作業台事故防止自律点検表**
+**トラック事故防止自律点検表**
+**移動式クレーン事故防止自律点検表**
+**タワークレーン事故防止自律点検表**
+**杭打ち・杭抜き機事故防止自律点検表**
+**建設用リフト事故防止自律点検表**
+**溶接装置事故防止自律点検表**
+
+上記項目の中で気になる内容のキーワードを入力すると、詳細な安全点検表を確認できます。""",
+
+    "zh": """**雨季建筑工地安全检查表**
+
+**雨季共同检查事项**
+**坍塌挖掘坡面事故预防自律检查表**
+**挡土支撑事故预防自律检查表**
+**钢结构工程事故预防自律检查表**
+**电气工程作业事故预防自律检查表**
+**密闭空间事故预防自律检查表**
+**边缘·开口坠落事故预防自律检查表**
+**脚手架·工作平台事故预防自律检查表**
+**梯子·移动脚手架事故预防自律检查表**
+**悬挂脚手架事故预防自律检查表**
+**模板·支撑事故预防自律检查表**
+**挖掘机事故预防自律检查表**
+**高空作业平台事故预防自律检查表**
+**卡车事故预防自律检查表**
+**移动式起重机事故预防自律检查表**
+**塔式起重机事故预防自律检查表**
+**打桩·拔桩机事故预防自律检查表**
+**建筑升降机事故预防自律检查表**
+**焊接设备事故预防自律检查表**
+
+输入上述项目中您想了解的内容关键词，即可查看详细安全检查表。""",
+
+    "zh-TW": """**雨季建築工地安全檢查表**
+
+**雨季共同檢查事項**
+**坍塌挖掘坡面事故預防自律檢查表**
+**擋土支撐事故預防自律檢查表**
+**鋼結構工程事故預防自律檢查表**
+**電氣工程作業事故預防自律檢查表**
+**密閉空間事故預防自律檢查表**
+**邊緣·開口墜落事故預防自律檢查表**
+**鷹架·工作平台事故預防自律檢查表**
+**梯子·移動式鷹架事故預防自律檢查表**
+**懸掛鷹架事故預防自律檢查表**
+**模板·支撐事故預防自律檢查表**
+**挖掘機事故預防自律檢查表**
+**高空作業平台事故預防自律檢查表**
+**卡車事故預防自律檢查表**
+**移動式起重機事故預防自律檢查表**
+**塔式起重機事故預防自律檢查表**
+**打樁·拔樁機事故預防自律檢查表**
+**建築升降機事故預防自律檢查表**
+**焊接設備事故預防自律檢查表**
+
+輸入上述項目中您想瞭解的內容關鍵詞，即可查看詳細安全檢查表。""",
+
+    "id": """**Daftar Periksa Keselamatan Lokasi Konstruksi Musim Hujan**
+
+**Item Pemeriksaan Umum Musim Hujan**
+**Daftar Periksa Pencegahan Kecelakaan Runtuh Lereng Penggalian**
+**Daftar Periksa Pencegahan Kecelakaan Penyangga Penahan Tanah**
+**Daftar Periksa Pencegahan Kecelakaan Konstruksi Baja**
+**Daftar Periksa Pencegahan Kecelakaan Pekerjaan Listrik**
+**Daftar Periksa Pencegahan Kecelakaan Ruang Terbatas**
+**Daftar Periksa Pencegahan Kecelakaan Jatuh Tepi·Bukaan**
+**Daftar Periksa Pencegahan Kecelakaan Perancah·Platform Kerja**
+**Daftar Periksa Pencegahan Kecelakaan Tangga·Perancah Bergerak**
+**Daftar Periksa Pencegahan Kecelakaan Perancah Gantung**
+**Daftar Periksa Pencegahan Kecelakaan Bekisting·Penyangga**
+**Daftar Periksa Pencegahan Kecelakaan Ekskavator**
+**Daftar Periksa Pencegahan Kecelakaan Platform Kerja Tinggi**
+**Daftar Periksa Pencegahan Kecelakaan Truk**
+**Daftar Periksa Pencegahan Kecelakaan Derek Bergerak**
+**Daftar Periksa Pencegahan Kecelakaan Derek Menara**
+**Daftar Periksa Pencegahan Kecelakaan Pemancang·Pencabut Tiang**
+**Daftar Periksa Pencegahan Kecelakaan Lift Konstruksi**
+**Daftar Periksa Pencegahan Kecelakaan Peralatan Las**
+
+Masukkan kata kunci dari item di atas untuk melihat daftar periksa keselamatan terperinci.""",
+
+    "th": """**รายการตรวจสอบความปลอดภัยไซต์ก่อสร้างฤดูฝน**
+
+**รายการตรวจสอบทั่วไปฤดูฝน**
+**รายการตรวจสอบป้องกันอุบัติเหตุพังทลายความชันขุดเจาะ**
+**รายการตรวจสอบป้องกันอุบัติเหตุค้ำยันกั้นดิน**
+**รายการตรวจสอบป้องกันอุบัติเหตุการก่อสร้างเหล็ก**
+**รายการตรวจสอบป้องกันอุบัติเหตุงานไฟฟ้า**
+**รายการตรวจสอบป้องกันอุบัติเหตุพื้นที่ปิด**
+**รายการตรวจสอบป้องกันอุบัติเหตุตกจากขอบ·ช่องเปิด**
+**รายการตรวจสอบป้องกันอุบัติเหตุนั่งร้าน·แพลตฟอร์มทำงาน**
+**รายการตรวจสอบป้องกันอุบัติเหตุบันได·นั่งร้านเคลื่อนที่**
+**รายการตรวจสอบป้องกันอุบัติเหตุนั่งร้านแขวน**
+**รายการตรวจสอบป้องกันอุบัติเหตุแบบหล่อ·ค้ำยัน**
+**รายการตรวจสอบป้องกันอุบัติเหตุรถขุด**
+**รายการตรวจสอบป้องกันอุบัติเหตุแพลตฟอร์มทำงานที่ความสูง**
+**รายการตรวจสอบป้องกันอุบัติเหตุรถบรรทุก**
+**รายการตรวจสอบป้องกันอุบัติเหตุเครนเคลื่อนที่**
+**รายการตรวจสอบป้องกันอุบัติเหตุเครนหอคอย**
+**รายการตรวจสอบป้องกันอุบัติเหตุเครื่องตอก·ถอนเสาเข็ม**
+**รายการตรวจสอบป้องกันอุบัติเหตุลิฟต์ก่อสร้าง**
+**รายการตรวจสอบป้องกันอุบัติเหตุอุปกรณ์เชื่อม**
+
+กรอกคีย์เวิร์ดจากรายการข้างต้นเพื่อดูรายการตรวจสอบความปลอดภัยโดยละเอียด""",
+
+    "fr": """**Liste de Contrôle de Sécurité du Chantier de Construction en Saison des Pluies**
+
+**Éléments de Contrôle Communs de la Saison des Pluies**
+**Liste de Contrôle de Prévention des Accidents d'Effondrement de Pente d'Excavation**
+**Liste de Contrôle de Prévention des Accidents d'Étayage de Soutènement**
+**Liste de Contrôle de Prévention des Accidents de Construction en Acier**
+**Liste de Contrôle de Prévention des Accidents de Travaux Électriques**
+**Liste de Contrôle de Prévention des Accidents d'Espace Confiné**
+**Liste de Contrôle de Prévention des Accidents de Chute de Bord·Ouverture**
+**Liste de Contrôle de Prévention des Accidents d'Échafaudage·Plateforme de Travail**
+**Liste de Contrôle de Prévention des Accidents d'Échelle·Échafaudage Mobile**
+**Liste de Contrôle de Prévention des Accidents d'Échafaudage Suspendu**
+**Liste de Contrôle de Prévention des Accidents de Coffrage·Étais**
+**Liste de Contrôle de Prévention des Accidents d'Excavatrice**
+**Liste de Contrôle de Prévention des Accidents de Plateforme de Travail en Hauteur**
+**Liste de Contrôle de Prévention des Accidents de Camion**
+**Liste de Contrôle de Prévention des Accidents de Grue Mobile**
+**Liste de Contrôle de Prévention des Accidents de Grue à Tour**
+**Liste de Contrôle de Prévention des Accidents de Battage·Extracteur de Pieux**
+**Liste de Contrôle de Prévention des Accidents d'Ascenseur de Construction**
+**Liste de Contrôle de Prévention des Accidents d'Équipement de Soudage**
+
+Entrez les mots-clés des éléments ci-dessus pour voir les listes de contrôle de sécurité détaillées.""",
+
+    "de": """**Sicherheitscheckliste für Baustellen in der Regenzeit**
+
+**Gemeinsame Prüfpunkte der Regenzeit**
+**Checkliste zur Unfallverhütung bei Einsturz von Aushubböschungen**
+**Checkliste zur Unfallverhütung bei Erdstützungsabstützung**
+**Checkliste zur Unfallverhütung im Stahlbau**
+**Checkliste zur Unfallverhütung bei Elektroarbeiten**
+**Checkliste zur Unfallverhütung in geschlossenen Räumen**
+**Checkliste zur Unfallverhütung bei Sturz von Kante·Öffnung**
+**Checkliste zur Unfallverhütung bei Gerüst·Arbeitsplattform**
+**Checkliste zur Unfallverhütung bei Leiter·Mobilem Gerüst**
+**Checkliste zur Unfallverhütung bei Hängegerüst**
+**Checkliste zur Unfallverhütung bei Schalung·Abstützung**
+**Checkliste zur Unfallverhütung bei Bagger**
+**Checkliste zur Unfallverhütung bei Arbeitsbühne**
+**Checkliste zur Unfallverhütung bei LKW**
+**Checkliste zur Unfallverhütung bei Mobilkran**
+**Checkliste zur Unfallverhütung bei Turmkran**
+**Checkliste zur Unfallverhütung bei Pfahlramme·Pfahlzieher**
+**Checkliste zur Unfallverhütung bei Bauaufzug**
+**Checkliste zur Unfallverhütung bei Schweißausrüstung**
+
+Geben Sie Schlüsselwörter aus den oben genannten Punkten ein, um detaillierte Sicherheitschecklisten anzuzeigen.""",
+
+    "tl": """**Checklist ng Kaligtasan sa Construction Site sa Panahon ng Tag-ulan**
+
+**Mga Common na Inspection Items sa Tag-ulan**
+**Checklist para sa Pagpigil ng Aksidente sa Pagguho ng Excavation Slope**
+**Checklist para sa Pagpigil ng Aksidente sa Earth Retaining Shoring**
+**Checklist para sa Pagpigil ng Aksidente sa Steel Construction**
+**Checklist para sa Pagpigil ng Aksidente sa Electrical Work**
+**Checklist para sa Pagpigil ng Aksidente sa Confined Space**
+**Checklist para sa Pagpigil ng Aksidente sa Pagkahulog mula sa Edge/Opening**
+**Checklist para sa Pagpigil ng Aksidente sa Scaffold/Work Platform**
+**Checklist para sa Pagpigil ng Aksidente sa Ladder/Mobile Scaffold**
+**Checklist para sa Pagpigil ng Aksidente sa Suspended Scaffold**
+**Checklist para sa Pagpigil ng Aksidente sa Formwork/Shores**
+**Checklist para sa Pagpigil ng Aksidente sa Excavator**
+**Checklist para sa Pagpigil ng Aksidente sa Aerial Work Platform**
+**Checklist para sa Pagpigil ng Aksidente sa Truck**
+**Checklist para sa Pagpigil ng Aksidente sa Mobile Crane**
+**Checklist para sa Pagpigil ng Aksidente sa Tower Crane**
+**Checklist para sa Pagpigil ng Aksidente sa Pile Driver/Extractor**
+**Checklist para sa Pagpigil ng Aksidente sa Construction Lift**
+**Checklist para sa Pagpigil ng Aksidente sa Welding Equipment**
+
+Mag-type ng mga keyword mula sa mga item sa itaas para makita ang detalyadong safety checklist."""
+}
+
+# 장마철 건설 현장 자율안전 점검표 관련 함수들
+def generate_jangmachul_answer_with_gemini(query, target_lang, gemini_api_key):
+    """Gemini를 사용해서 장마철 안전 관련 질문에 답변"""
+    try:
+        genai.configure(api_key=gemini_api_key)
+        
+        prompts = {
+            "ko": f"""다음은 장마철 건설 현장 안전 관리에 관한 질문입니다. 
+            건설 현장에서의 장마철 안전 관리 전문가로서 실용적이고 구체적인 답변을 제공해주세요.
+
+질문: {query}
+
+질문이 특정 작업이나 장비에 관한 것이라면 해당 분야의 "자율안전 점검표" 형태로 답변해주세요.
+
+답변은 다음 형식으로 작성해주세요:
+1. **정의**: 해당 작업/장비가 무엇인지
+2. **주요 위험 요소**: 해당 작업에서 발생할 수 있는 위험
+3. **핵심 안전수칙**: 반드시 지켜야 할 기본 수칙
+4. **자율점검표**: 
+   - 사전조사/계획 단계
+   - 작업 중 점검사항
+   - 사후 관리
+
+실제 건설 현장에서 바로 활용할 수 있는 실무적인 내용으로 작성해주세요.""",
+            
+            "en": f"""This is a question about rainy season safety management at construction sites.
+Please provide practical and specific answers as an expert in rainy season safety management at construction sites.
+
+Question: {query}
+
+If the question is about specific work or equipment, please answer in the form of a "Self-Safety Checklist" for that field.
+
+Please format your answer as follows:
+1. **Definition**: What the work/equipment is
+2. **Main Risk Factors**: Risks that may occur in the work
+3. **Core Safety Rules**: Basic rules that must be followed
+4. **Self-Checklist**:
+   - Pre-survey/Planning stage
+   - Inspection items during work
+   - Post-management
+
+Please write practical content that can be used directly at actual construction sites.""",
+
+            "vi": f"""Đây là câu hỏi về quản lý an toàn mùa mưa tại các công trường xây dựng.
+Hãy cung cấp câu trả lời thực tế và cụ thể với tư cách là chuyên gia quản lý an toàn mùa mưa tại công trường xây dựng.
+
+Câu hỏi: {query}
+
+Nếu câu hỏi về công việc hoặc thiết bị cụ thể, hãy trả lời dưới dạng "Danh sách kiểm tra an toàn tự kiểm" cho lĩnh vực đó.
+
+Hãy định dạng câu trả lời như sau:
+1. **Định nghĩa**: Công việc/thiết bị là gì
+2. **Các yếu tố rủi ro chính**: Rủi ro có thể xảy ra trong công việc
+3. **Quy tắc an toàn cốt lõi**: Quy tắc cơ bản phải tuân theo
+4. **Danh sách kiểm tra tự kiểm**:
+   - Giai đoạn khảo sát/lập kế hoạch trước
+   - Các mục kiểm tra trong quá trình làm việc
+   - Quản lý sau
+
+Hãy viết nội dung thực tế có thể sử dụng trực tiếp tại công trường xây dựng thực tế.""",
+
+            "ja": f"""これは建設現場での梅雨期安全管理に関する質問です。
+建設現場での梅雨期安全管理専門家として実用的で具体的な回答を提供してください。
+
+質問: {query}
+
+質問が特定の作業や設備に関するものであれば、その分野の「自律安全点検表」の形で回答してください。
+
+回答は以下の形式で作成してください：
+1. **定義**: その作業/設備が何か
+2. **主要リスク要因**: その作業で発生し得るリスク
+3. **核心安全規則**: 必ず守るべき基本規則
+4. **自律点検表**:
+   - 事前調査/計画段階
+   - 作業中の点検事項
+   - 事後管理
+
+実際の建設現場で直接活用できる実務的な内容で作成してください。""",
+
+            "zh": f"""这是关于建筑工地雨季安全管理的问题。
+作为建筑工地雨季安全管理专家，请提供实用和具体的答案。
+
+问题: {query}
+
+如果问题是关于特定工作或设备的，请以该领域的"自主安全检查表"形式回答。
+
+请按以下格式回答：
+1. **定义**: 该工作/设备是什么
+2. **主要风险因素**: 该工作中可能发生的风险
+3. **核心安全规则**: 必须遵守的基本规则
+4. **自主检查表**:
+   - 预调查/规划阶段
+   - 工作中的检查项目
+   - 事后管理
+
+请写出可以在实际建筑工地直接使用的实用内容。""",
+
+            "zh-TW": f"""這是關於建築工地雨季安全管理的問題。
+作為建築工地雨季安全管理專家，請提供實用和具體的答案。
+
+問題: {query}
+
+如果問題是關於特定工作或設備的，請以該領域的「自主安全檢查表」形式回答。
+
+請按以下格式回答：
+1. **定義**: 該工作/設備是什麼
+2. **主要風險因素**: 該工作中可能發生的風險
+3. **核心安全規則**: 必須遵守的基本規則
+4. **自主檢查表**:
+   - 預調查/規劃階段
+   - 工作中的檢查項目
+   - 事後管理
+
+請寫出可以在實際建築工地直接使用的實用內容。""",
+
+            "id": f"""Ini adalah pertanyaan tentang manajemen keselamatan musim hujan di lokasi konstruksi.
+Berikan jawaban praktis dan spesifik sebagai ahli manajemen keselamatan musim hujan di lokasi konstruksi.
+
+Pertanyaan: {query}
+
+Jika pertanyaan tentang pekerjaan atau peralatan spesifik, jawablah dalam bentuk "Daftar Periksa Keselamatan Mandiri" untuk bidang tersebut.
+
+Silakan format jawaban Anda sebagai berikut:
+1. **Definisi**: Apa itu pekerjaan/peralatan
+2. **Faktor Risiko Utama**: Risiko yang mungkin terjadi dalam pekerjaan
+3. **Aturan Keselamatan Inti**: Aturan dasar yang harus diikuti
+4. **Daftar Periksa Mandiri**:
+   - Tahap survei/perencanaan awal
+   - Item pemeriksaan selama bekerja
+   - Manajemen pasca
+
+Tulis konten praktis yang dapat digunakan langsung di lokasi konstruksi aktual.""",
+
+            "th": f"""นี่คือคำถามเกี่ยวกับการจัดการความปลอดภัยในฤดูฝนที่ไซต์ก่อสร้าง
+ให้คำตอบที่ปraktical และเฉพาะเจาะจงในฐานะผู้เชี่ยวชาญการจัดการความปลอดภัยฤดูฝนที่ไซต์ก่อสร้าง
+
+คำถาม: {query}
+
+หากคำถามเกี่ยวกับงานหรืออุปกรณ์เฉพาะ โปรดตอบในรูปแบบ "รายการตรวจสอบความปลอดภัยแบบอิสระ" สำหรับด้านนั้น
+
+โปรดจัดรูปแบบคำตอบของคุณดังนี้:
+1. **คำนิยาม**: งาน/อุปกรณ์คืออะไร
+2. **ปัจจัยเสี่ยงหลัก**: ความเสี่ยงที่อาจเกิดขึ้นในงาน
+3. **กฎความปลอดภัยหลัก**: กฎพื้นฐานที่ต้องปฏิบัติตาม
+4. **รายการตรวจสอบอิสระ**:
+   - ขั้นตอนการสำรวจ/วางแผนล่วงหน้า
+   - รายการตรวจสอบระหว่างทำงาน
+   - การจัดการหลัง
+
+เขียนเนื้อหาที่ปฏิบัติได้จริงที่สามารถใช้ได้โดยตรงในไซต์ก่อสร้างจริง""",
+
+            "fr": f"""Il s'agit d'une question sur la gestion de la sécurité de la saison des pluies sur les chantiers de construction.
+Veuillez fournir des réponses pratiques et spécifiques en tant qu'expert en gestion de la sécurité de la saison des pluies sur les chantiers de construction.
+
+Question: {query}
+
+Si la question concerne un travail ou un équipement spécifique, veuillez répondre sous la forme d'une "Liste de contrôle de sécurité autonome" pour ce domaine.
+
+Veuillez formater votre réponse comme suit:
+1. **Définition**: Ce qu'est le travail/équipement
+2. **Principaux facteurs de risque**: Risques qui peuvent survenir dans le travail
+3. **Règles de sécurité de base**: Règles de base qui doivent être suivies
+4. **Liste de contrôle autonome**:
+   - Étape de pré-enquête/planification
+   - Éléments d'inspection pendant le travail
+   - Gestion post
+
+Rédigez un contenu pratique qui peut être utilisé directement sur les chantiers de construction réels.""",
+
+            "de": f"""Dies ist eine Frage zum Regenzeitensicherheitsmanagement auf Baustellen.
+Bitte geben Sie praktische und spezifische Antworten als Experte für Regenzeitensicherheitsmanagement auf Baustellen.
+
+Frage: {query}
+
+Wenn die Frage sich auf spezielle Arbeiten oder Ausrüstung bezieht, antworten Sie bitte in Form einer "Selbstsicherheitscheckliste" für diesen Bereich.
+
+Bitte formatieren Sie Ihre Antwort wie folgt:
+1. **Definition**: Was die Arbeit/Ausrüstung ist
+2. **Hauptrisikofaktoren**: Risiken, die bei der Arbeit auftreten können
+3. **Kernsicherheitsregeln**: Grundregeln, die befolgt werden müssen
+4. **Selbstcheckliste**:
+   - Voruntersuchungs-/Planungsphase
+   - Inspektionsartikel während der Arbeit
+   - Nachbetreuung
+
+Schreiben Sie praktische Inhalte, die direkt auf tatsächlichen Baustellen verwendet werden können.""",
+
+            "tl": f"""Ito ay tanong tungkol sa pamamahala ng kaligtasan sa tag-ulan sa mga construction site.
+Magbigay ng praktikal at tukoy na mga sagot bilang eksperto sa pamamahala ng kaligtasan sa tag-ulan sa mga construction site.
+
+Tanong: {query}
+
+Kung ang tanong ay tungkol sa tukoy na trabaho o kagamitan, sumagot sa anyo ng "Self-Safety Checklist" para sa larangan na iyon.
+
+Paki-format ang inyong sagot tulad nito:
+1. **Kahulugan**: Ano ang trabaho/kagamitan
+2. **Mga Pangunahing Risk Factor**: Mga panganib na maaaring mangyari sa trabaho
+3. **Mga Core Safety Rules**: Mga basic na tuntunin na dapat sundin
+4. **Self-Checklist**:
+   - Pre-survey/Planning stage
+   - Mga inspection items habang nagtatrabaho
+   - Post-management
+
+Sumulat ng praktikal na nilalaman na magagamit direkta sa mga tunay na construction site."""
+        }
+        
+        prompt = prompts.get(target_lang, prompts["ko"])
+        
+        model = genai.GenerativeModel("gemini-2.0-flash-lite")
+        response = model.generate_content(prompt, generation_config={
+            "max_output_tokens": 1500,
+            "temperature": 0.3
+        })
+        
+        # 언어별 헤더 텍스트
+        headers = {
+            "ko": "🌧️ **장마철 건설 현장 안전 관리 가이드**",
+            "en": "🌧️ **Rainy Season Construction Site Safety Management Guide**",
+            "vi": "🌧️ **Hướng Dẫn Quản Lý An Toàn Công Trường Mùa Mưa**",
+            "ja": "🌧️ **梅雨期建設現場安全管理ガイド**",
+            "zh": "🌧️ **雨季建筑工地安全管理指南**",
+            "zh-TW": "🌧️ **雨季建築工地安全管理指南**",
+            "id": "🌧️ **Panduan Manajemen Keselamatan Lokasi Konstruksi Musim Hujan**",
+            "th": "🌧️ **คู่มือการจัดการความปลอดภัยไซต์ก่อสร้างฤดูฝน**",
+            "fr": "🌧️ **Guide de Gestion de la Sécurité du Chantier de Construction en Saison des Pluies**",
+            "de": "🌧️ **Leitfaden für Regenzeitensicherheitsmanagement auf Baustellen**",
+            "tl": "🌧️ **Gabay sa Pamamahala ng Kaligtasan sa Construction Site sa Tag-ulan**"
+        }
+        
+        header = headers.get(target_lang, headers["ko"])
+        answer_content = f"{header}\n\n{response.text.strip()}"
+        
+        # YouTube 검색 버튼 정보 추가 (Gemini 답변용)
+        answer_content += "\n\n" + get_youtube_search_button_info_for_gemini(query, target_lang)
+        
+        return answer_content
+        
+    except Exception as e:
+        print(f"Gemini 답변 생성 오류: {e}")
+        fallback_messages = {
+            "ko": "죄송합니다. 장마철 안전 정보를 생성하는 중 오류가 발생했습니다.",
+            "en": "Sorry, an error occurred while generating rainy season safety information.",
+            "vi": "Xin lỗi, đã xảy ra lỗi khi tạo thông tin an toàn mùa mưa.",
+            "ja": "申し訳ございません。梅雨期安全情報の生成中にエラーが発生しました。",
+            "zh": "抱歉，生成雨季安全信息时发生错误。",
+            "zh-TW": "抱歉，生成雨季安全資訊時發生錯誤。",
+            "id": "Maaf, terjadi kesalahan saat menghasilkan informasi keselamatan musim hujan.",
+            "th": "ขออภัย เกิดข้อผิดพลาดขณะสร้างข้อมูลความปลอดภัยฤดูฝน",
+            "fr": "Désolé, une erreur s'est produite lors de la génération d'informations de sécurité de saison des pluies.",
+            "de": "Entschuldigung, ein Fehler ist bei der Erstellung von Regenzeitensicherheitsinformationen aufgetreten.",
+            "tl": "Sorry, may naganap na error habang ginagawa ang impormasyon ng kaligtasan sa tag-ulan."
+        }
+        return fallback_messages.get(target_lang, fallback_messages["ko"])
+
+def generate_onyul_answer_with_gemini(query, target_lang, gemini_api_key):
+    """Gemini를 사용해서 온열질환 예방조치 관련 질문에 답변"""
+    try:
+        genai.configure(api_key=gemini_api_key)
+        
+        prompts = {
+            "ko": f"""다음은 건설 현장에서의 폭염 및 온열질환 예방조치에 관한 질문입니다. 
+            산업안전보건 및 온열질환 예방 전문가로서 실용적이고 구체적인 답변을 제공해주세요.
+
+질문: {query}
+
+질문이 일반적인 온열질환 예방조치에 관한 것이라면 다음 항목들을 포함하여 종합적으로 답변하고,
+구체적인 세부 질문(5대 기본 수칙, 응급처치, 작업시간 조정 등)이라면 해당 내용에 집중해서 답변해주세요.
+
+답변에 포함할 내용:
+1. **온열질환의 종류와 증상** (열사병, 열탈진, 열경련, 열실신 등)
+2. **5대 기본 수칙** (한국 고용노동부 가이드라인 기준)
+3. **작업환경 개선 방법** (그늘막, 냉방시설, 통풍 등)
+4. **작업시간 조정** (무더위시간 작업 중단, 휴식시간 확보)
+5. **수분 섭취 방법** (물, 이온음료 등)
+6. **개인보호구 착용법** (통기성 좋은 작업복, 모자 등)
+7. **응급처치 방법** (체온 낮추기, 의식 확인, 119 신고 등)
+8. **관리자 주의사항** (근로자 건강상태 확인, 작업 중단 판단 등)
+
+답변은 한국어로, 건설 현장에서 바로 적용할 수 있는 실무적인 내용으로 작성해주세요.""",
+            
+            "en": f"""This is a question about heat wave and heat illness prevention measures at construction sites.
+Please provide practical and specific answers as an expert in industrial safety and heat illness prevention.
+
+Question: {query}
+
+If the question is about general heat illness prevention measures, please answer comprehensively including the following items.
+If it's a specific detailed question (5 basic rules, first aid, work time adjustment, etc.), please focus on that content.
+
+Content to include in the answer:
+1. **Types and symptoms of heat illness** (heat stroke, heat exhaustion, heat cramps, heat syncope, etc.)
+2. **5 basic rules** (based on Korean Ministry of Employment and Labor guidelines)
+3. **Work environment improvement methods** (shade, cooling facilities, ventilation, etc.)
+4. **Work time adjustment** (work suspension during hot weather, securing rest time)
+5. **Water intake methods** (water, ion drinks, etc.)
+6. **Personal protective equipment wearing** (breathable work clothes, hats, etc.)
+7. **First aid methods** (lowering body temperature, checking consciousness, calling 119, etc.)
+8. **Manager precautions** (checking worker health status, deciding work suspension, etc.)
+
+Please write practical content that can be applied directly at construction sites."""
+        }
+        
+        prompt = prompts.get(target_lang, prompts["ko"])
+        
+        model = genai.GenerativeModel("gemini-2.0-flash-lite")
+        response = model.generate_content(prompt, generation_config={
+            "max_output_tokens": 1500,
+            "temperature": 0.3
+        })
+        
+        return f"🌡️ **온열질환 예방조치 가이드**\n\n{response.text.strip()}"
+        
+    except Exception as e:
+        print(f"Gemini 온열질환 답변 생성 오류: {e}")
+        fallback_messages = {
+            "ko": "죄송합니다. 온열질환 예방조치 정보를 생성하는 중 오류가 발생했습니다.",
+            "en": "Sorry, an error occurred while generating heat illness prevention information.",
+        }
+        return fallback_messages.get(target_lang, fallback_messages["ko"])
+
+def generate_gemini_fallback_answer(query, target_lang, gemini_api_key):
+    """외국인근로자.pkl에서 답변을 찾을 수 없을 때 Gemini API로 일반 답변 생성"""
+    try:
+        genai.configure(api_key=gemini_api_key)
+        
+        prompts = {
+            "ko": f"""다음은 외국인 근로자와 관련된 질문입니다. 
+            외국인 근로자의 권리, 근로 조건, 생활 정보 등에 대해 도움이 되는 답변을 제공해주세요.
+
+질문: {query}
+
+답변은 한국어로, 외국인 근로자가 한국에서 생활하고 일하는 데 실질적으로 도움이 되는 정보를 포함해주세요.""",
+            
+            "en": f"""This is a question related to foreign workers.
+Please provide helpful answers about foreign workers' rights, working conditions, living information, etc.
+
+Question: {query}
+
+Please answer in English with information that is practically helpful for foreign workers living and working in Korea.""",
+            
+            "vi": f"""Đây là câu hỏi liên quan đến lao động nước ngoài.
+Vui lòng cung cấp câu trả lời hữu ích về quyền lợi, điều kiện làm việc, thông tin sinh hoạt của lao động nước ngoài, v.v.
+
+Câu hỏi: {query}
+
+Vui lòng trả lời bằng tiếng Việt với thông tin thực tế hữu ích cho lao động nước ngoài sống và làm việc tại Hàn Quốc.""",
+            
+            "zh": f"""这是与外国劳工相关的问题。
+请就外国劳工的权利、工作条件、生活信息等提供有用的答案。
+
+问题: {query}
+
+请用中文回答，提供对在韩国生活和工作的外国劳工实际有用的信息。""",
+            
+            "ja": f"""これは外国人労働者に関する質問です。
+外国人労働者の権利、労働条件、生活情報などについて役立つ回答を提供してください。
+
+質問: {query}
+
+日本語で回答し、韓国で生活し働く外国人労働者に実際に役立つ情報を含めてください。"""
+        }
+        
+        prompt = prompts.get(target_lang, prompts["ko"])
+        
+        model = genai.GenerativeModel("gemini-2.0-flash-lite")
+        response = model.generate_content(prompt, generation_config={
+            "max_output_tokens": 1000,
+            "temperature": 0.3
+        })
+        
+        return response.text.strip()
+        
+    except Exception as e:
+        print(f"Gemini 폴백 답변 생성 오류: {e}")
+        fallback_messages = {
+            "ko": "죄송합니다. 답변을 생성하는 중 오류가 발생했습니다.",
+            "en": "Sorry, an error occurred while generating an answer.",
+            "vi": "Xin lỗi, đã xảy ra lỗi khi tạo câu trả lời.",
+            "zh": "抱歉，生成答案时发生错误。",
+            "ja": "申し訳ございません。回答の生成中にエラーが発生しました。"
+        }
+        return fallback_messages.get(target_lang, fallback_messages["ko"])
+
+def search_jangmachul_json(query, jangmachul_json_data):
+    """JSON 데이터에서 키워드와 매칭되는 정보 검색"""
+    query_lower = query.lower()
+    results = []
+    
+    try:
+        safety_data = jangmachul_json_data.get("자율안전보건_점검표", {})
+        
+        # 직접 키워드로 섹션 검색 (더 간단하고 확실한 방법)
+        matched_sections = []
+        print(f"[DEBUG] 검색 중인 키워드: {query_lower}")
+        
+        all_sections = list(safety_data.keys())
+        print(f"[DEBUG] 사용 가능한 섹션 개수: {len(all_sections)}")
+        
+        # "자율점검표"만 입력된 경우 전체 메뉴 표시
+        if query_lower.strip() in ["자율점검표", "점검표", "안전점검표"]:
+            print(f"[DEBUG] '{query_lower}' - 전체 메뉴 표시")
+            # 빈 리스트 반환하여 handle_jangmachul_query에서 메뉴를 표시하도록 함
+            return []
+        
+        # 키워드별 섹션 매핑
+        for section_name in all_sections:
+            section_lower = section_name.lower()
+            
+            # 키워드가 섹션 이름에 포함되는지 확인
+            if ("붕괴" in query_lower or "굴착사면" in query_lower) and "굴착사면" in section_lower:
+                print(f"[DEBUG] '붕괴/굴착사면' 키워드로 섹션 '{section_name}' 매칭됨")
+                matched_sections.append(section_name)
+            elif ("흙막이지보공" in query_lower or "흙막이" in query_lower or "지보공" in query_lower) and "흙막이지보공" in section_lower:
+                print(f"[DEBUG] '흙막이지보공' 키워드로 섹션 '{section_name}' 매칭됨")
+                matched_sections.append(section_name)
+            elif ("철골공사" in query_lower or "철골" in query_lower) and "철골공사" in section_lower:
+                print(f"[DEBUG] '철골공사' 키워드로 섹션 '{section_name}' 매칭됨")
+                matched_sections.append(section_name)
+            elif ("전기공사" in query_lower or "전기" in query_lower) and "전기공사" in section_lower:
+                print(f"[DEBUG] '전기공사' 키워드로 섹션 '{section_name}' 매칭됨")
+                matched_sections.append(section_name)
+            elif "밀폐공간" in query_lower and "밀폐공간" in section_lower:
+                print(f"[DEBUG] '밀폐공간' 키워드로 섹션 '{section_name}' 매칭됨")
+                matched_sections.append(section_name)
+            elif ("단부" in query_lower or "개구부" in query_lower) and ("단부" in section_lower or "개구부" in section_lower):
+                print(f"[DEBUG] '단부/개구부' 키워드로 섹션 '{section_name}' 매칭됨")
+                matched_sections.append(section_name)
+            elif ("지붕공사" in query_lower or "지붕" in query_lower) and "지붕공사" in section_lower:
+                print(f"[DEBUG] '지붕공사' 키워드로 섹션 '{section_name}' 매칭됨")
+                matched_sections.append(section_name)
+            elif ("비계" in query_lower or "작업발판" in query_lower) and ("비계" in section_lower or "작업발판" in section_lower):
+                print(f"[DEBUG] '비계/작업발판' 키워드로 섹션 '{section_name}' 매칭됨")
+                matched_sections.append(section_name)
+            elif "사다리" in query_lower and "사다리" in section_lower:
+                print(f"[DEBUG] '사다리' 키워드로 섹션 '{section_name}' 매칭됨")
+                matched_sections.append(section_name)
+            elif "이동식비계" in query_lower and "이동식비계" in section_lower:
+                print(f"[DEBUG] '이동식비계' 키워드로 섹션 '{section_name}' 매칭됨")
+                matched_sections.append(section_name)
+            elif "달비계" in query_lower and "달비계" in section_lower:
+                print(f"[DEBUG] '달비계' 키워드로 섹션 '{section_name}' 매칭됨")
+                matched_sections.append(section_name)
+            elif ("거푸집" in query_lower or "동바리" in query_lower) and ("거푸집" in section_lower or "동바리" in section_lower):
+                print(f"[DEBUG] '거푸집/동바리' 키워드로 섹션 '{section_name}' 매칭됨")
+                matched_sections.append(section_name)
+            elif "굴착기" in query_lower and "굴착기" in section_lower:
+                print(f"[DEBUG] '굴착기' 키워드로 섹션 '{section_name}' 매칭됨")
+                matched_sections.append(section_name)
+            elif ("고소작업대" in query_lower or "고속작업대" in query_lower) and "고소작업대" in section_lower:
+                print(f"[DEBUG] '고소작업대' 키워드로 섹션 '{section_name}' 매칭됨")
+                matched_sections.append(section_name)
+            elif "트럭" in query_lower and "트럭" in section_lower:
+                print(f"[DEBUG] '트럭' 키워드로 섹션 '{section_name}' 매칭됨")
+                matched_sections.append(section_name)
+            elif ("이동식크레인" in query_lower or "크레인" in query_lower) and "이동식크레인" in section_lower:
+                print(f"[DEBUG] '이동식크레인' 키워드로 섹션 '{section_name}' 매칭됨")
+                matched_sections.append(section_name)
+            elif ("타워크레인" in query_lower or "크레인" in query_lower) and "타워크레인" in section_lower:
+                print(f"[DEBUG] '타워크레인' 키워드로 섹션 '{section_name}' 매칭됨")
+                matched_sections.append(section_name)
+            elif "용접" in query_lower and "용접" in section_lower:
+                print(f"[DEBUG] '용접' 키워드로 섹션 '{section_name}' 매칭됨")
+                matched_sections.append(section_name)
+            # 장마철 공통사항 매칭
+            elif any(keyword in query_lower for keyword in ["장마철", "공통", "호우", "침수", "태풍", "강풍", "감전", "붕괴", "매몰"]) and "장마철" in section_lower:
+                print(f"[DEBUG] 장마철 관련 키워드로 섹션 '{section_name}' 매칭됨")
+                matched_sections.append(section_name)
+        
+        # 중복 제거
+        matched_sections = list(set(matched_sections))
+        print(f"[DEBUG] 최종 매칭된 섹션들: {matched_sections}")
+        
+        # 매칭된 섹션들의 정보 수집
+        for section in matched_sections:
+            section_data = safety_data[section]
+            results.append({
+                "section": section,
+                "data": section_data
+            })
+        
+        return results
+        
+    except Exception as e:
+        print(f"JSON 검색 오류: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
+
+def format_jangmachul_results(results, target_lang="ko", original_query=""):
+    """검색 결과를 포맷팅하여 사용자에게 표시 (YouTube 링크 버튼 포함)"""
+    if not results:
+        return None
+    
+    formatted_text = "**장마철 건설 현장 자율안전 점검표**\n\n"
+    
+    for result in results:
+        section = result["section"]
+        data = result["data"]
+        
+        # 섹션 제목
+        section_title = section.replace("_", " ").title()
+        formatted_text += f"**{section_title}**\n\n"
+        
+        # 데이터 포맷팅
+        if section == "장마철_공통사항":
+            formatted_text += format_common_safety_items(data)
+        else:
+            # 모든 다른 섹션들에 대해 일반적인 포맷팅 사용
+            formatted_text += format_general_safety_info(data)
+        
+        formatted_text += "\n\n"
+    
+    # YouTube 검색 버튼 정보 추가 (장마철 안전점검표에만 적용)
+    formatted_text += "\n" + get_youtube_search_button_info(results, target_lang, original_query) + "\n"
+    
+    return formatted_text.strip()
+
+def get_youtube_search_button_info(results, target_lang, original_query=""):
+    """안전점검표 결과를 기반으로 YouTube 검색 버튼 정보 생성"""
+    import urllib.parse
+    
+    # 검색 키워드 매핑 (한국어로)
+    search_keywords = {
+        "굴착사면_무너짐": "굴착 사면 붕괴",
+        "장마철_공통사항": "장마철 안전",
+        "비계_조립해체": "비계",
+        "크레인_운전": "크레인",
+        "용접_절단": "용접",
+        "가설전기": "가설전기",
+        "고소작업": "고소작업",
+        "터널공사": "터널공사",
+        "교량공사": "교량공사"
+    }
+    
+    # 결과에서 키워드 추출
+    detected_keyword = original_query or "장마철 안전"  # 기본값을 원래 질문으로 설정
+    print(f"[DEBUG] JSON 검색 결과 개수: {len(results) if results else 0}")
+    if results and len(results) > 0:
+        for result in results:
+            section = result.get("section", "")
+            print(f"[DEBUG] 검색 결과 섹션: {section}")
+            if section in search_keywords:
+                detected_keyword = search_keywords[section]
+                print(f"[DEBUG] 매핑된 검색어: {detected_keyword}")
+                break
+    
+    if detected_keyword == original_query:
+        print(f"[DEBUG] JSON에서 키워드 매핑 실패, 사용자 질문 사용: {detected_keyword}")
+    else:
+        print(f"[DEBUG] JSON에서 매핑된 검색어 사용: {detected_keyword}")
+    
+    # URL 인코딩
+    encoded_keyword = urllib.parse.quote(detected_keyword)
+    youtube_url = f"https://www.youtube.com/@koshamovie/search?query={encoded_keyword}"
+    print(f"[DEBUG] Generated YouTube URL: {youtube_url}")  # 디버그
+    
+    # 언어별 버튼 텍스트
+    button_texts = {
+        "ko": "📺 KOSHA 관련 동영상 보기",
+        "en": "📺 Watch Related KOSHA Videos",
+        "vi": "📺 Xem Video KOSHA Liên Quan",
+        "ja": "📺 KOSHA関連動画を見る",
+        "zh": "📺 观看相关KOSHA视频",
+        "zh-TW": "📺 觀看相關KOSHA影片",
+        "id": "📺 Tonton Video KOSHA Terkait",
+        "th": "📺 ดูวิดีโอ KOSHA ที่เกี่ยวข้อง",
+        "fr": "📺 Voir Vidéos KOSHA Connexes",
+        "de": "📺 KOSHA Videos ansehen",
+        "tl": "📺 Manood ng KOSHA Videos"
+    }
+    
+    button_text = button_texts.get(target_lang, button_texts["ko"])
+    
+    # 버튼 정보를 반환 (실제 버튼은 chat_room.py에서 생성)
+    # 형식: YOUTUBE_BUTTON|URL|버튼텍스트|검색키워드 (| 구분자 사용)
+    return f"YOUTUBE_BUTTON|{youtube_url}|{button_text}|{detected_keyword}"
+
+def get_youtube_search_button_info_for_gemini(query, target_lang):
+    """Gemini 답변용 YouTube 검색 버튼 정보 생성"""
+    import urllib.parse
+    
+    # 질문에서 키워드 추출하여 검색어 결정
+    query_lower = query.lower()
+    detected_keyword = query  # 기본값을 사용자 질문으로 변경
+    
+    # 키워드 매핑 (한국어로) - 특별한 매핑이 필요한 경우만
+    keyword_mapping = {
+        "굴착": "굴착 사면 붕괴",
+        "사면": "굴착 사면 붕괴", 
+        "무너짐": "굴착 사면 붕괴",
+        "붕괴": "굴착 사면 붕괴",
+        "조립": "비계",
+        "해체": "비계",
+        "운전": "크레인",
+        "절단": "용접",
+        "전기": "가설전기",
+        "고소": "고소작업",
+        "낙하": "개구부",
+        "추락": "개구부",
+        "scaffold": "비계",
+        "crane": "크레인",
+        "welding": "용접",
+        "excavation": "굴착 사면 붕괴",
+        "tunnel": "터널공사",
+        "bridge": "교량공사",
+        "opening": "개구부",
+        "fall": "개구부"
+    }
+    
+    # 질문에서 키워드 찾기 (특별한 매핑이 있는 경우만)
+    print(f"[DEBUG] 사용자 질문: {query}")
+    for keyword, search_term in keyword_mapping.items():
+        if keyword in query_lower:
+            detected_keyword = search_term
+            print(f"[DEBUG] 감지된 키워드: '{keyword}' -> 검색어: '{search_term}'")
+            break
+    
+    if detected_keyword == query:
+        print(f"[DEBUG] 사용자 질문을 그대로 검색어로 사용: {detected_keyword}")
+    else:
+        print(f"[DEBUG] 매핑된 검색어 사용: {detected_keyword}")
+    
+    # URL 인코딩
+    encoded_keyword = urllib.parse.quote(detected_keyword)
+    youtube_url = f"https://www.youtube.com/@koshamovie/search?query={encoded_keyword}"
+    print(f"[DEBUG] Generated YouTube URL: {youtube_url}")  # 디버그
+    
+    # 언어별 버튼 텍스트
+    button_texts = {
+        "ko": "📺 KOSHA 관련 동영상 보기",
+        "en": "📺 Watch Related KOSHA Videos",
+        "vi": "📺 Xem Video KOSHA Liên Quan",
+        "ja": "📺 KOSHA関連動画を見る",
+        "zh": "📺 观看相关KOSHA视频",
+        "zh-TW": "📺 觀看相關KOSHA影片",
+        "id": "📺 Tonton Video KOSHA Terkait",
+        "th": "📺 ดูวิดีโอ KOSHA ที่เกี่ยวข้อง",
+        "fr": "📺 Voir Vidéos KOSHA Connexes",
+        "de": "📺 KOSHA Videos ansehen",
+        "tl": "📺 Manood ng KOSHA Videos"
+    }
+    
+    button_text = button_texts.get(target_lang, button_texts["ko"])
+    
+    # 버튼 정보를 반환 (실제 버튼은 chat_room.py에서 생성)
+    # 형식: YOUTUBE_BUTTON|URL|버튼텍스트|검색키워드 (| 구분자 사용)
+    return f"YOUTUBE_BUTTON|{youtube_url}|{button_text}|{detected_keyword}"
+
+def format_common_safety_items(data):
+    """장마철 공통사항 포맷팅"""
+    result = ""
+    
+    if "점검_항목" in data:
+        for category, items in data["점검_항목"].items():
+            result += f"**{category.replace('_', ' ')}**\n"
+            if isinstance(items, list):
+                for item in items:
+                    # [1] 같은 번호 제거
+                    clean_item = item.split(" [")[0] if " [" in item else item
+                    result += f"• {clean_item}\n"
+            result += "\n"
+    
+    return result
+
+def format_general_safety_info(data):
+    """일반적인 안전정보 포맷팅"""
+    result = ""
+    
+    if "정의" in data:
+        result += f"**정의**: {data['정의']}\n\n"
+    
+    if "핵심_안전수칙" in data and isinstance(data["핵심_안전수칙"], list):
+        result += "**핵심 안전수칙**\n"
+        for rule in data["핵심_안전수칙"]:
+            clean_rule = rule.split(" [")[0] if " [" in rule else rule
+            result += f"• {clean_rule}\n"
+        result += "\n"
+    
+    if "근로자는_이것만은_지켜야_합니다" in data and isinstance(data["근로자는_이것만은_지켜야_합니다"], list):
+        result += "**근로자 준수사항**\n"
+        for rule in data["근로자는_이것만은_지켜야_합니다"]:
+            clean_rule = rule.split(" [")[0] if " [" in rule else rule
+            result += f"• {clean_rule}\n"
+        result += "\n"
+    
+    if "자율점검표" in data:
+        result += "**자율점검표**\n"
+        checklist = data["자율점검표"]
+        if isinstance(checklist, dict):
+            for category, items in checklist.items():
+                result += f"**{category.replace('_', ' ')}**\n"
+                if isinstance(items, list):
+                    for item in items:
+                        clean_item = item.split(" [")[0] if " [" in item else item
+                        result += f"• {clean_item}\n"
+                result += "\n"
+    
+    return result
+
+def handle_jangmachul_query(query, target_lang, jangmachul_json_data, gemini_api_key):
+    """장마철 자율안전 점검표 관련 질문 처리 - JSON RAG 우선, Gemini 보조 (외국어 지원)"""
+    try:
+        # JSON 데이터가 없으면 Gemini 일반 지식으로 답변
+        if jangmachul_json_data is None:
+            print("JSON 데이터가 없어서 Gemini로 답변 생성")
+            return generate_jangmachul_answer_with_gemini(query, target_lang, gemini_api_key)
+        
+        # 현재 언어의 키워드 목록 가져오기
+        current_keywords = JANGMACHUL_KEYWORDS.get(target_lang, JANGMACHUL_KEYWORDS["ko"])
+        
+        # 일반적인 안전점검표 요청 텍스트 패턴 정의 (언어별)
+        general_patterns = {
+            "ko": ["장마철 건설 현장 자율안전 점검표", "장마철 안전점검표", "장마철 점검표"],
+            "en": ["rainy season construction site safety checklist", "rainy season safety checklist"],
+            "vi": ["danh sách kiểm tra an toàn công trường mùa mưa", "danh sách kiểm tra an toàn mùa mưa"],
+            "ja": ["梅雨期建設現場安全点検表", "梅雨期安全点検表"],
+            "zh": ["雨季建筑工地安全检查表", "雨季安全检查表"],
+            "zh-TW": ["雨季建築工地安全檢查表", "雨季安全檢查表"],
+            "id": ["daftar periksa keselamatan lokasi konstruksi musim hujan", "daftar periksa keselamatan musim hujan"],
+            "th": ["รายการตรวจสอบความปลอดภัยไซต์ก่อสร้างฤดูฝน", "รายการตรวจสอบความปลอดภัยฤดูฝน"],
+            "fr": ["liste de contrôle de sécurité du chantier de construction en saison des pluies", "liste de contrôle de sécurité en saison des pluies"],
+            "de": ["sicherheitscheckliste für baustellen in der regenzeit", "sicherheitscheckliste regenzeit"],
+            "tl": ["checklist ng kaligtasan sa construction site sa panahon ng tag-ulan", "checklist ng kaligtasan sa tag-ulan"]
+        }
+        
+        query_lower = query.lower()
+        current_general_patterns = general_patterns.get(target_lang, general_patterns["ko"])
+        
+        # 일반적인 안전점검표 요청인지 확인
+        is_general_request = any(pattern in query_lower for pattern in current_general_patterns)
+        
+        if is_general_request:
+            # 일반적인 요청이면 메뉴 표시
+            return JANGMACHUL_MENU_TEXT.get(target_lang, JANGMACHUL_MENU_TEXT["ko"])
+        
+        # 구체적인 키워드가 있는지 확인 (기술적인 용어들)
+        specific_keywords = [kw for kw in current_keywords if kw.lower() in query_lower and kw.lower() not in [
+            "rainy season", "safety checklist", "construction site", "safety inspection",
+            "장마철", "자율안전", "점검표",
+            "mùa mưa", "danh sách kiểm tra an toàn", "công trường xây dựng", "kiểm tra an toàn",
+            "梅雨期", "安全点検表", "建設現場", "安全点検",
+            "雨季", "安全检查表", "建筑工地", "安全检查",
+            "musim hujan", "daftar periksa keselamatan", "lokasi konstruksi", "inspeksi keselamatan",
+            "ฤดูฝน", "รายการตรวจสอบความปลอดภัย", "ไซต์ก่อสร้าง", "การตรวจสอบความปลอดภัย",
+            "saison des pluies", "liste de contrôle de sécurité", "chantier de construction", "inspection de sécurité",
+            "regenzeit", "sicherheitscheckliste", "baustelle", "sicherheitsinspektion",
+            "tag-ulan", "checklist ng kaligtasan", "construction site"
+        ]]
+        
+        # 구체적인 키워드가 있으면 JSON에서 검색, 없으면 전체 메뉴 표시
+        if not specific_keywords:
+            # 메뉴 텍스트 반환
+            return JANGMACHUL_MENU_TEXT.get(target_lang, JANGMACHUL_MENU_TEXT["ko"])
+        
+        # JSON에서 관련 정보 검색
+        print(f"JSON 검색 시작: {query}")
+        search_results = search_jangmachul_json(query, jangmachul_json_data)
+        
+        if search_results:
+            print(f"JSON에서 {len(search_results)}개 결과 찾음")
+            formatted_result = format_jangmachul_results(search_results, target_lang, query)
+            if formatted_result:
+                return formatted_result
+        
+        # JSON에서 관련 정보를 찾지 못한 경우 Gemini로 대체
+        print("JSON에서 관련 정보를 찾지 못해 Gemini로 답변 생성")
+        return generate_jangmachul_answer_with_gemini(query, target_lang, gemini_api_key)
+        
+    except Exception as e:
+        print(f"장마철 질문 처리 오류: {e}")
+        print("오류가 발생하여 Gemini로 답변 생성")
+        return generate_jangmachul_answer_with_gemini(query, target_lang, gemini_api_key)
+
+def handle_onyul_query(query, target_lang, onyul_json_data, gemini_api_key):
+    """온열질환 예방조치 관련 질문 처리 - 항상 Gemini API 사용"""
+    try:
+        print("온열질환 관련 질문은 항상 Gemini API로 답변 생성")
+        return generate_onyul_answer_with_gemini(query, target_lang, gemini_api_key)
+        
+    except Exception as e:
+        print(f"온열질환 질문 처리 오류: {e}")
+        print("오류가 발생하여 Gemini로 답변 생성")
+        return generate_onyul_answer_with_gemini(query, target_lang, gemini_api_key)
+
+def format_excavation_info(excavation_data, target_lang):
+    """굴착사면 무너짐 정보 포맷"""
+    result = "🏗️ **굴착사면 무너짐 예방**\n\n"
+    
+    if "정의" in excavation_data:
+        result += f"**정의**: {excavation_data['정의']}\n\n"
+    
+    if "핵심_안전수칙" in excavation_data:
+        result += "**핵심 안전수칙**\n"
+        for rule in excavation_data["핵심_안전수칙"]:
+            result += f"• {rule}\n"
+        result += "\n"
+    
+    if "근로자는_이것만은_지켜야_합니다" in excavation_data:
+        result += "**근로자 준수사항**\n"
+        for item in excavation_data["근로자는_이것만은_지켜야_합니다"]:
+            result += f"• {item}\n"
+        result += "\n"
+    
+    return result
+
+# 통합 RAG 답변 함수들
+def foreign_worker_rag_answer(query, target_lang, vector_db_foreign_worker, gemini_api_key, conversation_context=None, jangmachul_json_data=None, onyul_json_data=None):
+    """외국인 근로자 RAG 답변 처리 (장마철/온열질환 포함)"""
+    try:
+        print(f"\n" + "="*80)
+        print(f"[SEARCH] [DEBUG] 외국인 권리구제 RAG 질문: {query}")
+        print(f"[SEARCH] [DEBUG] 타겟 언어: {target_lang}")
+        print(f"[SEARCH] [DEBUG] 질문 길이: {len(query)}자")
+        print(f"[SEARCH] [DEBUG] 질문 소문자: {query.lower()}")
+        
+        # 1. 장마철 안전점검표 관련 질문 확인 (외국어 지원)
+        jangmachul_keywords = JANGMACHUL_KEYWORDS.get(target_lang, JANGMACHUL_KEYWORDS["ko"])
+        
+        matched_jangmachul = [k for k in jangmachul_keywords if k.lower() in query.lower()]
+        print(f"[SEARCH] [DEBUG] 장마철 키워드 매칭 결과: {matched_jangmachul}")
+        
+        if matched_jangmachul:
+            print(f"[SUCCESS] [DEBUG] 장마철 자율안전 점검표로 라우팅: {query}")
+            result = handle_jangmachul_query(query, target_lang, jangmachul_json_data, gemini_api_key)
+            print(f"[SUCCESS] [DEBUG] 장마철 점검표 응답 길이: {len(result)}자")
+            print("="*80)
+            return result
+        
+        # 2. 온열질환 관련 질문 확인
+        onyul_keywords = [
+            "온열질환", "폭염", "열사병", "더위",
+            "체감온도", "기분상쾌", "수분섭취", "휴식", "그늘",
+            "냉방", "통풍", "바람", "쉼터", "물", "음료",
+            "열경련", "열실신", "열피로", "일사병",
+            "5대 기본", "기본 수칙", "예방 수칙", "수칙", "기본원칙",
+            "예방 방법", "대처 방법", "응급처치", "안전수칙"
+        ]
+        
+        matched_onyul = [k for k in onyul_keywords if k in query.lower()]
+        print(f"[SEARCH] [DEBUG] 온열질환 키워드 매칭 결과: {matched_onyul}")
+        
+        if matched_onyul:
+            print(f"[SUCCESS] [DEBUG] 온열질환 예방조치로 라우팅: {query}")
+            result = handle_onyul_query(query, target_lang, onyul_json_data, gemini_api_key)
+            print(f"[SUCCESS] [DEBUG] 온열질환 응답 길이: {len(result)}자")
+            print("="*80)
+            return result
+        
+        # 3. 건설 현장 자율안전 점검표 관련이 아니면 -> 외국인근로자.pkl 우선 검색
+        print(f"[SEARCH] [DEBUG] 건설/온열질환 관련이 아님 -> 외국인근로자.pkl에서 검색")
+        
+        if vector_db_foreign_worker is None:
+            print(f"[ERROR] [DEBUG] 외국인 권리구제 벡터DB가 None입니다!")
+            error_messages = {
+                "ko": "죄송합니다. RAG 기능이 현재 사용할 수 없습니다. (외국인 권리구제 벡터DB가 로드되지 않았습니다.)",
+                "en": "Sorry, the RAG function is currently unavailable. (Foreign worker rights vector database not loaded.)",
+                "vi": "Xin lỗi, chức năng RAG hiện không khả dụng. (Cơ sở dữ liệu vector quyền lợi người lao động nước ngoài chưa được tải.)",
+                "zh": "抱歉，RAG功能目前不可用。(外国工人权益向量数据库未加载。)",
+                "ja": "申し訳ございません。RAG機能は現在利用できません。(外国人労働者権利ベクターデータベースが読み込まれていません。)"
+            }
+            print("="*80)
+            return error_messages.get(target_lang, error_messages["ko"])
+        
+        # 외국인근로자.pkl에서 답변 검색
+        rag_result = answer_with_rag_foreign_worker(query, vector_db_foreign_worker, gemini_api_key, target_lang=target_lang)
+        
+        # RAG 결과가 "관련 내용을 찾을 수 없습니다" 류의 메시지인지 확인
+        not_found_messages = [
+            "참고 정보에서 관련 내용을 찾을 수 없습니다",
+            "Related content could not be found",
+            "Không thể tìm thấy nội dung liên quan", 
+            "找不到相关内容",
+            "関連内容が見つかりませんでした"
+        ]
+        
+        is_not_found = any(msg in rag_result for msg in not_found_messages)
+        
+        if is_not_found:
+            print(f"[WARNING] [DEBUG] 외국인근로자.pkl에서 답변을 찾지 못함 -> Gemini API 폴백")
+            gemini_result = generate_gemini_fallback_answer(query, target_lang, gemini_api_key)
+            print("="*80)
+            return gemini_result
+        else:
+            print(f"[SUCCESS] [DEBUG] 외국인근로자.pkl에서 답변 찾음: {len(rag_result)}자")
+            print("="*80)
+            return rag_result
+            
+    except Exception as e:
+        print(f"[ERROR] [DEBUG] 외국인 근로자 RAG 처리 중 예외 발생: {e}")
+        # 오류 발생시 Gemini API 폴백
+        try:
+            fallback_result = generate_gemini_fallback_answer(query, target_lang, gemini_api_key)
+            print("="*80)
+            return fallback_result
+        except Exception as fallback_error:
+            print(f"[ERROR] [DEBUG] Gemini API 폴백도 실패: {fallback_error}")
+            error_messages = {
+                "ko": "죄송합니다. 외국인 근로자 권리구제 정보를 찾을 수 없습니다.",
+                "en": "Sorry, foreign worker rights information could not be found.",
+                "vi": "Xin lỗi, không thể tìm thấy thông tin quyền lợi người lao động nước ngoài.",
+                "zh": "抱歉，找不到外国工人权益信息。",
+                "ja": "申し訳ございません。外国人労働者の権利救済情報が見つかりませんでした。"
+            }
+            print("="*80)
+            return error_messages.get(target_lang, error_messages["ko"])

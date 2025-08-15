@@ -349,6 +349,32 @@ BUSAN_FOOD_GUIDE_TEXTS = {
             "• Rekomendasikan restoran seafood di Busan"
         ],
         "input_hint": "Tanyakan apa saja tentang restoran Busan! 🍽️"
+    },
+    "tl": {
+        "title": "Paghahanap ng Restaurant sa Busan",
+        "info": "Maaari kang magtanong tungkol sa:",
+        "items": [
+            "🍜 Mga sikat na noodle restaurant sa Busan",
+            "🦐 Mga eksperto sa sashimi at seafood",
+            "🍖 Mga BBQ at meat restaurant",
+            "🍲 Mga sopas at nilaga",
+            "🍰 Mga cafe at dessert",
+            "🍺 Mga bar at street food stall",
+            "🥢 Mga rekomendasyon ng restaurant ayon sa lugar",
+            "💰 Mga restaurant ayon sa presyo"
+        ],
+        "example_title": "Mga halimbawa ng tanong:",
+        "examples": [
+            "• Mag-recommend ng sikat na pork soup restaurant sa Busan",
+            "• Sabihin mo sa akin ang tungkol sa mga restaurant sa Haeundae-gu",
+            "• Mga restaurant malapit sa pork soup alley ng Busan Station",
+            "• Mga lumang restaurant sa Nampo-dong",
+            "• Mag-recommend ng mga cafe sa Busan",
+            "• Mga restaurant sa Gangseo-gu",
+            "• Mga noodle restaurant sa Geumjeong-gu",
+            "• Mag-recommend ng mga seafood restaurant sa Busan"
+        ],
+        "input_hint": "Magtanong ng kahit ano tungkol sa mga restaurant sa Busan! 🍽️"
     }
 }
 
@@ -977,6 +1003,42 @@ RAG_GUIDE_TEXTS = {
             "• کوریا میں کون سے فون نمبر جاننے چاہئیں؟"
         ],
         "input_hint": "ذیل میں اپنا حقوق کی حفاظت کا سوال لکھیں! 💬"
+    },
+    "tl": {
+        "title": "Gabay sa Buhay sa Korea para sa Mga Pamilyang Multikultural",
+        "info": "Maaari kang magtanong tungkol sa mga sumusunod na paksa:",
+        "items": [
+            "🏥 Paano gumamit ng mga ospital at parmasya",
+            "🏦 Paano gumamit ng mga bangko, post office, opisina ng gobyerno",
+            "🚌 Paano gumamit ng public transport (bus, subway, tren)",
+            "🚗 Lisensya ng driver, pribadong sasakyan, taxi",
+            "🏠 Paghahanap ng bahay",
+            "📱 Paggamit ng mobile phone",
+            "🗑️ Paano magtapon ng basura (volume-based, recycling)",
+            "🆔 Pag-rehistro ng dayuhan, paghababa ng pananatili"
+        ],
+        "example_title": "Mga halimbawa ng tanong:",
+        "examples": [
+            "• Saan ako pupunta para mag-rehistro bilang dayuhan?",
+            "• Ang aking panahon ng pananatili ay tatlong buwan na lang, paano ko ito palawihin?",
+            "• Paano ginagamit ng mga dayuhan ang mga mobile phone?",
+            "• Ano ang jeonse (bahay na nakabatay sa deposito)?",
+            "• Ano ang real estate agency?",
+            "• Paano ako magsusulat ng kontrata ng bahay?",
+            "• Ano ang proseso para makakuha ng Korean driver's license?",
+            "• Saan ako bibili ng mga basurahan?",
+            "• Paano ako magtatapon ng basura?",
+            "• May sakit ako, ano ang dapat kong gawin?",
+            "• Ano ang health insurance card na kailangan para sa mga ospital?",
+            "• Iba ba ang oriental medicine sa mga regular na ospital?",
+            "• Paano kung wala akong reseta?",
+            "• Paano ako magbubukas ng bank account?",
+            "• Paano ako magpapadala ng mga bagay sa ibang bansa?",
+            "• Ano ang mga 24-hour call center na numero?",
+            "• Ano ang mga emergency number?",
+            "• Paano ako matututo ng Korean?"
+        ],
+        "input_hint": "I-type ang inyong tanong sa ibaba! 💬"
     }
 }
 
@@ -1018,7 +1080,11 @@ FOREIGN_WORKER_GUIDE_TEXTS = {
             "• 외국인 전용보험은 어떤게 있나요?",
             "• 한국 체류시 꼭 알아둘 전화번호는요?"
         ],
-        "input_hint": "권리구제 관련 질문을 입력해보세요! 💬"
+        "input_hint": "권리구제 관련 질문을 입력해보세요! 💬",
+        "safety_buttons": [
+            {"emoji": "☔", "text": "장마철 건설현장 안전점검표", "type": "jangmachul"},
+            {"emoji": "🌡️", "text": "온열질환 예방조치", "type": "onyul"}
+        ]
     },
     "en": {
         "title": "Foreign Worker Rights Protection Guide",
@@ -1042,7 +1108,11 @@ FOREIGN_WORKER_GUIDE_TEXTS = {
             "• What insurance is available for foreigners?",
             "• What phone numbers should I know in Korea?"
         ],
-        "input_hint": "Enter your rights protection question below! 💬"
+        "input_hint": "Enter your rights protection question below! 💬",
+        "safety_buttons": [
+            {"emoji": "☔", "text": "Rainy Season Construction Site Safety Checklist", "type": "jangmachul"},
+            {"emoji": "🌡️", "text": "Heat-Related Illness Prevention", "type": "onyul"}
+        ]
     },
     "vi": {
         "title": "Hướng dẫn bảo vệ quyền lợi người lao động nước ngoài",
@@ -1066,7 +1136,11 @@ FOREIGN_WORKER_GUIDE_TEXTS = {
             "• Bảo hiểm nào có sẵn cho người nước ngoài?",
             "• Số điện thoại nào tôi nên biết ở Hàn Quốc?"
         ],
-        "input_hint": "Nhập câu hỏi bảo vệ quyền lợi của bạn bên dưới! 💬"
+        "input_hint": "Nhập câu hỏi bảo vệ quyền lợi của bạn bên dưới! 💬",
+        "safety_buttons": [
+            {"emoji": "☔", "text": "Danh sách kiểm tra an toàn công trường mùa mưa", "type": "jangmachul"},
+            {"emoji": "🌡️", "text": "Biện pháp phòng ngừa bệnh do nắng nóng", "type": "onyul"}
+        ]
     },
     "ja": {
         "title": "外国人労働者権利保護ガイド",
@@ -1090,7 +1164,11 @@ FOREIGN_WORKER_GUIDE_TEXTS = {
             "• 外国人専用保険は何がありますか？",
             "• 韓国滞在中に知っておくべき電話番号は？"
         ],
-        "input_hint": "権利保護に関する質問を入力してください！💬"
+        "input_hint": "権利保護に関する質問を入力してください！💬",
+        "safety_buttons": [
+            {"emoji": "☔", "text": "梅雨期建設現場安全点検表", "type": "jangmachul"},
+            {"emoji": "🌡️", "text": "熱中症予防措置", "type": "onyul"}
+        ]
     },
     "zh": {
         "title": "外籍劳工权益保护指南",
@@ -1114,7 +1192,11 @@ FOREIGN_WORKER_GUIDE_TEXTS = {
             "• 外国人有什么保险？",
             "• 在韩国应该知道哪些电话号码？"
         ],
-        "input_hint": "请在下方输入您的权益保护问题！💬"
+        "input_hint": "请在下方输入您的权益保护问题！💬",
+        "safety_buttons": [
+            {"emoji": "☔", "text": "雨季建筑工地安全检查表", "type": "jangmachul"},
+            {"emoji": "🌡️", "text": "热相关疾病预防措施", "type": "onyul"}
+        ]
     },
     "zh-TW": {
         "title": "外籍勞工權益保護指南",
@@ -1138,7 +1220,11 @@ FOREIGN_WORKER_GUIDE_TEXTS = {
             "• 外國人有什麽保險？",
             "• 在韓國應該知道哪些電話號碼？"
         ],
-        "input_hint": "請在下方輸入您的權益保護問題！💬"
+        "input_hint": "請在下方輸入您的權益保護問題！💬",
+        "safety_buttons": [
+            {"emoji": "☔", "text": "雨季建築工地安全檢查表", "type": "jangmachul"},
+            {"emoji": "🌡️", "text": "熱相關疾病預防措施", "type": "onyul"}
+        ]
     },
     "id": {
         "title": "Panduan Perlindungan Hak Pekerja Asing",
@@ -1162,7 +1248,11 @@ FOREIGN_WORKER_GUIDE_TEXTS = {
             "• Asuransi apa yang tersedia untuk warga asing?",
             "• Nomor telepon apa yang harus saya ketahui di Korea?"
         ],
-        "input_hint": "Masukkan pertanyaan perlindungan hak Anda di bawah ini! 💬"
+        "input_hint": "Masukkan pertanyaan perlindungan hak Anda di bawah ini! 💬",
+        "safety_buttons": [
+            {"emoji": "☔", "text": "Daftar Periksa Keselamatan Lokasi Konstruksi Musim Hujan", "type": "jangmachul"},
+            {"emoji": "🌡️", "text": "Pencegahan Penyakit Terkait Panas", "type": "onyul"}
+        ]
     },
     "th": {
         "title": "คู่มือการคุ้มครองสิทธิแรงงานต่างชาติ",
@@ -1186,7 +1276,11 @@ FOREIGN_WORKER_GUIDE_TEXTS = {
             "• ประกันอะไรที่มีสำหรับชาวต่างชาติ?",
             "• เบอร์โทรศัพท์อะไรที่ฉันควรรู้ในเกาหลี?"
         ],
-        "input_hint": "ป้อนคำถามการคุ้มครองสิทธิ์ของคุณด้านล่าง! 💬"
+        "input_hint": "ป้อนคำถามการคุ้มครองสิทธิ์ของคุณด้านล่าง! 💬",
+        "safety_buttons": [
+            {"emoji": "☔", "text": "รายการตรวจสอบความปลอดภัยไซต์ก่อสร้างฤดูฝน", "type": "jangmachul"},
+            {"emoji": "🌡️", "text": "มาตรการป้องกันโรคจากความร้อน", "type": "onyul"}
+        ]
     },
     "fr": {
         "title": "Guide de protection des droits des travailleurs étrangers",
@@ -1210,7 +1304,11 @@ FOREIGN_WORKER_GUIDE_TEXTS = {
             "• Quelle assurance est disponible pour les étrangers?",
             "• Quels numéros de téléphone dois-je connaître en Corée?"
         ],
-        "input_hint": "Entrez votre question de protection des droits ci-dessous! 💬"
+        "input_hint": "Entrez votre question de protection des droits ci-dessous! 💬",
+        "safety_buttons": [
+            {"emoji": "☔", "text": "Liste de contrôle de sécurité du chantier de construction en saison des pluies", "type": "jangmachul"},
+            {"emoji": "🌡️", "text": "Mesures de prévention des maladies liées à la chaleur", "type": "onyul"}
+        ]
     },
     "de": {
         "title": "Leitfaden zum Schutz der Rechte ausländischer Arbeitnehmer",
@@ -1234,7 +1332,87 @@ FOREIGN_WORKER_GUIDE_TEXTS = {
             "• Welche Versicherung ist für Ausländer verfügbar?",
             "• Welche Telefonnummern sollte ich in Korea kennen?"
         ],
-        "input_hint": "Geben Sie Ihre Rechtsschutzfrage unten ein! 💬"
+        "input_hint": "Geben Sie Ihre Rechtsschutzfrage unten ein! 💬",
+        "safety_buttons": [
+            {"emoji": "☔", "text": "Sicherheitscheckliste für Baustellen in der Regenzeit", "type": "jangmachul"},
+            {"emoji": "🌡️", "text": "Maßnahmen zur Prävention hitzebedingter Krankheiten", "type": "onyul"}
+        ]
+    },
+    "tl": {
+        "title": "Gabay sa Proteksyon ng Karapatan ng Dayuhang Manggagawa",
+        "info": "Maaari kang magtanong tungkol sa mga sumusunod na paksa ng proteksyon ng karapatan:",
+        "items": [
+            "💰 Hindi nabayad na sahod at pagbabayad",
+            "🚫 Hindi makatarungang pagtanggal sa trabaho at abiso ng pagtanggal",
+            "🏥 Aksidente sa trabaho at mga pinsalang may kaugnayan sa trabaho",
+            "🚨 Sexual harassment at sexual assault sa lugar ng trabaho",
+            "📞 Insurance at counseling para sa mga dayuhan",
+            "📱 Emergency contacts at mga ahensyang nagbibigay ng payo",
+            "⚖️ Batas sa paggawa at mga pamamaraan sa proteksyon ng karapatan"
+        ],
+        "example_title": "Mga halimbawa ng tanong:",
+        "examples": [
+            "• Hindi nabayad ang aking sahod",
+            "• Ako ay hindi makatarungang tinanggal sa trabaho",
+            "• Nasaktan ako habang nagtatrabaho",
+            "• Nakaranas ako ng sexual harassment sa trabaho",
+            "• Nakaranas ako ng sexual assault o harassment",
+            "• Anong insurance ang available para sa mga dayuhan?",
+            "• Anong mga numero ng telepono ang dapat kong malaman sa Korea?"
+        ],
+        "input_hint": "Ilagay ang inyong tanong tungkol sa proteksyon ng karapatan sa ibaba! 💬",
+        "safety_buttons": [
+            {"emoji": "☔", "text": "Checklist ng Kaligtasan sa Construction Site ng Tag-ulan", "type": "jangmachul"},
+            {"emoji": "🌡️", "text": "Mga Pamamaraan sa Pag-iwas sa Sakit dahil sa Init", "type": "onyul"}
+        ]
+    }
+}
+
+# 안전점검표 버튼 클릭시 입력될 텍스트 정의
+SAFETY_BUTTON_TEXTS = {
+    "ko": {
+        "jangmachul": "장마철 건설 현장 자율안전 점검표",
+        "onyul": "온열질환 예방조치"
+    },
+    "en": {
+        "jangmachul": "Rainy Season Construction Site Safety Checklist",
+        "onyul": "Heat-Related Illness Prevention Measures"
+    },
+    "vi": {
+        "jangmachul": "Danh sách kiểm tra an toàn công trường mùa mưa",
+        "onyul": "Biện pháp phòng ngừa bệnh do nắng nóng"
+    },
+    "ja": {
+        "jangmachul": "梅雨期建設現場安全点検表",
+        "onyul": "熱中症予防措置"
+    },
+    "zh": {
+        "jangmachul": "雨季建筑工地安全检查表",
+        "onyul": "热相关疾病预防措施"
+    },
+    "zh-TW": {
+        "jangmachul": "雨季建築工地安全檢查表",
+        "onyul": "熱相關疾病預防措施"
+    },
+    "id": {
+        "jangmachul": "Daftar Periksa Keselamatan Lokasi Konstruksi Musim Hujan",
+        "onyul": "Pencegahan Penyakit Terkait Panas"
+    },
+    "th": {
+        "jangmachul": "รายการตรวจสอบความปลอดภัยไซต์ก่อสร้างฤดูฝน",
+        "onyul": "มาตรการป้องกันโรคจากความร้อน"
+    },
+    "fr": {
+        "jangmachul": "Liste de contrôle de sécurité du chantier de construction en saison des pluies",
+        "onyul": "Mesures de prévention des maladies liées à la chaleur"
+    },
+    "de": {
+        "jangmachul": "Sicherheitscheckliste für Baustellen in der Regenzeit",
+        "onyul": "Maßnahmen zur Prävention hitzebedingter Krankheiten"
+    },
+    "tl": {
+        "jangmachul": "Checklist ng Kaligtasan sa Construction Site ng Tag-ulan",
+        "onyul": "Mga Pamamaraan sa Pag-iwas sa Sakit dahil sa Init"
     }
 }
 
@@ -1704,6 +1882,28 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             print(f"Google Maps 열기 오류: {e}")
             print("지도 열기 중 오류가 발생했습니다.")
 
+    # YouTube 검색으로 열기 함수 (장마철 안전점검표용)
+    def open_youtube_search(search_keyword):
+        """KOSHA YouTube 채널에서 키워드 검색"""
+        try:
+            import urllib.parse
+            
+            # URL 인코딩 (한국어 키워드)
+            encoded_keyword = urllib.parse.quote(search_keyword)
+            youtube_url = f"https://www.youtube.com/@koshamovie/search?query={encoded_keyword}"
+            
+            print(f"📺 YouTube 검색 키워드: {search_keyword}")
+            print(f"📺 YouTube URL: {youtube_url}")
+            
+            # Google Maps와 동일한 방식으로 URL 열기
+            page.launch_url(youtube_url)
+            
+            print(f"📺 '{search_keyword}' 관련 KOSHA 교육 동영상을 찾고 있습니다...")
+            
+        except Exception as e:
+            print(f"YouTube 열기 오류: {e}")
+            print("YouTube 열기 중 오류가 발생했습니다.")
+
     def create_message_bubble(msg_data, is_me):
         # 닉네임이 '익명'이고 본문/번역문이 모두 비어있으면 말풍선 생성하지 않음
         if msg_data.get('nickname', '') == '익명' and not msg_data.get('text', '').strip() and not msg_data.get('translated', '').strip():
@@ -1858,6 +2058,60 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                     controls.append(ft.Container(height=4))
                     for button_row in button_rows:
                         controls.append(button_row)
+        
+        # 장마철 안전점검표 YouTube 버튼 처리 (외국인 근로자 RAG에서만)
+        if is_rag and (is_foreign_worker_rag or room_id == "foreign_worker_rights_rag"):
+            text_content = msg_data.get('text', '') + ' ' + msg_data.get('translated', '')
+            if 'YOUTUBE_BUTTON|' in text_content:
+                # YouTube 버튼 정보 추출 (형식: YOUTUBE_BUTTON|URL|버튼텍스트|검색키워드)
+                button_info = text_content.split('YOUTUBE_BUTTON|')[-1]
+                parts = button_info.split('|', 3)
+                if len(parts) >= 3:
+                    youtube_url = parts[0].strip()
+                    button_text = parts[1].strip() if len(parts) > 1 else "📺 관련 동영상 보기"
+                    search_keyword = parts[2].strip() if len(parts) > 2 else "장마철 안전"
+                    
+                    print(f"[DEBUG] YouTube 버튼 정보:")
+                    print(f"  URL: {youtube_url}")
+                    print(f"  버튼텍스트: {button_text}")
+                    print(f"  검색키워드: {search_keyword}")
+                    
+                    # YouTube 버튼 생성 - Google Maps 방식과 동일
+                    youtube_button = ft.ElevatedButton(
+                        content=ft.Row([
+                            ft.Icon(ft.Icons.PLAY_CIRCLE, size=20),
+                            ft.Text(button_text, size=14, weight=ft.FontWeight.W_500)
+                        ], spacing=8, alignment=ft.MainAxisAlignment.CENTER),
+                        on_click=lambda e, keyword=search_keyword: open_youtube_search(keyword),
+                        style=ft.ButtonStyle(
+                            bgcolor=ft.Colors.RED_600,
+                            color=ft.Colors.WHITE,
+                            shape=ft.RoundedRectangleBorder(radius=8),
+                            padding=ft.padding.symmetric(horizontal=12, vertical=8)
+                        ),
+                        height=40,
+                        width=280 if is_mobile else 320
+                    )
+                    
+                    # YouTube 버튼 섹션 추가
+                    controls.append(ft.Container(height=8))  # 구분선
+                    controls.append(youtube_button)
+                    
+                    # 메시지 텍스트에서 YOUTUBE_BUTTON 태그 제거
+                    msg_data['text'] = msg_data['text'].split('YOUTUBE_BUTTON|')[0].strip()
+                    if 'translated' in msg_data:
+                        msg_data['translated'] = msg_data['translated'].split('YOUTUBE_BUTTON|')[0].strip()
+                    
+                    # 텍스트 컨트롤 업데이트
+                    if len(controls) > 1 and isinstance(controls[1], ft.Text):
+                        controls[1] = ft.Text(
+                            msg_data.get('text', '').replace('**', ''),
+                            size=base_size + (2 if is_guide else 0),
+                            color=ft.Colors.WHITE if is_me else ft.Colors.BLACK87,
+                            font_family=font_family,
+                            selectable=True,
+                            weight=ft.FontWeight.W_500,
+                        )
         
         # Row로 감싸서 좌/우 정렬
         return ft.Row([
@@ -2618,6 +2872,98 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         # 외국인 근로자 권리구제 RAG 방인지 확인 (방 ID와 파라미터 모두 확인)
         elif is_foreign_worker_rag or room_id == "foreign_worker_rights_rag":
             guide_texts = FOREIGN_WORKER_GUIDE_TEXTS.get(user_lang, FOREIGN_WORKER_GUIDE_TEXTS["ko"])
+            
+            # 안전 버튼 생성 함수
+            def create_safety_button(button_info):
+                def on_safety_button_click(e):
+                    # 현재 언어에 맞는 텍스트 가져오기
+                    safety_texts = SAFETY_BUTTON_TEXTS.get(user_lang, SAFETY_BUTTON_TEXTS["ko"])
+                    if button_info["type"] == "jangmachul":
+                        input_box.value = safety_texts["jangmachul"]
+                    elif button_info["type"] == "onyul":
+                        input_box.value = safety_texts["onyul"]
+                    page.update()
+                    # 자동으로 메시지 전송
+                    send_message()
+                
+                return ft.ElevatedButton(
+                    content=ft.Row([
+                        ft.Text(button_info["emoji"], size=16),
+                        ft.Text(button_info["text"], size=12 if is_mobile else 14, weight=ft.FontWeight.BOLD)
+                    ], alignment=ft.MainAxisAlignment.CENTER, spacing=8),
+                    on_click=on_safety_button_click,
+                    style=ft.ButtonStyle(
+                        bgcolor=ft.Colors.ORANGE_50,
+                        color=ft.Colors.ORANGE_800,
+                        padding=ft.padding.symmetric(horizontal=12, vertical=8),
+                        shape=ft.RoundedRectangleBorder(radius=8),
+                        side=ft.BorderSide(color=ft.Colors.ORANGE_200, width=1)
+                    ),
+                    width=200 if is_mobile else 250,
+                    height=45
+                )
+            
+            # 안전 버튼들 생성
+            safety_buttons = []
+            if "safety_buttons" in guide_texts:
+                for button_info in guide_texts["safety_buttons"]:
+                    safety_buttons.append(create_safety_button(button_info))
+            
+            guide_items = []
+            for item in guide_texts["items"]:
+                guide_items.append(ft.Text(item, size=14 if is_mobile else 16, color=ft.Colors.GREY_700, selectable=True))
+            example_items = []
+            for example in guide_texts["examples"]:
+                example_items.append(ft.Text(example, size=13 if is_mobile else 14, color=ft.Colors.GREY_600, selectable=True))
+            
+            # 안전 버튼 섹션 추가
+            safety_section = []
+            if safety_buttons:
+                # 안전 섹션 제목 다국어 처리
+                safety_titles = {
+                    "ko": "🚧 안전 관련 정보",
+                    "en": "🚧 Safety Information",
+                    "vi": "🚧 Thông tin an toàn",
+                    "ja": "🚧 安全関連情報",
+                    "zh": "🚧 安全相关信息",
+                    "zh-TW": "🚧 安全相關資訊",
+                    "id": "🚧 Informasi Keselamatan",
+                    "th": "🚧 ข้อมูลความปลอดภัย",
+                    "fr": "🚧 Informations de sécurité",
+                    "de": "🚧 Sicherheitsinformationen"
+                }
+                safety_title = safety_titles.get(user_lang, safety_titles["ko"])
+                
+                safety_section = [
+                    ft.Container(height=12),
+                    ft.Text(safety_title, size=15 if is_mobile else 16, weight=ft.FontWeight.BOLD, color=ft.Colors.ORANGE_700, selectable=True),
+                    ft.Container(height=8),
+                    ft.Column(safety_buttons, spacing=8, alignment=ft.MainAxisAlignment.CENTER),
+                ]
+            
+            bubble_width = int(page.width * 0.9) if is_mobile else 400
+            return ft.Container(
+                content=ft.Column([
+                    ft.Text(guide_texts["title"], size=18 if is_mobile else 20, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_600, selectable=True),
+                    ft.Container(height=8),
+                    ft.Text(guide_texts["info"], size=15 if is_mobile else 16, color=ft.Colors.GREY_700, selectable=True),
+                    ft.Container(height=8),
+                    *guide_items,
+                    ft.Container(height=12),
+                    ft.Text(guide_texts["example_title"], size=15 if is_mobile else 16, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700, selectable=True),
+                    ft.Container(height=6),
+                    *example_items,
+                    *safety_section,
+                    ft.Container(height=12),
+                    ft.Text(guide_texts["input_hint"], size=15 if is_mobile else 16, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_600, text_align=ft.TextAlign.CENTER, selectable=True),
+                ], spacing=4),
+                padding=16 if is_mobile else 20,
+                bgcolor=ft.LinearGradient(["#E3F2FD", "#BBDEFB"], begin=ft.alignment.top_left, end=ft.alignment.bottom_right),
+                border_radius=12,
+                margin=ft.margin.only(bottom=16),
+                border=ft.border.all(1, "#2196F3"),
+                width=bubble_width,
+            )
         else:
             guide_texts = RAG_GUIDE_TEXTS.get(user_lang, RAG_GUIDE_TEXTS["ko"])
         guide_items = []
@@ -2648,7 +2994,98 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             border=ft.border.all(1, "#2196F3"),
             width=bubble_width,
         )
-
+        
+        # 안전 버튼 생성 함수
+        def create_safety_button(button_info):
+            def on_safety_button_click(e):
+                # 현재 언어에 맞는 텍스트 가져오기
+                safety_texts = SAFETY_BUTTON_TEXTS.get(user_lang, SAFETY_BUTTON_TEXTS["ko"])
+                if button_info["type"] == "jangmachul":
+                    input_box.value = safety_texts["jangmachul"]
+                elif button_info["type"] == "onyul":
+                    input_box.value = safety_texts["onyul"]
+                page.update()
+                # 자동으로 메시지 전송
+                send_message()
+            
+            return ft.ElevatedButton(
+                content=ft.Row([
+                    ft.Text(button_info["emoji"], size=16),
+                    ft.Text(button_info["text"], size=12 if is_mobile else 14, weight=ft.FontWeight.BOLD)
+                ], alignment=ft.MainAxisAlignment.CENTER, spacing=8),
+                on_click=on_safety_button_click,
+                style=ft.ButtonStyle(
+                    bgcolor=ft.Colors.ORANGE_50,
+                    color=ft.Colors.ORANGE_800,
+                    padding=ft.padding.symmetric(horizontal=12, vertical=8),
+                    shape=ft.RoundedRectangleBorder(radius=8),
+                    side=ft.BorderSide(color=ft.Colors.ORANGE_200, width=1)
+                ),
+                width=200 if is_mobile else 250,
+                height=45
+            )
+        
+        # 안전 버튼들 생성
+        safety_buttons = []
+        if "safety_buttons" in guide_texts:
+            for button_info in guide_texts["safety_buttons"]:
+                safety_buttons.append(create_safety_button(button_info))
+        guide_items = []
+        for item in guide_texts["items"]:
+            guide_items.append(ft.Text(item, size=14 if is_mobile else 16, color=ft.Colors.GREY_700, selectable=True))
+        example_items = []
+        for example in guide_texts["examples"]:
+            example_items.append(ft.Text(example, size=13 if is_mobile else 14, color=ft.Colors.GREY_600, selectable=True))
+        
+        # 안전 버튼 섹션 추가
+        safety_section = []
+        if safety_buttons:
+            # 안전 섹션 제목 다국어 처리
+            safety_titles = {
+                "ko": "🚧 안전 관련 정보",
+                "en": "🚧 Safety Information",
+                "vi": "🚧 Thông tin an toàn",
+                "ja": "🚧 安全関連情報",
+                "zh": "🚧 安全相关信息",
+                "zh-TW": "🚧 安全相關資訊",
+                "id": "🚧 Informasi Keselamatan",
+                "th": "🚧 ข้อมูลความปลอดภัย",
+                "fr": "🚧 Informations de sécurité",
+                "de": "🚧 Sicherheitsinformationen"
+            }
+            safety_title = safety_titles.get(user_lang, safety_titles["ko"])
+            
+            safety_section = [
+                ft.Container(height=12),
+                ft.Text(safety_title, size=15 if is_mobile else 16, weight=ft.FontWeight.BOLD, color=ft.Colors.ORANGE_700, selectable=True),
+                ft.Container(height=8),
+                ft.Column(safety_buttons, spacing=8, alignment=ft.MainAxisAlignment.CENTER),
+            ]
+        
+        bubble_width = int(page.width * 0.9) if is_mobile else 400
+        return ft.Container(
+            content=ft.Column([
+                ft.Text(guide_texts["title"], size=18 if is_mobile else 20, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_600, selectable=True),
+                ft.Container(height=8),
+                ft.Text(guide_texts["info"], size=15 if is_mobile else 16, color=ft.Colors.GREY_700, selectable=True),
+                ft.Container(height=8),
+                *guide_items,
+                ft.Container(height=12),
+                ft.Text(guide_texts["example_title"], size=15 if is_mobile else 16, weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700, selectable=True),
+                ft.Container(height=6),
+                *example_items,
+                *safety_section,
+                ft.Container(height=12),
+                ft.Text(guide_texts["input_hint"], size=15 if is_mobile else 16, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_600, text_align=ft.TextAlign.CENTER, selectable=True),
+            ], spacing=4),
+            padding=16 if is_mobile else 20,
+            bgcolor=ft.LinearGradient(["#E3F2FD", "#BBDEFB"], begin=ft.alignment.top_left, end=ft.alignment.bottom_right),
+            border_radius=12,
+            margin=ft.margin.only(bottom=16),
+            border=ft.border.all(1, "#2196F3"),
+            width=bubble_width,
+        )
+    
     # 다국어 '빠른 채팅방' 타이틀 사전
     QUICK_ROOM_TITLES = {
         "ko": "빠른 채팅방",
