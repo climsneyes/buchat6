@@ -1340,6 +1340,10 @@ Antwortrichtlinien:
 Antwort:"""
     }
     
+    # 언어 코드 매핑 (zh-TW -> tw)
+    if target_lang == "zh-TW":
+        target_lang = "tw"
+    
     return templates.get(target_lang, templates["ko"])
 
 def get_foreign_worker_prompt_template(target_lang):
@@ -1385,6 +1389,11 @@ Sagot: Mangyaring sumagot mula sa pananaw ng proteksyon ng mga karapatan ng fore
         "fr": """Voici des informations sur la protection des droits des travailleurs étrangers. Veuillez répondre en français de manière précise et utile.\n\n[Informations de référence]\n{context}\n\nQuestion : {query}\n\nRéponse : Veuillez répondre du point de vue de la protection des droits des travailleurs étrangers en français.""",
         "de": """Nachfolgend finden Sie Informationen zum Schutz der Rechte ausländischer Arbeitnehmer. Bitte antworten Sie auf Deutsch genau und hilfreich.\n\n[Referenzinformationen]\n{context}\n\nFrage: {query}\n\nAntwort: Bitte antworten Sie aus der Sicht des Schutzes der Rechte ausländischer Arbeitnehmer auf Deutsch.""",
     }
+    
+    # 언어 코드 매핑 (zh-TW -> tw)
+    if target_lang == "zh-TW":
+        target_lang = "tw"
+    
     return templates.get(target_lang, templates["ko"])
 
 def get_waste_management_prompt_template(target_lang):
@@ -1501,6 +1510,11 @@ Jawaban harus memenuhi kondisi berikut:
 3. Sertakan informasi kontak kantor distrik dan biaya jika diperlukan
 4. Menjawab dalam bahasa Indonesia"""
     }
+    
+    # 언어 코드 매핑 (zh-TW -> tw)
+    if target_lang == "zh-TW":
+        target_lang = "tw"
+    
     return templates.get(target_lang, templates["ko"])
 
 def load_busan_waste_info():
@@ -1820,6 +1834,11 @@ Tanong: {query}
 
 Sagot: Mangyaring sumagot nang detalyado sa Tagalog batay sa impormasyon ng restaurant sa Busan. Isama ang mga pangalan ng restaurant, lokasyon, menu, presyo, at mga special features.""",
     }
+    
+    # 언어 코드 매핑 (zh-TW -> tw)
+    if target_lang == "zh-TW":
+        target_lang = "tw"
+    
     return templates.get(target_lang, templates["ko"])
 
 # 6. JSON 기반 부산 맛집 검색 답변 함수
@@ -2142,6 +2161,10 @@ Frage: {query}
 
 Antwort: Basierend auf den obigen Busan-Restaurant-Informationen geben Sie bitte eine spezifische und hilfreiche Antwort auf die Frage. Fügen Sie Restaurantnamen, Standorte, Menüs, Preise, Kontaktinformationen, Öffnungszeiten usw. detailliert hinzu. Wenn es keine genau passenden Informationen zur Frage gibt, schlagen Sie bitte ähnliche Informationen oder Alternativen vor."""
     }
+    
+    # 언어 코드 매핑 (zh-TW -> tw)
+    if target_lang == "zh-TW":
+        target_lang = "tw"
     
     # 타겟 언어에 맞는 프롬프트 선택
     prompt = lang_prompts.get(target_lang, lang_prompts["ko"])
@@ -2847,7 +2870,25 @@ Hướng dẫn trả lời:
 5. Nếu câu trả lời không đủ hoặc không liên quan, hãy nói "Tôi không thể tìm thấy thông tin liên quan."
 6. Giải thích theo cách mà các gia đình đa văn hóa có thể dễ dàng hiểu.
 
-Trả lời:"""
+Trả lời:""",
+            
+            "zh-TW": """您是面向多文化家庭的韓國生活指導聊天機器人。
+以下是參考資訊。請用繁體中文提供準確有用的答案。
+
+[參考資訊]
+{context}
+
+問題: {query}
+
+答案指南:
+1. 如果用戶只輸入區郡名，請考慮之前對話的上下文提供適當的資訊。
+2. 如果是垃圾處理相關問題，請指導該區的垃圾排放方法。
+3. 如果是其他生活資訊問題，請提供該區的相關資訊。
+4. 提供具體實用的資訊。
+5. 如果答案不充分或相關性低，請說「找不到相關資訊」。
+6. 從多文化家庭的角度進行易於理解的說明。
+
+答案:"""
         }
         
         template = templates.get(target_lang, templates["ko"])

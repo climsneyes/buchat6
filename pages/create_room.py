@@ -226,7 +226,8 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
             ft.dropdown.Option("ur", "🇵🇰 Urdu"),
         ],
         hint_text=t["target_lang_hint"],
-        width=field_width
+        width=field_width,
+        value="ko"  # 외국인이 채팅방 만들 때 답변 언어 기본값을 한국어로 설정
     )
     purpose_dd = ft.Dropdown(
         label=t["purpose_label"],

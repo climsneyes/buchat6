@@ -1725,7 +1725,7 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         ("en", "🇺🇸 English"),
         ("ja", "🇯🇵 Japanese"),
         ("zh", "🇨🇳 Chinese"),
-        ("tw", "🇹🇼 Taiwanese"),
+        ("zh-TW", "🇹🇼 Taiwanese"),
         ("id", "🇮🇩 Indonesian"),
         ("tl", "🇵🇭 Tagalog"),
         ("ms", "🇲🇾 Malay"),
