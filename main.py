@@ -738,7 +738,7 @@ def main(page: ft.Page):
                                 shadow=ft.BoxShadow(blur_radius=8, color="#B0BEC544"),
                                 padding=16,
                                 margin=ft.margin.only(bottom=16),
-                                on_click=lambda e: go_chat(lang, lang, user_rag_room_id, RAG_ROOM_TITLE, is_rag=True)
+                                on_click=lambda e: go_chat(lang, "zh-TW" if lang == "zh-TW" else lang, user_rag_room_id, RAG_ROOM_TITLE, is_rag=True)
                             ),
                             # --- 외국인 근로자 권리구제 버튼 추가 ---
                             ft.Container(
@@ -1328,6 +1328,180 @@ def main(page: ft.Page):
                                                     "목요일": "木曜日", 
                                                     "금요일": "金曜日",
                                                     "토요일": "土曜日"
+                                                },
+                                                "tw": {
+                                                    # 부서명 번역
+                                                    "자원순환과": "資源循環課",
+                                                    "청소행정과": "清掃行政課",
+                                                    "환경위생과": "環境衛生課",
+                                                    "환경과": "環境課",
+                                                    "청소과": "清掃課",
+                                                    
+                                                    # 배출 품목 번역
+                                                    "일반쓰레기": "一般垃圾",
+                                                    "음식물쓰레기": "食物垃圾",
+                                                    "재활용품": "可回收物",
+                                                    "재활용품(캔,병,고철,플라스틱,우유.종이팩, 투명폐트병)": "可回收物（罐頭、瓶子、廢鐵、塑膠、牛奶紙盒、透明PET瓶）",
+                                                    "재활용품(종이,의류,비닐포장재,스치로폼류)": "可回收物（紙類、衣物、塑膠包裝、泡沫塑膠）",
+                                                    "소형폐가전": "小型廢棄家電",
+                                                    "불연성폐기물": "不可燃垃圾",
+                                                    "연탄재": "煤球灰",
+                                                    "소규모건설폐기물(PP전용마대)": "小型建築垃圾（PP專用袋）",
+                                                    "배출금지": "禁止投放",
+                                                    
+                                                    # 요일 번역
+                                                    "일요일": "星期日",
+                                                    "월요일": "星期一",
+                                                    "화요일": "星期二",
+                                                    "수요일": "星期三",
+                                                    "목요일": "星期四",
+                                                    "금요일": "星期五",
+                                                    "토요일": "星期六"
+                                                },
+                                                "th": {
+                                                    # 부서명 번역
+                                                    "자원순환과": "แผนกหมุนเวียนทรัพยากร",
+                                                    "청소행정과": "แผนกบริหารสุขาภิบาล",
+                                                    "환경위생과": "แผนกสุขาภิบาลสิ่งแวดล้อม",
+                                                    "환경과": "แผนกสิ่งแวดล้อม",
+                                                    "청소과": "แผนกสุขาภิบาล",
+                                                    
+                                                    # 배출 품목 번역
+                                                    "일반쓰레기": "ขยะทั่วไป",
+                                                    "음식물쓰레기": "ขยะอาหาร",
+                                                    "재활용품": "ของรีไซเคิล",
+                                                    "재활용품(캔,병,고철,플라스틱,우유.종이팩, 투명폐트병)": "ของรีไซเคิล（กระป๋อง, ขวด, เหล็กเก่า, พลาสติก, กล่องนม/กระดาษ, ขวดPETใส）",
+                                                    "재활용품(종이,의류,비닐포장재,스치로폼류)": "ของรีไซเคิล（กระดาษ, เสื้อผ้า, บรรจุภัณฑ์พลาสติก, โฟม）",
+                                                    "소형폐가전": "เครื่องใช้ไฟฟ้าขนาดเล็กที่ไม่ใช้แล้ว",
+                                                    "불연성폐기물": "ขยะที่ไม่ติดไฟ",
+                                                    "연탄재": "เถ้าถ่านอัด",
+                                                    "소규모건설폐기물(PP전용마대)": "ขยะก่อสร้างขนาดเล็ก（ถุงPPเท่านั้น）",
+                                                    "배출금지": "ห้ามทิ้ง",
+                                                    
+                                                    # 요일 번역
+                                                    "일요일": "วันอาทิตย์",
+                                                    "월요일": "วันจันทร์",
+                                                    "화요일": "วันอังคาร",
+                                                    "수요일": "วันพุธ",
+                                                    "목요일": "วันพฤหัสบดี",
+                                                    "금요일": "วันศุกร์",
+                                                    "토요일": "วันเสาร์"
+                                                },
+                                                "tl": {
+                                                    # 부서명 번역
+                                                    "자원순환과": "Departamento ng Pag-ikot ng Mapagkukunan",
+                                                    "청소행정과": "Departamento ng Administrasyon ng Kalinisan",
+                                                    "환경위생과": "Departamento ng Kalinisan ng Kapaligiran",
+                                                    "환경과": "Departamento ng Kapaligiran",
+                                                    "청소과": "Departamento ng Kalinisan",
+                                                    
+                                                    # 배출 품목 번역
+                                                    "일반쓰레기": "General na basura",
+                                                    "음식물쓰레기": "Basura ng pagkain",
+                                                    "재활용품": "Mga recyclable",
+                                                    "재활용품(캔,병,고철,플라스틱,우유.종이팩, 투명폐트병)": "Mga recyclable (lata, bote, bakal, plastic, karton ng gatas, transparent PET bottles)",
+                                                    "재활용품(종이,의류,비닐포장재,스치로폼류)": "Mga recyclable (papel, damit, plastic packaging, styrofoam)",
+                                                    "소형폐가전": "Maliliit na sirang appliances",
+                                                    "불연성폐기물": "Hindi nasusunog na basura",
+                                                    "연탄재": "Abo ng uling",
+                                                    "소규모건설폐기물(PP전용마대)": "Maliit na basura sa konstruksiyon (PP bags lang)",
+                                                    "배출금지": "Bawal itapon",
+                                                    
+                                                    # 요일 번역
+                                                    "일요일": "Linggo",
+                                                    "월요일": "Lunes",
+                                                    "화요일": "Martes",
+                                                    "수요일": "Miyerkules",
+                                                    "목요일": "Huwebes",
+                                                    "금요일": "Biyernes",
+                                                    "토요일": "Sabado"
+                                                },
+                                                "id": {
+                                                    # 부서명 번역
+                                                    "자원순환과": "Departemen Sirkulasi Sumber Daya",
+                                                    "청소행정과": "Departemen Administrasi Sanitasi",
+                                                    "환경위생과": "Departemen Sanitasi Lingkungan",
+                                                    "환경과": "Departemen Lingkungan",
+                                                    "청소과": "Departemen Sanitasi",
+                                                    
+                                                    # 배출 품목 번역
+                                                    "일반쓰레기": "Sampah umum",
+                                                    "음식물쓰레기": "Sampah makanan",
+                                                    "재활용품": "Barang daur ulang",
+                                                    "재활용품(캔,병,고철,플라스틱,우유.종이팩, 투명폐트병)": "Barang daur ulang (kaleng, botol, besi bekas, plastik, karton susu, botol PET transparan)",
+                                                    "재활용품(종이,의류,비닐포장재,스치로폼류)": "Barang daur ulang (kertas, pakaian, kemasan plastik, styrofoam)",
+                                                    "소형폐가전": "Elektronik kecil bekas",
+                                                    "불연성폐기물": "Sampah tidak mudah terbakar",
+                                                    "연탄재": "Abu briket",
+                                                    "소규모건설폐기물(PP전용마대)": "Sampah konstruksi kecil (hanya kantong PP)",
+                                                    "배출금지": "Dilarang buang",
+                                                    
+                                                    # 요일 번역
+                                                    "일요일": "Minggu",
+                                                    "월요일": "Senin",
+                                                    "화요일": "Selasa",
+                                                    "수요일": "Rabu",
+                                                    "목요일": "Kamis",
+                                                    "금요일": "Jumat",
+                                                    "토요일": "Sabtu"
+                                                },
+                                                "fr": {
+                                                    # 부서명 번역
+                                                    "자원순환과": "Département de circulation des ressources",
+                                                    "청소행정과": "Département d'administration sanitaire",
+                                                    "환경위생과": "Département d'hygiène environnementale",
+                                                    "환경과": "Département de l'environnement",
+                                                    "청소과": "Département sanitaire",
+                                                    
+                                                    # 배출 품목 번역
+                                                    "일반쓰레기": "Déchets généraux",
+                                                    "음식물쓰레기": "Déchets alimentaires",
+                                                    "재활용품": "Matières recyclables",
+                                                    "재활용품(캔,병,고철,플라스틱,우유.종이팩, 투명폐트병)": "Matières recyclables (canettes, bouteilles, ferraille, plastique, briques de lait, bouteilles PET transparentes)",
+                                                    "재활용품(종이,의류,비닐포장재,스치로폼류)": "Matières recyclables (papier, vêtements, emballages plastiques, polystyrène)",
+                                                    "소형폐가전": "Petits appareils électroniques usagés",
+                                                    "불연성폐기물": "Déchets non combustibles",
+                                                    "연탄재": "Cendres de briquettes",
+                                                    "소규모건설폐기물(PP전용마대)": "Petits déchets de construction (sacs PP uniquement)",
+                                                    "배출금지": "Interdiction de jeter",
+                                                    
+                                                    # 요일 번역
+                                                    "일요일": "Dimanche",
+                                                    "월요일": "Lundi",
+                                                    "화요일": "Mardi",
+                                                    "수요일": "Mercredi",
+                                                    "목요일": "Jeudi",
+                                                    "금요일": "Vendredi",
+                                                    "토요일": "Samedi"
+                                                },
+                                                "de": {
+                                                    # 부서명 번역
+                                                    "자원순환과": "Abteilung für Ressourcenkreislauf",
+                                                    "청소행정과": "Abteilung für Sanitärverwaltung",
+                                                    "환경위생과": "Abteilung für Umwelthygiene",
+                                                    "환경과": "Umweltabteilung",
+                                                    "청소과": "Sanitärabteilung",
+                                                    
+                                                    # 배출 품목 번역
+                                                    "일반쓰레기": "Allgemeiner Abfall",
+                                                    "음식물쓰레기": "Lebensmittelabfall",
+                                                    "재활용품": "Recycelbare Materialien",
+                                                    "재활용품(캔,병,고철,플라스틱,우유.종이팩, 투명폐트병)": "Recycelbare Materialien (Dosen, Flaschen, Schrott, Kunststoff, Milchkartons, durchsichtige PET-Flaschen)",
+                                                    "재활용품(종이,의류,비닐포장재,스치로폼류)": "Recycelbare Materialien (Papier, Kleidung, Kunststoffverpackungen, Styropor)",
+                                                    "소형폐가전": "Kleine Elektroaltgeräte",
+                                                    "불연성폐기물": "Nicht brennbarer Abfall",
+                                                    "연탄재": "Brikettkohle-Asche",
+                                                    "소규모건설폐기물(PP전용마대)": "Kleine Bauabfälle (nur PP-Säcke)",
+                                                    "배출금지": "Entsorgung verboten",
+                                                    
+                                                    # 요일 번역
+                                                    "일요일": "Sonntag",
+                                                    "월요일": "Montag",
+                                                    "화요일": "Dienstag",
+                                                    "수요일": "Mittwoch",
+                                                    "목요일": "Donnerstag",
+                                                    "금요일": "Freitag",
+                                                    "토요일": "Samstag"
                                                 }
                                             }
                                             
@@ -1560,7 +1734,9 @@ def main(page: ft.Page):
         # 언어별 채팅방 제목 설정
         room_title = FOREIGN_WORKER_ROOM_CARD_TEXTS.get(lang, FOREIGN_WORKER_ROOM_CARD_TEXTS["ko"])["title"]
         # 채팅방 진입 (is_foreign_worker_rag=True로 설정)
-        go_chat(lang, lang, room_id, room_title, is_rag=False, is_foreign_worker_rag=True)
+        # 대만 사용자의 경우 답변 언어를 대만어로 설정
+        target_lang = "zh-TW" if lang == "zh-TW" else lang
+        go_chat(lang, target_lang, room_id, room_title, is_rag=False, is_foreign_worker_rag=True)
 
     # --- 부산 맛집 검색 RAG 채팅방 진입 함수 ---
     def go_busan_food_rag_chat(lang):
@@ -1569,7 +1745,7 @@ def main(page: ft.Page):
         room_title = BUSAN_FOOD_ROOM_CARD_TEXTS.get(lang, BUSAN_FOOD_ROOM_CARD_TEXTS["ko"])["title"]
         
         # 대만 사용자의 경우 답변 언어를 대만어로 설정
-        target_lang = "tw" if lang == "tw" else lang
+        target_lang = "zh-TW" if lang == "zh-TW" else lang
         
         # 채팅방 진입 (is_busan_food_rag=True로 설정)
         go_chat(lang, target_lang, room_id, room_title, is_rag=False, is_foreign_worker_rag=False, is_busan_food_rag=True)

@@ -395,6 +395,21 @@ def get_waste_info_translations():
             "목요일": "星期四", "금요일": "星期五", "토요일": "星期六"
         },
         "ja": {
+            # 기본 용어 번역
+            "담당부서": "担当部署",
+            "연락처": "連絡先",
+            "수집시간": "収集時間",
+            "배출시간": "排出時間",
+            "수집장소": "収集場所", 
+            "배출장소": "排出場所",
+            "주간수집스케줄": "週間収集スケジュール",
+            "배출요일": "排出曜日",
+            "週間収集スケジュール": "週間収集スケジュール",
+            "ゴミ袋価格": "ゴミ袋価格",
+            "特記事項": "特記事項",
+            "処理ガイド": "処理ガイド",
+            "RAG": "RAG",
+            
             # 부서명 번역
             "자원순환과": "資源循環課",
             "청소행정과": "清掃行政課",
@@ -4238,8 +4253,40 @@ def get_youtube_search_button_info(results, target_lang, original_query=""):
                 print(f"[DEBUG] 매핑된 검색어: {detected_keyword}")
                 break
     
+    # JSON에서 매핑 실패 시 외국어 질문을 한국어로 번역 시도
     if detected_keyword == original_query:
-        print(f"[DEBUG] JSON에서 키워드 매핑 실패, 사용자 질문 사용: {detected_keyword}")
+        print(f"[DEBUG] JSON에서 키워드 매핑 실패, 외국어 질문을 한국어로 번역 시도")
+        # 간단한 번역 사전 (Gemini 함수와 동일)
+        translation_dict = {
+            "perancah gantung": "현수형 비계",
+            "manajemen keselamatan": "안전 관리", 
+            "suspended scaffold": "현수형 비계",
+            "hanging platform": "현수형 비계",
+            "construction safety": "건설 안전",
+            "safety management": "안전 관리",
+            "つり足場": "현수형 비계",
+            "建設安全": "건설 안전",
+            "悬挂脚手架": "현수형 비계",
+            "建筑安全": "건설 안전",
+            "giàn treo": "현수형 비계",
+            "an toàn xây dựng": "건설 안전"
+        }
+        
+        # 질문에서 번역 가능한 구문 찾기
+        query_lower_for_translation = original_query.lower()
+        for foreign_phrase, korean_translation in translation_dict.items():
+            if foreign_phrase.lower() in query_lower_for_translation:
+                detected_keyword = korean_translation
+                print(f"[DEBUG] 질문 번역 성공: '{foreign_phrase}' -> '{korean_translation}'")
+                break
+        
+        # 여전히 매핑되지 않은 경우 기본 검색어 사용
+        if detected_keyword == original_query:
+            if target_lang != "ko":
+                detected_keyword = "건설현장 안전"
+                print(f"[DEBUG] 외국어 질문 -> 기본 한국어 검색어 사용: {detected_keyword}")
+            else:
+                print(f"[DEBUG] 한국어 질문을 그대로 검색어로 사용: {detected_keyword}")
     else:
         print(f"[DEBUG] JSON에서 매핑된 검색어 사용: {detected_keyword}")
     
@@ -4277,8 +4324,9 @@ def get_youtube_search_button_info_for_gemini(query, target_lang):
     query_lower = query.lower()
     detected_keyword = query  # 기본값을 사용자 질문으로 변경
     
-    # 키워드 매핑 (한국어로) - 특별한 매핑이 필요한 경우만
+    # 포괄적인 다국어 키워드 매핑 (한국어로 번역)
     keyword_mapping = {
+        # 한국어 키워드
         "굴착": "굴착 사면 붕괴",
         "사면": "굴착 사면 붕괴", 
         "무너짐": "굴착 사면 붕괴",
@@ -4291,14 +4339,182 @@ def get_youtube_search_button_info_for_gemini(query, target_lang):
         "고소": "고소작업",
         "낙하": "개구부",
         "추락": "개구부",
+        "비계": "비계",
+        "크레인": "크레인",
+        "용접": "용접",
+        "개구부": "개구부",
+        "터널": "터널공사",
+        "교량": "교량공사",
+        
+        # 영어 키워드
         "scaffold": "비계",
+        "scaffolding": "비계",
         "crane": "크레인",
         "welding": "용접",
         "excavation": "굴착 사면 붕괴",
         "tunnel": "터널공사",
         "bridge": "교량공사",
         "opening": "개구부",
-        "fall": "개구부"
+        "fall": "개구부",
+        "suspended": "비계",
+        "hanging": "비계",
+        "platform": "비계",
+        "construction": "건설현장 안전",
+        "safety": "안전점검표",
+        "inspection": "안전점검표",
+        "rainy": "장마철 안전",
+        "monsoon": "장마철 안전",
+        
+        # 인도네시아어 키워드
+        "perancah": "비계",
+        "gantung": "비계",
+        "platform": "비계",
+        "konstruksi": "건설현장 안전",
+        "keselamatan": "안전점검표",
+        "hujan": "장마철 안전",
+        "musim": "장마철 안전",
+        "derek": "크레인",
+        "las": "용접",
+        "terowongan": "터널공사",
+        "jembatan": "교량공사",
+        "galian": "굴착 사면 붕괴",
+        "lereng": "굴착 사면 붕괴",
+        "runtuh": "굴착 사면 붕괴",
+        "jatuh": "개구부",
+        "lubang": "개구부",
+        
+        # 일본어 키워드
+        "足場": "비계",
+        "クレーン": "크레인",
+        "溶接": "용접",
+        "掘削": "굴착 사면 붕괴",
+        "法面": "굴착 사면 붕괴",
+        "崩壊": "굴착 사면 붕괴",
+        "開口部": "개구부",
+        "墜落": "개구부",
+        "トンネル": "터널공사",
+        "橋梁": "교량공사",
+        "安全": "안전점검표",
+        "点検": "안전점검표",
+        "梅雨": "장마철 안전",
+        
+        # 중국어 키워드
+        "脚手架": "비계",
+        "起重机": "크레인",
+        "焊接": "용접",
+        "挖掘": "굴착 사면 붕괴",
+        "边坡": "굴착 사면 붕괴",
+        "坍塌": "굴착 사면 붕괴",
+        "开口": "개구부",
+        "坠落": "개구부",
+        "隧道": "터널공사",
+        "桥梁": "교량공사",
+        "安全": "안전점검표",
+        "检查": "안전점검표",
+        "雨季": "장마철 안전",
+        
+        # 대만 중국어 키워드
+        "鷹架": "비계",
+        "吊架": "비계",
+        "起重機": "크레인",
+        "焊接": "용접",
+        "挖掘": "굴착 사면 붕괴",
+        "邊坡": "굴착 사면 붕괴",
+        "坍塌": "굴착 사면 붕괴",
+        "開口": "개구부",
+        "墜落": "개구부",
+        "隧道": "터널공사",
+        "橋樑": "교량공사",
+        "安全": "안전점검표",
+        "檢查": "안전점검표",
+        "雨季": "장마철 안전",
+        
+        # 베트남어 키워드
+        "giàn": "비계",
+        "treo": "비계",
+        "cần": "크레인",
+        "hàn": "용접",
+        "đào": "굴착 사면 붕괴",
+        "taluy": "굴착 사면 붕괴",
+        "sập": "굴착 사면 붕괴",
+        "lỗ": "개구부",
+        "rơi": "개구부",
+        "hầm": "터널공사",
+        "cầu": "교량공사",
+        "an": "안전점검표",
+        "toàn": "안전점검표",
+        "kiểm": "안전점검표",
+        "tra": "안전점검표",
+        "mưa": "장마철 안전",
+        "mùa": "장마철 안전",
+        
+        # 프랑스어 키워드
+        "échafaudage": "비계",
+        "suspendu": "비계",
+        "grue": "크레인",
+        "soudage": "용접",
+        "excavation": "굴착 사면 붕괴",
+        "pente": "굴착 사면 붕괴",
+        "effondrement": "굴착 사면 붕괴",
+        "ouverture": "개구부",
+        "chute": "개구부",
+        "tunnel": "터널공사",
+        "pont": "교량공사",
+        "sécurité": "안전점검표",
+        "inspection": "안전점검표",
+        "pluie": "장마철 안전",
+        "mousson": "장마철 안전",
+        
+        # 독일어 키워드
+        "gerüst": "비계",
+        "hängend": "비계",
+        "kran": "크레인",
+        "schweißen": "용접",
+        "aushub": "굴착 사면 붕괴",
+        "böschung": "굴착 사면 붕괴",
+        "einsturz": "굴착 사면 붕괴",
+        "öffnung": "개구부",
+        "sturz": "개구부",
+        "tunnel": "터널공사",
+        "brücke": "교량공사",
+        "sicherheit": "안전점검표",
+        "inspektion": "안전점검표",
+        "regen": "장마철 안전",
+        "monsun": "장마철 안전",
+        
+        # 태국어 키워드
+        "นั่งร้าน": "비계",
+        "แขวน": "비계",
+        "เครน": "크레인",
+        "เชื่อม": "용접",
+        "ขุด": "굴착 사면 붕괴",
+        "ลาด": "굴착 사면 붕괴",
+        "ถล่ม": "굴착 사면 붕괴",
+        "ช่อง": "개구부",
+        "ตก": "개구부",
+        "อุโมงค์": "터널공사",
+        "สะพาน": "교량공사",
+        "ความปลอดภัย": "안전점검표",
+        "ตรวจสอบ": "안전점검표",
+        "ฝน": "장마철 안전",
+        "มรสุม": "장마철 안전",
+        
+        # 필리핀어 키워드
+        "andamyo": "비계",
+        "nakasabit": "비계",
+        "crane": "크레인",
+        "welding": "용접",
+        "hukay": "굴착 사면 붕괴",
+        "dalisdis": "굴착 사면 붕괴",
+        "guho": "굴착 사면 붕괴",
+        "butas": "개구부",
+        "bagsak": "개구부",
+        "tunnel": "터널공사",
+        "tulay": "교량공사",
+        "kaligtasan": "안전점검표",
+        "inspeksyon": "안전점검표",
+        "ulan": "장마철 안전",
+        "tag-ulan": "장마철 안전"
     }
     
     # 질문에서 키워드 찾기 (특별한 매핑이 있는 경우만)
@@ -4309,10 +4525,110 @@ def get_youtube_search_button_info_for_gemini(query, target_lang):
             print(f"[DEBUG] 감지된 키워드: '{keyword}' -> 검색어: '{search_term}'")
             break
     
+    # 키워드 매핑이 없는 경우 질문을 한국어로 번역
     if detected_keyword == query:
-        print(f"[DEBUG] 사용자 질문을 그대로 검색어로 사용: {detected_keyword}")
+        print(f"[DEBUG] 키워드 매핑 없음, 외국어 질문을 한국어로 번역 시도")
+        # 간단한 언어별 번역 사전
+        translation_dict = {
+            # 인도네시아어 번역
+            "perancah gantung": "현수형 비계",
+            "manajemen keselamatan": "안전 관리",
+            "lokasi konstruksi": "건설 현장",
+            "musim hujan": "장마철",
+            "faktor risiko": "위험 요소",
+            "keseimbangan dan stabilitas": "균형과 안정성",
+            "pekerja terjatuh": "작업자 추락",
+            "platform kerja": "작업 플랫폼",
+            "perlindungan jatuh": "추락 방지",
+            "safety harness": "안전 하네스",
+            "railing": "난간",
+            "kondisi cuaca": "기상 조건",
+            
+            # 영어 번역
+            "suspended scaffold": "현수형 비계",
+            "hanging platform": "현수형 비계",
+            "construction safety": "건설 안전",
+            "safety management": "안전 관리",
+            "fall protection": "추락 방지",
+            "worker safety": "작업자 안전",
+            "weather conditions": "기상 조건",
+            "risk factors": "위험 요소",
+            "balance and stability": "균형과 안정성",
+            
+            # 일본어 번역
+            "つり足場": "현수형 비계",
+            "建設安全": "건설 안전",
+            "安全管理": "안전 관리",
+            "墜落防止": "추락 방지",
+            "作業者安全": "작업자 안전",
+            "気象条件": "기상 조건",
+            "危険要因": "위험 요소",
+            
+            # 중국어 번역
+            "悬挂脚手架": "현수형 비계",
+            "建筑安全": "건설 안전",
+            "安全管理": "안전 관리",
+            "坠落防护": "추락 방지",
+            "工人安全": "작업자 안전",
+            "天气条件": "기상 조건",
+            "风险因素": "위험 요소",
+            
+            # 베트남어 번역
+            "giàn treo": "현수형 비계",
+            "an toàn xây dựng": "건설 안전",
+            "quản lý an toàn": "안전 관리",
+            "bảo vệ chống rơi": "추락 방지",
+            "an toàn công nhân": "작업자 안전",
+            "điều kiện thời tiết": "기상 조건",
+            "yếu tố rủi ro": "위험 요소",
+            
+            # 태국어 번역
+            "นั่งร้านแขวน": "현수형 비계",
+            "ความปลอดภัยในการก่อสร้าง": "건설 안전",
+            "การจัดการความปลอดภัย": "안전 관리",
+            "การป้องกันการตก": "추락 방지",
+            "ความปลอดภัยของผู้ปฏิบัติงาน": "작업자 안전",
+            
+            # 프랑스어 번역
+            "échafaudage suspendu": "현수형 비계",
+            "sécurité de construction": "건설 안전",
+            "gestion de sécurité": "안전 관리",
+            "protection contre chutes": "추락 방지",
+            "sécurité des travailleurs": "작업자 안전",
+            
+            # 독일어 번역
+            "hängendes gerüst": "현수형 비계",
+            "bausicherheit": "건설 안전",
+            "sicherheitsmanagement": "안전 관리",
+            "absturzschutz": "추락 방지",
+            "arbeitersicherheit": "작업자 안전",
+            
+            # 필리핀어 번역
+            "nakasabit na andamyo": "현수형 비계",
+            "kaligtasan sa konstruksyon": "건설 안전",
+            "pamamahala ng kaligtasan": "안전 관리",
+            "proteksyon sa pagkakahulog": "추락 방지",
+            "kaligtasan ng manggagawa": "작업자 안전"
+        }
+        
+        # 질문에서 번역 가능한 구문 찾기
+        query_lower_for_translation = query.lower()
+        for foreign_phrase, korean_translation in translation_dict.items():
+            if foreign_phrase.lower() in query_lower_for_translation:
+                detected_keyword = korean_translation
+                print(f"[DEBUG] 질문 번역 성공: '{foreign_phrase}' -> '{korean_translation}'")
+                break
+        
+        # 여전히 매핑되지 않은 경우 기본 검색어 사용
+        if detected_keyword == query:
+            # 외국어 질문인 경우 기본적으로 "장마철 안전"이나 "건설현장 안전"으로 변경
+            if target_lang != "ko":
+                detected_keyword = "건설현장 안전"
+                print(f"[DEBUG] 외국어 질문 -> 기본 한국어 검색어 사용: {detected_keyword}")
+            else:
+                print(f"[DEBUG] 한국어 질문을 그대로 검색어로 사용: {detected_keyword}")
     else:
-        print(f"[DEBUG] 매핑된 검색어 사용: {detected_keyword}")
+        print(f"[DEBUG] 키워드 매핑된 검색어 사용: {detected_keyword}")
     
     # URL 인코딩
     encoded_keyword = urllib.parse.quote(detected_keyword)

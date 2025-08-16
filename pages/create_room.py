@@ -203,6 +203,7 @@ def CreateRoomPage(page, lang="ko", on_create=None, on_back=None):
     room_title_field = ft.TextField(hint_text=t["room_title_hint"], width=field_width)
     target_lang_dd = ft.Dropdown(
         options=[
+            ft.dropdown.Option("ko", "🇰🇷 한국어"),
             ft.dropdown.Option("en", "🇺🇸 English"),
             ft.dropdown.Option("ja", "🇯🇵 日本語"),
             ft.dropdown.Option("zh", "🇨🇳 中文"),

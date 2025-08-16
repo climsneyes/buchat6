@@ -1761,20 +1761,36 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
         import os
         
         try:
-            # JSON 파일 로드
-            json_path = os.path.join(os.path.dirname(__file__), '..', '부산의맛(2025).json')
-            with open(json_path, 'r', encoding='utf-8') as f:
-                busan_data = json.load(f)
-            
-            # 모든 식당 이름 수집 (한글, 영어)
             all_restaurants = []
-            for district, restaurants in busan_data["부산의 맛 2025"].items():
-                for restaurant in restaurants:
-                    korean_name = restaurant["식당이름"]["한글"]
-                    english_name = restaurant["식당이름"]["영어"]
+            
+            # 부산의맛(2025).json 파일 로드
+            busan_food_path = os.path.join(os.path.dirname(__file__), '..', '부산의맛(2025).json')
+            if os.path.exists(busan_food_path):
+                with open(busan_food_path, 'r', encoding='utf-8') as f:
+                    busan_data = json.load(f)
+                
+                for district, restaurants in busan_data["부산의 맛 2025"].items():
+                    for restaurant in restaurants:
+                        korean_name = restaurant["식당이름"]["한글"]
+                        english_name = restaurant["식당이름"]["영어"]
+                        all_restaurants.append({
+                            'korean': korean_name,
+                            'english': english_name,
+                            'district': district
+                        })
+            
+            # 택슐랭(2025).json 파일 로드
+            taek_path = os.path.join(os.path.dirname(__file__), '..', '택슐랭(2025).json')
+            if os.path.exists(taek_path):
+                with open(taek_path, 'r', encoding='utf-8') as f:
+                    taek_data = json.load(f)
+                
+                for restaurant in taek_data["restaurants"]:
+                    korean_name = restaurant["name"]
+                    district = restaurant["district"]
                     all_restaurants.append({
                         'korean': korean_name,
-                        'english': english_name,
+                        'english': korean_name,  # 택슐랭은 영어명이 별도로 없으므로
                         'district': district
                     })
             
@@ -1799,6 +1815,7 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             # 중복 제거
             unique_restaurants = list(dict.fromkeys(mentioned_restaurants))
             
+            print(f"🍽️ 추출된 식당 이름들: {unique_restaurants}")  # 디버깅용 로그
             return unique_restaurants[:8]  # 최대 8개
             
         except Exception as e:
@@ -2890,16 +2907,15 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                     content=ft.Row([
                         ft.Text(button_info["emoji"], size=16),
                         ft.Text(button_info["text"], size=12 if is_mobile else 14, weight=ft.FontWeight.BOLD)
-                    ], alignment=ft.MainAxisAlignment.CENTER, spacing=8),
+                    ], alignment=ft.MainAxisAlignment.CENTER, spacing=8, tight=True),
                     on_click=on_safety_button_click,
                     style=ft.ButtonStyle(
                         bgcolor=ft.Colors.ORANGE_50,
                         color=ft.Colors.ORANGE_800,
-                        padding=ft.padding.symmetric(horizontal=12, vertical=8),
+                        padding=ft.padding.symmetric(horizontal=16, vertical=8),
                         shape=ft.RoundedRectangleBorder(radius=8),
                         side=ft.BorderSide(color=ft.Colors.ORANGE_200, width=1)
                     ),
-                    width=200 if is_mobile else 250,
                     height=45
                 )
             
@@ -3012,16 +3028,15 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
                 content=ft.Row([
                     ft.Text(button_info["emoji"], size=16),
                     ft.Text(button_info["text"], size=12 if is_mobile else 14, weight=ft.FontWeight.BOLD)
-                ], alignment=ft.MainAxisAlignment.CENTER, spacing=8),
+                ], alignment=ft.MainAxisAlignment.CENTER, spacing=8, tight=True),
                 on_click=on_safety_button_click,
                 style=ft.ButtonStyle(
                     bgcolor=ft.Colors.ORANGE_50,
                     color=ft.Colors.ORANGE_800,
-                    padding=ft.padding.symmetric(horizontal=12, vertical=8),
+                    padding=ft.padding.symmetric(horizontal=16, vertical=8),
                     shape=ft.RoundedRectangleBorder(radius=8),
                     side=ft.BorderSide(color=ft.Colors.ORANGE_200, width=1)
                 ),
-                width=200 if is_mobile else 250,
                 height=45
             )
         
