@@ -8,9 +8,9 @@ This is a **Busan Tourism & Multicultural Support Chat Application** built with 
 
 ### Core Components
 
-- **main.py**: Primary Flet application entry point with multi-page routing
-- **pages/**: Page modules (nationality_select, home, create_room, chat_room, etc.)
-- **rag_utils.py**: RAG (Retrieval-Augmented Generation) utilities with vector databases
+- **main.py**: Primary Flet application entry point with multi-page routing and configuration
+- **pages/**: Page modules implementing the Flet multi-page architecture
+- **rag_utils.py**: RAG (Retrieval-Augmented Generation) utilities with vector databases and language detection
 - **cache_manager.py**: Hash-based caching system for PDF embeddings
 
 ### Key Features
@@ -32,6 +32,9 @@ python main.py
 # Production mode with Docker
 docker build -t buchat .
 docker run -p 8000:8000 buchat
+
+# Install dependencies
+pip install -r requirements.txt
 ```
 
 ### Data Management
@@ -79,14 +82,24 @@ CLOUDTYPE=1  # For production deployment
 
 ## Architecture
 
-### Page System (Flet Multi-Page App)
+### Flet Multi-Page Application Architecture
 
-- **NationalitySelectPage**: Initial language/nationality selection
-- **HomePage**: Main dashboard with service options
-- **CreateRoomPage**: Chat room creation
-- **ChatRoomPage**: Real-time chat interface with AI assistance
-- **MBTITourismPage**: MBTI-based tourism recommendations
-- **ForeignCountrySelectPage**: Country-specific services
+The application follows a functional page-based architecture where each page is implemented as a function that returns Flet UI components:
+
+- **NationalitySelectPage(page, on_select, on_foreign_select, on_back)**: Initial language/nationality selection
+- **HomePage(page, lang, on_create, on_find, on_quick, on_change_lang, on_back, on_mbti_tourism)**: Main dashboard with service options
+- **CreateRoomPage(page, lang, on_create, on_back)**: Chat room creation interface
+- **ChatRoomPage(page, room_id, room_title, user_lang, target_lang, ...)**: Real-time chat interface with AI assistance
+- **MBTITourismPage(page, lang, on_back, selected_mbti_value, result_view_value)**: MBTI-based tourism recommendations
+- **ForeignCountrySelectPage(page, on_select, on_back)**: Country-specific services
+
+### Page Routing System
+
+The main.py implements a routing system that:
+- Maintains page state in memory
+- Provides navigation callbacks between pages
+- Handles responsive design based on screen size
+- Manages language state across pages
 
 ### RAG System Architecture
 
@@ -96,45 +109,46 @@ The application uses multiple specialized vector databases:
 - **외국인근로자.pkl**: Foreign worker safety and legal information
 - **부산의맛.pkl**: Busan food and restaurant information
 
+#### Language Detection System
+
+Automatic language detection in `rag_utils.py` using regex patterns for:
+- Korean (한글), English, Japanese (ひらがな/カタカナ), Chinese (中文)
+- Vietnamese, French, German, Thai, Tagalog patterns
+- Returns appropriate language codes for response generation
+
 ### Vector Database Caching
 
 Uses MD5 hash-based caching for efficient PDF processing:
-- **Cache validation**: Compares file hashes to detect changes
+- **Cache validation**: Compares file hashes in `cache_info.json` to detect changes
 - **Automatic regeneration**: Creates new embeddings when PDFs change
 - **Performance optimization**: Skips expensive embedding generation for unchanged files
 
 ### Data Sources
 
-- **JSON Data Files**: 
+- **JSON Data Files**:
   - `부산의맛(2025).json`: Busan restaurant data
   - `택슐랭(2025).json`: Taek-seuling (Korean Michelin) restaurant data
   - `부산광역시_쓰레기처리정보.json`: Waste disposal information
   - `jangmachul.json`, `onyul.json`: Safety information for foreign workers
   - `mbti_recommendations_multilang.json`: MBTI tourism recommendations
 
-### Language Detection System
-
-Automatic language detection for user queries using regex patterns for:
-- Korean (한글), English, Japanese (ひらがな/カタカナ), Chinese (中文)
-- Vietnamese, French, German, Thai, Tagalog
-
 ## Dependencies
 
 ### Core Framework
 - **flet**: Main UI framework (Flutter for Python)
-- **flet-webview**: WebView integration
-- **firebase-admin**: Firebase integration
+- **flet-webview**: WebView integration for enhanced functionality
+- **firebase-admin**: Firebase integration for real-time chat
 
 ### AI & ML
-- **google-generativeai**: Gemini AI integration
-- **langchain**: LLM framework with RAG capabilities  
-- **langgraph**: Advanced LLM workflows
-- **chromadb**: Vector database
+- **google-generativeai**: Gemini AI integration for chat responses
+- **langchain**: LLM framework with RAG capabilities
+- **langgraph**: Advanced LLM workflows (optional, graceful fallback)
+- **chromadb**: Vector database for embeddings
 
 ### Utilities
 - **qrcode**: QR code generation for room sharing
-- **geocoder**: Location services
-- **pypdf**: PDF processing for RAG
+- **geocoder**: Location services for local recommendations
+- **pypdf**: PDF processing for RAG document ingestion
 
 ## Important Notes
 
@@ -152,3 +166,9 @@ Automatic language detection for user queries using regex patterns for:
 - Multiple specialized databases for different content types
 - Hash-based caching prevents unnecessary re-processing
 - Cache management tools available for debugging and optimization
+
+### Development Patterns
+- Each page is a pure function that returns Flet UI components
+- State management through callback functions passed between pages
+- Responsive design implemented in each page component
+- Language state maintained at the application level
