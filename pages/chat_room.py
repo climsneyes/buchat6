@@ -2741,12 +2741,32 @@ def ChatRoomPage(page, room_id, room_title, user_lang, target_lang, on_back=None
             
             # 부산 맛집 데이터 소개 및 다운로드 버튼 추가
             def download_busan_taste(e):
-                import webbrowser
-                webbrowser.open("https://www.visitbusan.net/board/download.do?boardId=BBS_0000007&dataSid=4208&fileSid=7458")
-            
+                try:
+                    # Flet 웹 환경에서 더 안정적인 방법
+                    page.launch_url("https://www.visitbusan.net/board/download.do?boardId=BBS_0000007&dataSid=4208&fileSid=7458")
+                    # 성공 메시지 표시
+                    page.show_snack_bar(
+                        ft.SnackBar(content=ft.Text("부산의맛 가이드 다운로드를 시작합니다..."), open=True)
+                    )
+                except Exception as ex:
+                    # 실패 시 대체 방법
+                    import webbrowser
+                    webbrowser.open("https://www.visitbusan.net/board/download.do?boardId=BBS_0000007&dataSid=4208&fileSid=7458")
+                    print(f"다운로드 오류: {ex}")
+
             def download_taek_sulling(e):
-                import webbrowser
-                webbrowser.open("https://www.visitbusan.net/board/download.do?boardId=BBS_0000007&dataSid=4277&fileSid=7886")
+                try:
+                    # Flet 웹 환경에서 더 안정적인 방법
+                    page.launch_url("https://www.visitbusan.net/board/download.do?boardId=BBS_0000007&dataSid=4277&fileSid=7886")
+                    # 성공 메시지 표시
+                    page.show_snack_bar(
+                        ft.SnackBar(content=ft.Text("택슐랭 가이드 다운로드를 시작합니다..."), open=True)
+                    )
+                except Exception as ex:
+                    # 실패 시 대체 방법
+                    import webbrowser
+                    webbrowser.open("https://www.visitbusan.net/board/download.do?boardId=BBS_0000007&dataSid=4277&fileSid=7886")
+                    print(f"다운로드 오류: {ex}")
             
             # 다국어 소개 텍스트
             intro_texts = {
