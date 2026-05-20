@@ -36,32 +36,43 @@ def generate_text_with_llm(prompt, system_instruction=None, temperature=0.3, max
     if not OLLAMA_API_KEY:
         raise ValueError("Ollama Cloud API Key (OLLAMA_API_KEY) is missing. Gemini LLM is disabled.")
         
-    try:
-        import requests
-        url = "https://ollama.com/api/chat"
-        headers = {
-            "Authorization": f"Bearer {OLLAMA_API_KEY}",
-            "Content-Type": "application/json"
+    import requests
+    import time
+    url = "https://ollama.com/api/chat"
+    headers = {
+        "Authorization": f"Bearer {OLLAMA_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    messages = []
+    if system_instruction:
+        messages.append({"role": "system", "content": system_instruction})
+    messages.append({"role": "user", "content": prompt})
+    
+    payload = {
+        "model": OLLAMA_MODEL_NAME or "gemma4:31b-cloud",
+        "messages": messages,
+        "stream": False,
+        "options": {
+            "temperature": temperature
         }
-        messages = []
-        if system_instruction:
-            messages.append({"role": "system", "content": system_instruction})
-        messages.append({"role": "user", "content": prompt})
-        
-        payload = {
-            "model": OLLAMA_MODEL_NAME or "gemma4:31b-cloud",
-            "messages": messages,
-            "stream": False,
-            "options": {
-                "temperature": temperature
-            }
-        }
-        response = requests.post(url, json=payload, headers=headers, timeout=60)
-        response.raise_for_status()
-        return response.json().get("message", {}).get("content", "").strip()
-    except Exception as e:
-        print(f"Ollama API 호출 오류: {e}")
-        raise e
+    }
+    
+    max_retries = 3
+    timeout = 90  # 생성 응답용 타임아웃을 90초로 증가
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(url, json=payload, headers=headers, timeout=timeout)
+            response.raise_for_status()
+            return response.json().get("message", {}).get("content", "").strip()
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+            print(f"[Ollama 호출 타임아웃/연결 오류] 시도 {attempt + 1}/{max_retries} 실패: {e}")
+            if attempt < max_retries - 1:
+                time.sleep(2 ** attempt)  # 지수 백오프 적용: 1초, 2초
+                continue
+            raise e
+        except Exception as e:
+            print(f"Ollama API 호출 오류: {e}")
+            raise e
 
 if LANGGRAPH_AVAILABLE:
     from langchain_core.language_models.chat_models import BaseChatModel
@@ -107,10 +118,25 @@ if LANGGRAPH_AVAILABLE:
                 }
             }
             
-            response = requests.post(url, json=payload, headers=headers, timeout=60)
-            response.raise_for_status()
-            res_json = response.json()
-            content = res_json.get("message", {}).get("content", "")
+            import time
+            max_retries = 3
+            timeout = 90  # 생성 응답용 타임아웃을 90초로 증가
+            for attempt in range(max_retries):
+                try:
+                    response = requests.post(url, json=payload, headers=headers, timeout=timeout)
+                    response.raise_for_status()
+                    res_json = response.json()
+                    content = res_json.get("message", {}).get("content", "")
+                    break
+                except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                    print(f"[Ollama LangGraph 호출 타임아웃/연결 오류] 시도 {attempt + 1}/{max_retries} 실패: {e}")
+                    if attempt < max_retries - 1:
+                        time.sleep(2 ** attempt)
+                        continue
+                    raise e
+                except Exception as e:
+                    print(f"Ollama LangGraph API 호출 오류: {e}")
+                    raise e
             
             ai_message = AIMessage(content=content)
             generation = ChatGeneration(message=ai_message)

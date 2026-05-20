@@ -72,29 +72,40 @@ def translate_message(text, target_lang):
     
     # 1. Ollama Cloud API 사용
     if OLLAMA_API_KEY:
-        try:
-            import requests
-            url = "https://ollama.com/api/chat"
-            headers = {
-                "Authorization": f"Bearer {OLLAMA_API_KEY}",
-                "Content-Type": "application/json"
+        import requests
+        import time
+        url = "https://ollama.com/api/chat"
+        headers = {
+            "Authorization": f"Bearer {OLLAMA_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": OLLAMA_MODEL_NAME or "gemma4:31b-cloud",
+            "messages": [{"role": "user", "content": prompt}],
+            "stream": False,
+            "options": {
+                "temperature": 0.2
             }
-            payload = {
-                "model": OLLAMA_MODEL_NAME or "gemma4:31b-cloud",
-                "messages": [{"role": "user", "content": prompt}],
-                "stream": False,
-                "options": {
-                    "temperature": 0.2
-                }
-            }
-            response = requests.post(url, json=payload, headers=headers, timeout=30)
-            response.raise_for_status()
-            translated_text = response.json().get("message", {}).get("content", "").strip()
-            if translated_text:
-                return translated_text
-        except Exception as e:
-            print(f"[Ollama 번역 오류] {e}")
-            return f"[번역 오류] {e}"
+        }
+        
+        max_retries = 3
+        timeout = 60  # 타임아웃을 60초로 증가
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(url, json=payload, headers=headers, timeout=timeout)
+                response.raise_for_status()
+                translated_text = response.json().get("message", {}).get("content", "").strip()
+                if translated_text:
+                    return translated_text
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                print(f"[Ollama 번역 타임아웃/연결 오류] 시도 {attempt + 1}/{max_retries} 실패: {e}")
+                if attempt < max_retries - 1:
+                    time.sleep(2 ** attempt)  # 지수 백오프 적용: 1초, 2초
+                    continue
+                return f"[번역 오류] 연결 시간 초과 (서버 응답 지연)"
+            except Exception as e:
+                print(f"[Ollama 번역 오류] {e}")
+                return f"[번역 오류] {e}"
     else:
         return "[번역 오류] Ollama API Key가 설정되지 않았습니다."
 
