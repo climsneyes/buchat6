@@ -65,7 +65,7 @@ def filter_message(message):
 def translate_message(text, target_lang):
     # 언어 코드 → 영어 언어명 매핑
     lang_map = {
-        "en": "English", "ko": "Korean", "ja": "Japanese", "zh": "Chinese", "zh-TW": "Traditional Chinese", "id": "Indonesian", "vi": "Vietnamese", "fr": "French", "de": "German", "th": "Thai", "tl": "Filipino", "uz": "Uzbek", "ne": "Nepali", "tet": "Tetum", "lo": "Lao", "mn": "Mongolian", "my": "Burmese", "bn": "Bengali", "si": "Sinhala", "km": "Khmer", "ky": "Kyrgyz", "ur": "Urdu"
+        "en": "English", "ko": "Korean", "ja": "Japanese", "zh": "Chinese", "zh-TW": "Traditional Chinese", "id": "Indonesian", "vi": "Vietnamese", "fr": "French", "de": "German", "th": "Thai", "tl": "Filipino", "uz": "Uzbek", "ne": "Nepali", "tet": "Tetum", "lo": "Lao", "mn": "Mongolian", "my": "Burmese", "bn": "Bengali", "si": "Sinhala", "km": "Khmer", "ky": "Kyrgyz", "ur": "Urdu", "zh-HK": "Cantonese (Hong Kong)", "zh-SG": "Chinese (Singapore)", "en-SG": "English (Singapore)", "ms-SG": "Malay (Singapore)", "ta-SG": "Tamil (Singapore)"
     }
     target_lang_name = lang_map.get(target_lang, target_lang)
     prompt = f"Translate the following text to {target_lang_name} and return only the translation.\n{text}"
