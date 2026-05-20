@@ -1,6 +1,6 @@
 import flet as ft
 import os
-from config import GEMINI_API_KEY, MODEL_NAME
+from config import GEMINI_API_KEY, MODEL_NAME, OLLAMA_API_KEY, OLLAMA_MODEL_NAME
 from flet import Column, Switch
 import time
 from firebase_admin import db
@@ -61,21 +61,42 @@ def filter_message(message):
     
     return filtered_message
 
-# Gemini 기반 번역 함수 (예시: 실제 구현 필요)
+# Ollama/Gemini 기반 번역 함수
 def translate_message(text, target_lang):
-    try:
-        genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel("gemini-2.0-flash-lite")
-        # 언어 코드 → 영어 언어명 매핑
-        lang_map = {
-            "en": "English", "ko": "Korean", "ja": "Japanese", "zh": "Chinese", "zh-TW": "Traditional Chinese", "id": "Indonesian", "vi": "Vietnamese", "fr": "French", "de": "German", "th": "Thai", "tl": "Filipino", "uz": "Uzbek", "ne": "Nepali", "tet": "Tetum", "lo": "Lao", "mn": "Mongolian", "my": "Burmese", "bn": "Bengali", "si": "Sinhala", "km": "Khmer", "ky": "Kyrgyz", "ur": "Urdu"
-        }
-        target_lang_name = lang_map.get(target_lang, target_lang)
-        prompt = f"Translate the following text to {target_lang_name} and return only the translation.\n{text}"
-        response = model.generate_content(prompt, generation_config={"max_output_tokens": 512, "temperature": 0.2})
-        return response.text.strip()
-    except Exception as e:
-        return f"[번역 오류] {e}"
+    # 언어 코드 → 영어 언어명 매핑
+    lang_map = {
+        "en": "English", "ko": "Korean", "ja": "Japanese", "zh": "Chinese", "zh-TW": "Traditional Chinese", "id": "Indonesian", "vi": "Vietnamese", "fr": "French", "de": "German", "th": "Thai", "tl": "Filipino", "uz": "Uzbek", "ne": "Nepali", "tet": "Tetum", "lo": "Lao", "mn": "Mongolian", "my": "Burmese", "bn": "Bengali", "si": "Sinhala", "km": "Khmer", "ky": "Kyrgyz", "ur": "Urdu"
+    }
+    target_lang_name = lang_map.get(target_lang, target_lang)
+    prompt = f"Translate the following text to {target_lang_name} and return only the translation.\n{text}"
+    
+    # 1. Ollama Cloud API 사용
+    if OLLAMA_API_KEY:
+        try:
+            import requests
+            url = "https://ollama.com/api/chat"
+            headers = {
+                "Authorization": f"Bearer {OLLAMA_API_KEY}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": OLLAMA_MODEL_NAME or "gemma4:31b-cloud",
+                "messages": [{"role": "user", "content": prompt}],
+                "stream": False,
+                "options": {
+                    "temperature": 0.2
+                }
+            }
+            response = requests.post(url, json=payload, headers=headers, timeout=30)
+            response.raise_for_status()
+            translated_text = response.json().get("message", {}).get("content", "").strip()
+            if translated_text:
+                return translated_text
+        except Exception as e:
+            print(f"[Ollama 번역 오류] {e}")
+            return f"[번역 오류] {e}"
+    else:
+        return "[번역 오류] Ollama API Key가 설정되지 않았습니다."
 
 # 언어 코드에 따른 전체 언어 이름 매핑
 LANG_NAME_MAP = {

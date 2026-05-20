@@ -28,6 +28,94 @@ CACHE_INFO_PATH = "cache_info.json"
 
 WASTE_INFO_JSON_PATH = "부산광역시_쓰레기처리정보.json"
 
+def generate_text_with_llm(prompt, system_instruction=None, temperature=0.3, max_tokens=1500, gemini_api_key=None):
+    """Ollama를 사용하여 텍스트를 생성합니다."""
+    # config 임포트를 지연 로딩(lazy import)하여 순환 참조 방지
+    from config import OLLAMA_API_KEY, OLLAMA_MODEL_NAME
+    
+    if not OLLAMA_API_KEY:
+        raise ValueError("Ollama Cloud API Key (OLLAMA_API_KEY) is missing. Gemini LLM is disabled.")
+        
+    try:
+        import requests
+        url = "https://ollama.com/api/chat"
+        headers = {
+            "Authorization": f"Bearer {OLLAMA_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        messages = []
+        if system_instruction:
+            messages.append({"role": "system", "content": system_instruction})
+        messages.append({"role": "user", "content": prompt})
+        
+        payload = {
+            "model": OLLAMA_MODEL_NAME or "gemma4:31b-cloud",
+            "messages": messages,
+            "stream": False,
+            "options": {
+                "temperature": temperature
+            }
+        }
+        response = requests.post(url, json=payload, headers=headers, timeout=60)
+        response.raise_for_status()
+        return response.json().get("message", {}).get("content", "").strip()
+    except Exception as e:
+        print(f"Ollama API 호출 오류: {e}")
+        raise e
+
+if LANGGRAPH_AVAILABLE:
+    from langchain_core.language_models.chat_models import BaseChatModel
+    from langchain_core.messages import AIMessage
+    from langchain_core.outputs import ChatResult, ChatGeneration
+    from pydantic import Field
+
+    class ChatOllamaCloud(BaseChatModel):
+        model_name: str = "gemma4:31b-cloud"
+        api_key: str = ""
+        temperature: float = 0.1
+        
+        @property
+        def _llm_type(self) -> str:
+            return "ollama-cloud"
+            
+        def _generate(self, messages, stop=None, run_manager=None, **kwargs):
+            ollama_messages = []
+            for msg in messages:
+                if msg.type == "human":
+                    role = "user"
+                elif msg.type == "system":
+                    role = "system"
+                elif msg.type == "ai":
+                    role = "assistant"
+                else:
+                    role = "user"
+                ollama_messages.append({"role": role, "content": msg.content})
+                
+            import requests
+            url = "https://ollama.com/api/chat"
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "model": self.model_name,
+                "messages": ollama_messages,
+                "stream": False,
+                "options": {
+                    "temperature": self.temperature
+                }
+            }
+            
+            response = requests.post(url, json=payload, headers=headers, timeout=60)
+            response.raise_for_status()
+            res_json = response.json()
+            content = res_json.get("message", {}).get("content", "")
+            
+            ai_message = AIMessage(content=content)
+            generation = ChatGeneration(message=ai_message)
+            return ChatResult(generations=[generation])
+
 # 언어 감지 함수
 def detect_language(text):
     """텍스트의 언어를 감지합니다."""
@@ -1625,16 +1713,11 @@ def answer_with_rag(query, vector_db, gemini_api_key, model=None, target_lang=No
         # 프롬프트 템플릿 선택
         prompt_template = get_multicultural_prompt_template(target_lang)
         
-        # LLM 설정
-        genai.configure(api_key=gemini_api_key)
-        model = genai.GenerativeModel('gemini-2.0-flash-lite')
-        
         # 프롬프트 구성
         prompt = prompt_template.format(context=context, query=enhanced_query)
         
         # 답변 생성
-        response = model.generate_content(prompt)
-        answer = response.text
+        answer = generate_text_with_llm(prompt, temperature=0.3, gemini_api_key=gemini_api_key)
         
         # 구군명만 입력된 경우 추가 처리
         if is_district_only and district_name:
@@ -2169,15 +2252,9 @@ Antwort: Basierend auf den obigen Busan-Restaurant-Informationen geben Sie bitte
     # 타겟 언어에 맞는 프롬프트 선택
     prompt = lang_prompts.get(target_lang, lang_prompts["ko"])
     
-    # Gemini로 답변 생성
+    # Ollama/Gemini로 답변 생성
     try:
-        genai.configure(api_key=gemini_api_key)
-        model = genai.GenerativeModel("gemini-2.0-flash-lite")
-        response = model.generate_content(prompt, generation_config={
-            "max_output_tokens": 1500,
-            "temperature": 0.3
-        })
-        answer = response.text.strip()
+        answer = generate_text_with_llm(prompt, temperature=0.3, max_tokens=1500, gemini_api_key=gemini_api_key)
         
         # 마크다운 문법 정리
         clean_answer = clean_markdown_text(answer)
@@ -2188,8 +2265,7 @@ Antwort: Basierend auf den obigen Busan-Restaurant-Informationen geben Sie bitte
         return "죄송합니다. 부산 맛집 정보를 처리하는 중에 오류가 발생했습니다."
 
 def answer_with_rag_busan_food(query, vector_db, gemini_api_key, model=None, target_lang=None, conversation_context=None):
-    model = "models/gemini-2.0-flash-lite"
-    print(f"  - Gemini 부산 맛집 RAG 답변 생성 시작")
+    print(f"  - 부산 맛집 RAG 답변 생성 시작 (Ollama)")
     lang = detect_language(query)
     prompt_lang = target_lang if target_lang else lang
     
@@ -2217,18 +2293,14 @@ def answer_with_rag_busan_food(query, vector_db, gemini_api_key, model=None, tar
     busan_food_prompt_template = get_busan_food_prompt_template(prompt_lang)
     prompt = busan_food_prompt_template.format(context=context, query=query)
     
-    genai.configure(api_key=gemini_api_key)
-    model = genai.GenerativeModel("gemini-2.0-flash-lite")
-    response = model.generate_content(prompt, generation_config={"max_output_tokens": 1000, "temperature": 0.1})
-    answer = response.text.strip()
+    answer = generate_text_with_llm(prompt, temperature=0.1, max_tokens=1000, gemini_api_key=gemini_api_key)
     
     # 마크다운 문법 정리
     clean_answer = clean_markdown_text(answer)
     return clean_answer
 
 def answer_with_rag_foreign_worker(query, vector_db, gemini_api_key, model=None, target_lang=None, conversation_context=None):
-    model = "models/gemini-2.0-flash-lite"
-    print(f"  - Gemini 외국인 근로자 RAG 답변 생성 시작")
+    print(f"  - 외국인 근로자 RAG 답변 생성 시작 (Ollama)")
     lang = detect_language(query)
     prompt_lang = target_lang if target_lang else lang
     
@@ -2304,10 +2376,7 @@ def answer_with_rag_foreign_worker(query, vector_db, gemini_api_key, model=None,
                 waste_prompt_template = get_waste_management_prompt_template(prompt_lang)
                 prompt = waste_prompt_template.format(context=context, query=combined_query, district=district)
                 
-                genai.configure(api_key=gemini_api_key)
-                model = genai.GenerativeModel("gemini-2.0-flash-lite")
-                response = model.generate_content(prompt, generation_config={"max_output_tokens": 1000, "temperature": 0.1})
-                answer = response.text.strip()
+                answer = generate_text_with_llm(prompt, temperature=0.1, max_tokens=1000, gemini_api_key=gemini_api_key)
                 return answer
     
     # 쓰레기 처리 관련 질문인지 확인
@@ -2398,10 +2467,7 @@ def answer_with_rag_foreign_worker(query, vector_db, gemini_api_key, model=None,
     context = "\n\n".join([doc['page_content'] if isinstance(doc, dict) and 'page_content' in doc else str(doc) for doc in relevant_chunks])
     prompt = foreign_worker_prompt_template.format(context=context, query=query)
     
-    genai.configure(api_key=gemini_api_key)
-    model = genai.GenerativeModel("gemini-2.0-flash-lite")
-    response = model.generate_content(prompt, generation_config={"max_output_tokens": 1000, "temperature": 0.1})
-    answer = response.text.strip()
+    answer = generate_text_with_llm(prompt, temperature=0.1, max_tokens=1000, gemini_api_key=gemini_api_key)
     
     # 마크다운 문법 정리
     clean_answer = clean_markdown_text(answer)
@@ -2467,17 +2533,18 @@ def create_langgraph_rag_system(gemini_api_key: str, vector_db_path: str, target
     try:
         print("LangGraph 사용 가능 확인됨")
         
-        # LLM 설정 - API 키를 환경변수로 설정
+        # LLM 설정
+        from config import OLLAMA_API_KEY, OLLAMA_MODEL_NAME
         print("🤖 LLM 설정 중...")
-        import os
-        os.environ["GOOGLE_API_KEY"] = gemini_api_key
-        
-        llm = ChatGoogleGenerativeAI(
-            model="gemini-2.0-flash-lite",
-            temperature=0.1,
-            max_output_tokens=2000,
-            google_api_key=gemini_api_key  # 명시적으로 API 키 전달
-        )
+        if OLLAMA_API_KEY:
+            print("Ollama Cloud LLM 사용")
+            llm = ChatOllamaCloud(
+                model_name=OLLAMA_MODEL_NAME or "gemma4:31b-cloud",
+                api_key=OLLAMA_API_KEY,
+                temperature=0.1
+            )
+        else:
+            raise ValueError("Ollama Cloud API Key (OLLAMA_API_KEY) is missing. Gemini LLM is disabled.")
         print("LLM 설정 완료")
         
         # 임베딩 모델 설정
@@ -3957,11 +4024,7 @@ Sumulat ng praktikal na nilalaman na magagamit direkta sa mga tunay na construct
         
         prompt = prompts.get(target_lang, prompts["ko"])
         
-        model = genai.GenerativeModel("gemini-2.0-flash-lite")
-        response = model.generate_content(prompt, generation_config={
-            "max_output_tokens": 1500,
-            "temperature": 0.3
-        })
+        response_text = generate_text_with_llm(prompt, temperature=0.3, max_tokens=1500, gemini_api_key=gemini_api_key)
         
         # 언어별 헤더 텍스트
         headers = {
@@ -3979,7 +4042,7 @@ Sumulat ng praktikal na nilalaman na magagamit direkta sa mga tunay na construct
         }
         
         header = headers.get(target_lang, headers["ko"])
-        answer_content = f"{header}\n\n{response.text.strip()}"
+        answer_content = f"{header}\n\n{response_text}"
         
         # YouTube 검색 버튼 정보 추가 (Gemini 답변용)
         answer_content += "\n\n" + get_youtube_search_button_info_for_gemini(query, target_lang)
@@ -4052,13 +4115,9 @@ Please write practical content that can be applied directly at construction site
         
         prompt = prompts.get(target_lang, prompts["ko"])
         
-        model = genai.GenerativeModel("gemini-2.0-flash-lite")
-        response = model.generate_content(prompt, generation_config={
-            "max_output_tokens": 1500,
-            "temperature": 0.3
-        })
+        response_text = generate_text_with_llm(prompt, temperature=0.3, max_tokens=1500, gemini_api_key=gemini_api_key)
         
-        return f"🌡️ **온열질환 예방조치 가이드**\n\n{response.text.strip()}"
+        return f"🌡️ **온열질환 예방조치 가이드**\n\n{response_text}"
         
     except Exception as e:
         print(f"Gemini 온열질환 답변 생성 오류: {e}")
@@ -4112,13 +4171,9 @@ Vui lòng trả lời bằng tiếng Việt với thông tin thực tế hữu �
         
         prompt = prompts.get(target_lang, prompts["ko"])
         
-        model = genai.GenerativeModel("gemini-2.0-flash-lite")
-        response = model.generate_content(prompt, generation_config={
-            "max_output_tokens": 1000,
-            "temperature": 0.3
-        })
+        response_text = generate_text_with_llm(prompt, temperature=0.3, max_tokens=1000, gemini_api_key=gemini_api_key)
         
-        return response.text.strip()
+        return response_text
         
     except Exception as e:
         print(f"Gemini 폴백 답변 생성 오류: {e}")

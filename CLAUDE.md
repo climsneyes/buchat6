@@ -66,8 +66,8 @@ python foreign_country_select.py  # Country selection helper
 ### Required Environment Variables
 
 ```bash
-GEMINI_API_KEY=your_gemini_api_key
-MODEL_NAME=gemini-2.0-flash-lite
+OLLAMA_API_KEY=your_ollama_api_key
+OLLAMA_MODEL_NAME=gemma4:31b-cloud
 FIREBASE_DB_URL=your_firebase_database_url
 FIREBASE_KEY_JSON=your_firebase_service_account_json
 CLOUDTYPE=1  # For production deployment
@@ -158,9 +158,9 @@ Uses MD5 hash-based caching for efficient PDF processing:
 - Database URL and service account credentials are mandatory for chat features
 
 ### Model Configuration
-- Default model: `gemini-2.0-flash-lite`
-- Model can be configured via `MODEL_NAME` environment variable
-- API key required for all AI features
+- Default model: `gemma4:31b-cloud` (via Ollama Cloud)
+- Model can be configured via `OLLAMA_MODEL_NAME` environment variable
+- Ollama API key required for all AI features
 
 ### Vector Database Management
 - Multiple specialized databases for different content types

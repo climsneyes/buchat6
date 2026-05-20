@@ -6,13 +6,63 @@ from typing import Dict, List, Any, Optional
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.outputs import ChatResult, ChatGeneration
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 import google.generativeai as genai
+from pydantic import Field
+
+class ChatOllamaCloud(BaseChatModel):
+    model_name: str = "gemma4:31b-cloud"
+    api_key: str = ""
+    temperature: float = 0.1
+    
+    @property
+    def _llm_type(self) -> str:
+        return "ollama-cloud"
+        
+    def _generate(self, messages, stop=None, run_manager=None, **kwargs):
+        ollama_messages = []
+        for msg in messages:
+            if msg.type == "human":
+                role = "user"
+            elif msg.type == "system":
+                role = "system"
+            elif msg.type == "ai":
+                role = "assistant"
+            else:
+                role = "user"
+            ollama_messages.append({"role": role, "content": msg.content})
+            
+        import requests
+        url = "https://ollama.com/api/chat"
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "model": self.model_name,
+            "messages": ollama_messages,
+            "stream": False,
+            "options": {
+                "temperature": self.temperature
+            }
+        }
+        
+        response = requests.post(url, json=payload, headers=headers, timeout=60)
+        response.raise_for_status()
+        res_json = response.json()
+        content = res_json.get("message", {}).get("content", "")
+        
+        ai_message = AIMessage(content=content)
+        generation = ChatGeneration(message=ai_message)
+        return ChatResult(generations=[generation])
 
 class LangGraphRAG:
     def __init__(self, gemini_api_key: str):
@@ -20,11 +70,15 @@ class LangGraphRAG:
         genai.configure(api_key=gemini_api_key)
         
         # LLM 설정
-        self.llm = ChatGoogleGenerativeAI(
-            model="gemini-2.0-flash-lite",
-            temperature=0.1,
-            max_output_tokens=2000
-        )
+        from config import OLLAMA_API_KEY, OLLAMA_MODEL_NAME
+        if OLLAMA_API_KEY:
+            self.llm = ChatOllamaCloud(
+                model_name=OLLAMA_MODEL_NAME or "gemma4:31b-cloud",
+                api_key=OLLAMA_API_KEY,
+                temperature=0.1
+            )
+        else:
+            raise ValueError("Ollama Cloud API Key (OLLAMA_API_KEY) is missing. Gemini LLM is disabled.")
         
         # 임베딩 모델 설정
         self.embeddings = GoogleGenerativeAIEmbeddings(

@@ -14,9 +14,11 @@ if not os.path.exists("config.py"):
         f.write(f'''
 import os
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-MODEL_NAME = os.getenv("MODEL_NAME", "gemini-2.0-flash-lite")
+MODEL_NAME = os.getenv("MODEL_NAME", "gemma4:31b-cloud")
 FIREBASE_DB_URL = os.getenv("FIREBASE_DB_URL", "https://pychat-25c45-default-rtdb.asia-southeast1.firebasedatabase.app/")
 FIREBASE_KEY_PATH = os.getenv("FIREBASE_KEY_PATH", "firebase_key.json")
+OLLAMA_API_KEY = os.getenv("OLLAMA_API_KEY")
+OLLAMA_MODEL_NAME = os.getenv("OLLAMA_MODEL_NAME", "gemma4:31b-cloud")
 ''')
 
 import flet as ft
@@ -29,7 +31,7 @@ from pages.chat_room import ChatRoomPage
 from pages.foreign_country_select import ForeignCountrySelectPage
 from pages.mbti_tourism import MBTITourismPage
 import openai
-from config import GEMINI_API_KEY, MODEL_NAME, FIREBASE_DB_URL, FIREBASE_KEY_PATH
+from config import GEMINI_API_KEY, MODEL_NAME, FIREBASE_DB_URL, FIREBASE_KEY_PATH, OLLAMA_API_KEY, OLLAMA_MODEL_NAME
 import uuid
 import qrcode
 import io
